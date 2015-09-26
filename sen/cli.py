@@ -6,6 +6,7 @@ import argparse
 import logging
 
 from sen.tui import UI
+from sen import set_logging
 
 
 logger = logging.getLogger("sen")
@@ -22,6 +23,8 @@ def main():
 
     ui = UI()
 
+    set_logging()
+
     try:
         ui.run()
     except KeyboardInterrupt:
@@ -33,3 +36,6 @@ def main():
         else:
             logger.error("Exception caught: %r", ex)
             return -1
+
+if __name__ == "__main__":
+    main()

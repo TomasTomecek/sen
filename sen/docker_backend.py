@@ -35,7 +35,7 @@ class ImageNameStruct(object):
             result.namespace = s[1]
         if result.namespace == 'library':
             # https://github.com/projectatomic/atomic-reactor/issues/45
-            logging.debug("namespace 'library' -> ''")
+            logger.debug("namespace 'library' -> ''")
             result.namespace = None
         result.repo = s[-1]
 
@@ -91,15 +91,12 @@ class ImageNameStruct(object):
             tag=self.tag)
 
 
-class DockerImage():
+class DockerObject:
+    """
+    Common base for images and containers
+    """
     def __init__(self, data):
         self.data = data
-        self._inspect = None
-        self._names = None
-
-    @property
-    def image_id(self):
-        return self.data["Id"]
 
     @property
     def time_created(self):
@@ -107,6 +104,17 @@ class DockerImage():
 
     def display_time_created(self):
         return humanize.naturaltime(datetime.datetime.fromtimestamp(self.data["Created"]))
+
+
+class DockerImage(DockerObject):
+    def __init__(self, data):
+        super().__init__(data)
+        self._inspect = None
+        self._names = None
+
+    @property
+    def image_id(self):
+        return self.data["Id"]
 
     @property
     def names(self):
@@ -117,12 +125,25 @@ class DockerImage():
         return self._names
 
 
-class DockerContainer():
-    def __init__(self, data):
-        self.data = data
+class DockerContainer(DockerObject):
+    @property
+    def container_id(self):
+        return self.data["Id"]
+
+    @property
+    def name(self):
+        return self.data["Names"]
+
+    @property
+    def command(self):
+        return self.data["Command"]
+
+    @property
+    def status(self):
+        return self.data["Status"]
 
 
-class DockerBackend():
+class DockerBackend:
     """
     backend for docker
     """
@@ -146,10 +167,36 @@ class DockerBackend():
         if sort:
             if sort == "time":
                 self._images.sort(key=lambda x: x.time_created, reverse=True)
-        return self._images
+        return self._images[:]
+
+    def containers(self, cached=False, sort="time"):
+        if self._containers is None or cached is False:
+            self._containers = []
+            for c in self.client.containers(all=True):
+                self._containers.append(DockerContainer(c))
+        if sort:
+            if sort == "time":
+                self._containers.sort(key=lambda x: x.time_created, reverse=True)
+        return self._containers[:]
 
     def inspect_image(self, image_id):
-        logging.debug("inspect image %r", image_id)
+        logger.debug("inspect image %r", image_id)
         inspect_data = self.client.inspect_image(image_id)
-        logging.debug(inspect_data)
+        logger.debug(inspect_data)
         return inspect_data
+
+    def inspect_container(self, container_id):
+        logger.debug("inspect container %r", container_id)
+        inspect_data = self.client.inspect_container(container_id)
+        logger.debug(inspect_data)
+        return inspect_data
+
+    def logs(self, container_id):
+        logger.debug("get logs for container %r", container_id)
+        logs_data = self.client.logs(container_id, stream=True)
+        return logs_data
+
+    def initial_content(self):
+        content = self.images(sort=None) + self.containers(sort=None)
+        content.sort(key=lambda x: x.time_created, reverse=True)
+        return content
