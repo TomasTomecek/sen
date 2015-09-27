@@ -193,8 +193,9 @@ class DockerBackend:
 
     def logs(self, container_id):
         logger.debug("get logs for container %r", container_id)
-        logs_data = self.client.logs(container_id, stream=True)
-        return logs_data
+        logs_data = self.client.logs(container_id, stream=False)
+        generator = self.client.logs(container_id, stream=True, tail=1)
+        return logs_data, generator
 
     def initial_content(self):
         content = self.images(sort=None) + self.containers(sort=None)

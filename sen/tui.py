@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class DockerImageColumns(urwid.Columns):
-
     def __init__(self, docker_object, widgets):
         self.docker_object = docker_object
         super(DockerImageColumns, self).__init__(widgets)
@@ -33,6 +32,32 @@ class ScrollableListBox(urwid.ListBox):
         super(ScrollableListBox, self).__init__(body)
 
 
+class AsyncScrollableListBox(urwid.ListBox):
+    def __init__(self, static_data, generator, ui):
+        self.log_texts = []
+        for d in static_data.decode("utf-8").split("\n"):
+            log_entry = d.strip()
+            if log_entry:
+                self.log_texts.append(urwid.Text(("text", log_entry), align="left", wrap="any"))
+        walker = urwid.SimpleFocusListWalker(self.log_texts)
+        super(AsyncScrollableListBox, self).__init__(walker)
+        def fetch_logs():
+            for line in generator:
+                if self.stop.is_set():
+                    break
+                logger.debug("log line emitted: %r", line)
+                walker.append(urwid.Text(("text", line.strip()), align="left", wrap="any"))
+                walker.set_focus(len(walker) - 1)
+                ui.add_and_set_main_widget(self, True)
+
+        self.stop = threading.Event()
+        self.thread = threading.Thread(target=fetch_logs, daemon=True)
+        self.thread.start()
+
+    def destroy(self):
+        self.stop.set()
+
+
 class MainListBox(urwid.ListBox):
     def __init__(self, docker_backend, ui):
         self.d = docker_backend
@@ -48,14 +73,14 @@ class MainListBox(urwid.ListBox):
                 image_id = urwid.Text(("image_id", o.image_id[:12]), align="left", wrap="any")
                 time = urwid.Text(("image_id", o.display_time_created()), align="left", wrap="any")
                 names = urwid.Text(("image_names", o.names or ""), align="left", wrap="clip")
-                line = DockerImageColumns(o, [image_id, names, time])
+                line = DockerImageColumns(o, [(13, image_id), names, time])
             elif isinstance(o, DockerContainer):
                 container_id = urwid.Text(("image_id", o.container_id[:12]), align="left", wrap="any")
                 time = urwid.Text(("image_id", o.display_time_created()), align="left", wrap="any")
                 name = urwid.Text(("image_names", o.name), align="left", wrap="clip")
                 command = urwid.Text(("image_names", o.command), align="left", wrap="clip")
                 status = urwid.Text(("image_names", o.status), align="left", wrap="clip")
-                line = DockerImageColumns(o, [container_id, command, time, status, name])
+                line = DockerImageColumns(o, [(13, container_id), command, time, status, name])
             widgets.append(urwid.AttrMap(line, 'image_id', focus_map='reversed'))
         return widgets
 
@@ -75,17 +100,9 @@ class MainListBox(urwid.ListBox):
         if key == "l":
             docker_object = self.get_focus()[0].original_widget.docker_object
             if isinstance(docker_object, DockerContainer):
-                logs_generator = self.d.logs(docker_object.container_id)
-                log_texts = []
-                walker = urwid.SimpleFocusListWalker(log_texts)
-                list_box = urwid.ListBox(walker)
-                self.ui.add_and_set_main_widget(list_box)
-                def fetch_logs():
-                    for line in logs_generator:
-                        logger.debug("log line emitted: %r", line)
-                        walker.append(urwid.Text(("text", line.strip()), align="left", wrap="any"))
-                        walker.set_focus(len(walker) - 1)
-                threading.Thread(target=fetch_logs, daemon=True).start()
+                logs_data, logs_generator = self.d.logs(docker_object.container_id)
+                w = AsyncScrollableListBox(logs_data, logs_generator, self.ui)
+                self.ui.add_and_set_main_widget(w)
             return
         key = super(MainListBox, self).keypress(size, key)
         return key
@@ -97,11 +114,16 @@ class UI(urwid.MainLoop):
             ('reversed', 'yellow', 'brown'),
             ("image_id", "white", "black"),
             ("image_names", "light red", "black"),
+            ('root', "white", "black"),
         ]
         self.d = DockerBackend()
         self.main_list = MainListBox(self.d, self)
-        # the padding is placeholder so we can change it easily
-        super().__init__(urwid.Padding(self.main_list), palette=pallete)
+
+        # root widget
+        self.mainframe = urwid.Frame(urwid.SolidFill())
+        root_widget = urwid.AttrMap(self.mainframe, "root")
+
+        super().__init__(root_widget, palette=pallete)
         self.handle_mouse = False
         self.widgets = []
 
@@ -112,10 +134,11 @@ class UI(urwid.MainLoop):
         :param widget:
         :return:
         """
-        self._widget.original_widget = widget
+        self.mainframe.set_body(widget)
+        # self._widget.original_widget = widget
         if redraw:
-            logger.debug("redraw main widget")
-            # FIXME: redraw on change, this doesn't work, somehow
+        #    logger.debug("redraw main widget")
+        #    # FIXME: redraw on change, this doesn't work, somehow
             self.draw_screen()
 
     def add_and_set_main_widget(self, widget, redraw=True):
@@ -148,11 +171,11 @@ class UI(urwid.MainLoop):
 
     @property
     def current_widget_index(self):
-        return self.widgets.index(self._widget.original_widget)
+        return self.widgets.index(self.current_widget)
 
     @property
     def current_widget(self):
-        return self._widget.original_widget
+        return self.mainframe.get_body()
 
     def remove_current_widget(self):
         # don't allow removing main_list
@@ -160,6 +183,9 @@ class UI(urwid.MainLoop):
             logger.warning("you can't remove main list widget")
             return
         self.widgets.remove(self.current_widget)
+        destroy_method = getattr(self.current_widget, "destroy", None)
+        if destroy_method:
+            destroy_method()
         # FIXME: we should display last displayed widget here
         self._set_main_widget(self.main_list, True)
 
