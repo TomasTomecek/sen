@@ -1,3 +1,4 @@
+import copy
 import logging
 import datetime
 
@@ -95,20 +96,36 @@ class DockerObject:
     """
     Common base for images and containers
     """
-    def __init__(self, data):
+    def __init__(self, data, docker_client):
         self.data = data
+        self.d = docker_client
+        self._created = None
 
     @property
-    def time_created(self):
-        return self.data["Created"]
+    def created(self):
+        if self._created is None:
+            self._created = datetime.datetime.fromtimestamp(self.data["Created"])
+        return self._created
 
     def display_time_created(self):
-        return humanize.naturaltime(datetime.datetime.fromtimestamp(self.data["Created"]))
+        return humanize.naturaltime(self.created)
+
+    
+def graceful_chain_get(d, *args):
+    if not d:
+        return None
+    t = copy.deepcopy(d)
+    for arg in args:
+        try:
+            t = t[arg]
+        except (AttributeError, KeyError):
+            return None
+    return t
 
 
 class DockerImage(DockerObject):
-    def __init__(self, data):
-        super().__init__(data)
+    def __init__(self, data, docker_client):
+        super().__init__(data, docker_client)
         self._inspect = None
         self._names = None
 
@@ -117,12 +134,32 @@ class DockerImage(DockerObject):
         return self.data["Id"]
 
     @property
+    def command(self):
+        cmd = graceful_chain_get(self.data, "Config", "Cmd")
+        if cmd:
+            return " ".join(cmd)
+        return ""
+
+    @property
     def names(self):
         if self._names is None:
             self._names = []
             for t in self.data["RepoTags"]:
-                self._names.append(ImageNameStruct.parse(t).to_str())
+                self._names.append(ImageNameStruct.parse(t))
         return self._names
+
+    def inspect_image(self):
+        logger.debug("inspect image %r", self.image_id)
+        inspect_data = self.d.inspect_image(self.image_id)
+        logger.debug(inspect_data)
+        return inspect_data
+
+    def remove(self):
+        logger.debug("remove image %r", self.image_id)
+        self.d.remove_image(self.image_id)
+
+    def __str__(self):
+        return "{} ({})".format(self.image_id, self.names)
 
 
 class DockerContainer(DockerObject):
@@ -142,6 +179,25 @@ class DockerContainer(DockerObject):
     def status(self):
         return self.data["Status"]
 
+    def inspect(self):
+        logger.debug("inspect container %r", self.container_id)
+        inspect_data = self.d.inspect_container(self.container_id)
+        logger.debug(inspect_data)
+        return inspect_data
+
+    def logs(self):
+        logger.debug("get logs for container %r", self.container_id)
+        logs_data = self.d.logs(self.container_id, stream=False)
+        generator = self.d.logs(self.container_id, stream=True, tail=1)
+        return logs_data, generator
+
+    def remove(self):
+        logger.debug("remove container %r", self.container_id)
+        self.d.remove_container(self.container_id)
+
+    def __str__(self):
+        return "{} ({})".format(self.container_id, self.name)
+
 
 class DockerBackend:
     """
@@ -159,45 +215,31 @@ class DockerBackend:
             self._client = docker.AutoVersionClient()
         return self._client
 
-    def images(self, cached=True, sort="time"):
+    def images(self, cached=True, sort_by_time=True):
         if self._images is None or cached is False:
-            self._images = []
+            self._images = {}
             for i in self.client.images():
-                self._images.append(DockerImage(i))
-        if sort:
-            if sort == "time":
-                self._images.sort(key=lambda x: x.time_created, reverse=True)
-        return self._images[:]
+                img = DockerImage(i, self.client)
+                self._images[img.image_id] = img
+        if sort_by_time:
+            v = list(self._images.values())
+            v.sort(key=lambda x: x.time_created, reverse=True)
+            return v
+        return list(self._images.values())
 
-    def containers(self, cached=False, sort="time"):
+    def containers(self, cached=False, sort_by_time=True):
         if self._containers is None or cached is False:
-            self._containers = []
+            self._containers = {}
             for c in self.client.containers(all=True):
-                self._containers.append(DockerContainer(c))
-        if sort:
-            if sort == "time":
-                self._containers.sort(key=lambda x: x.time_created, reverse=True)
-        return self._containers[:]
-
-    def inspect_image(self, image_id):
-        logger.debug("inspect image %r", image_id)
-        inspect_data = self.client.inspect_image(image_id)
-        logger.debug(inspect_data)
-        return inspect_data
-
-    def inspect_container(self, container_id):
-        logger.debug("inspect container %r", container_id)
-        inspect_data = self.client.inspect_container(container_id)
-        logger.debug(inspect_data)
-        return inspect_data
-
-    def logs(self, container_id):
-        logger.debug("get logs for container %r", container_id)
-        logs_data = self.client.logs(container_id, stream=False)
-        generator = self.client.logs(container_id, stream=True, tail=1)
-        return logs_data, generator
+                container = DockerContainer(c, self.client)
+                self._containers[container.container_id] = container
+        if sort_by_time:
+            v = list(self._containers.values())
+            v.sort(key=lambda x: x.time_created, reverse=True)
+            return v
+        return list(self._containers.values())
 
     def initial_content(self):
-        content = self.images(sort=None) + self.containers(sort=None)
-        content.sort(key=lambda x: x.time_created, reverse=True)
+        content = self.images(sort_by_time=False) + self.containers(sort_by_time=False)
+        content.sort(key=lambda x: x.created, reverse=True)
         return content

@@ -5,7 +5,7 @@ yes, this is python 3 ONLY project
 import argparse
 import logging
 
-from sen.tui import UI
+from sen.tui.init import UI
 from sen import set_logging
 
 
@@ -21,9 +21,9 @@ def main():
 
     args = parser.parse_args()
 
-    ui = UI()
-
     set_logging()
+
+    ui = UI()
 
     try:
         ui.run()
