@@ -36,11 +36,9 @@ class UI(urwid.MainLoop):
         :return:
         """
         self.mainframe.set_body(widget)
-        # self._widget.original_widget = widget
         self.mainframe.set_footer(self.build_statusbar())
         if redraw:
-        #    logger.debug("redraw main widget")
-        #    # FIXME: redraw on change, this doesn't work, somehow
+            logger.debug("redraw main widget")
             self.draw_screen()
 
     def add_and_set_main_widget(self, widget, redraw=True):
