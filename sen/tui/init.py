@@ -37,6 +37,7 @@ class UI(urwid.MainLoop):
         """
         self.mainframe.set_body(widget)
         # self._widget.original_widget = widget
+        self.mainframe.set_footer(self.build_statusbar())
         if redraw:
         #    logger.debug("redraw main widget")
         #    # FIXME: redraw on change, this doesn't work, somehow
@@ -104,3 +105,23 @@ class UI(urwid.MainLoop):
     def run(self):
         self.add_and_set_main_widget(self.main_list, redraw=False)
         super().run()
+
+    def build_statusbar(self):
+        """construct and return statusbar widget"""
+        lefttxt = "Images: {images}, Containers: {all_containers}, Running: {running_containers} ".\
+        format(
+            images=len(self.d.images(cached=True, sort_by_time=False)),
+            all_containers=len(self.d.containers(cached=True, sort_by_time=False)),
+            running_containers=len(self.d.containers(cached=True, sort_by_time=False,
+                                                     stopped=False)),
+            buffers=len(self.widgets),
+        )
+        righttxt = "Buffers: {buffers}".format(buffers=len(self.widgets))
+
+        footerleft = urwid.Text(lefttxt, align='left')
+
+        footerright = urwid.Text(righttxt, align='right')
+        columns = urwid.Columns([
+            footerleft,
+            ('fixed', len(righttxt), footerright)])
+        return urwid.AttrMap(columns, "default")

@@ -179,6 +179,10 @@ class DockerContainer(DockerObject):
     def status(self):
         return self.data["Status"]
 
+    @property
+    def running(self):
+        return self.status.startswith("Up")
+
     def inspect(self):
         logger.debug("inspect container %r", self.container_id)
         inspect_data = self.d.inspect_container(self.container_id)
@@ -227,17 +231,18 @@ class DockerBackend:
             return v
         return list(self._images.values())
 
-    def containers(self, cached=False, sort_by_time=True):
+    def containers(self, cached=False, sort_by_time=True, stopped=True):
         if self._containers is None or cached is False:
             self._containers = {}
             for c in self.client.containers(all=True):
                 container = DockerContainer(c, self.client)
                 self._containers[container.container_id] = container
+        v = list(self._containers.values())
+        if stopped is False:
+            v = [x for x in v if x.running]
         if sort_by_time:
-            v = list(self._containers.values())
             v.sort(key=lambda x: x.time_created, reverse=True)
-            return v
-        return list(self._containers.values())
+        return v
 
     def initial_content(self):
         content = self.images(sort_by_time=False) + self.containers(sort_by_time=False)
