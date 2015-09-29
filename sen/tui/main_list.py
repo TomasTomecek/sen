@@ -185,8 +185,16 @@ class MainListBox(urwid.ListBox):
     def __init__(self, docker_backend, ui):
         self.d = docker_backend
         self.ui = ui
-        self.widgets = self._assemble_initial_content()
-        super(MainListBox, self).__init__(urwid.SimpleFocusListWalker(self.widgets))
+        self.walker = None
+        self.populate()
+        super(MainListBox, self).__init__(self.walker)
+
+    def populate(self):
+        widgets = self._assemble_initial_content()
+        if self.walker:
+            self.walker[:] = widgets
+        else:
+            self.walker = urwid.SimpleFocusListWalker(widgets)
 
     def _assemble_initial_content(self):
         widgets = []
@@ -214,23 +222,7 @@ class MainListBox(urwid.ListBox):
             return
         elif key == "d":
             self.focused_docker_object.remove()
-            w = {}
-            for o in self.d.initial_content():
-                line = MainLineWidget(o)
-                if isinstance(o, DockerContainer):
-                    w[o.container_id] = line
-                else:
-                    w[o.image_id] = line
-            for idx, row in enumerate(self.widgets):
-                logger.debug(row)
-
-                if isinstance(row.docker_object, DockerContainer):
-                    try:
-                        self.widgets[idx] = w[row.docker_object.container_id]
-                    except KeyError:
-                        del self.widgets[idx]
-                else:
-                    self.widgets[idx] = w[row.docker_object.image_id]
+            self.populate()
             return
         key = super(MainListBox, self).keypress(size, key)
         return key
