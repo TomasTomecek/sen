@@ -148,7 +148,7 @@ class DockerImage(DockerObject):
                 self._names.append(ImageNameStruct.parse(t))
         return self._names
 
-    def inspect_image(self):
+    def inspect(self):
         logger.debug("inspect image %r", self.image_id)
         inspect_data = self.d.inspect_image(self.image_id)
         logger.debug(inspect_data)
