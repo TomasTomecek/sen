@@ -73,9 +73,26 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(fourth)
             columns.append((self.FOURTH_COL, fourth))
 
+            names_markup = []
             for n in o.names:
                 logger.debug(n)
-            names = AdHocAttrMap(urwid.Text('x', wrap="clip"), get_map())
+                if n.registry:
+                    names_markup.append(("main_list_dg", n.registry + "/"))
+                if n.namespace and n.repo:
+                    names_markup.append(("main_list_lg", n.namespace + "/" + n.repo))
+                else:
+                    if n.repo == "<none>":
+                        names_markup.append(("main_list_dg", n.repo))
+                    else:
+                        names_markup.append(("main_list_lg", n.repo))
+                if n.tag:
+                    if n.tag in ["<none>", "latest"]:
+                        logger.debug("not displaying tag %r for image %s", n.tag, n)
+                    else:
+                        names_markup.append(("main_list_lg", ":" + n.tag))
+                names_markup.append(("main_list_dg", ", "))
+            names_markup = names_markup[:-1]
+            names = AdHocAttrMap(urwid.Text(names_markup, wrap="clip"), get_map())
             self.widgets.append(names)
             columns.append(names)
 
