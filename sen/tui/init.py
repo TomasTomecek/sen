@@ -1,12 +1,11 @@
-import json
 import logging
-import threading
+
+from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer
+from sen.tui.constants import PALLETE
+from sen.docker_backend import DockerBackend
 
 import urwid
 
-from sen.tui.constants import PALLETE
-from sen.docker_backend import DockerBackend, DockerImage, DockerContainer
-from sen.tui.main_list import MainListBox
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,6 @@ logger = logging.getLogger(__name__)
 class UI(urwid.MainLoop):
     def __init__(self):
         self.d = DockerBackend()
-        self.main_list = MainListBox(self.d, self)
 
         # root widget
         self.mainframe = urwid.Frame(urwid.SolidFill())
@@ -26,7 +24,11 @@ class UI(urwid.MainLoop):
 
         super().__init__(root_widget, screen=screen)
         self.handle_mouse = False
-        self.widgets = []
+        self.current_buffer = None
+        self.buffers = []
+
+    def refresh(self):
+        self.draw_screen()
 
     def _set_main_widget(self, widget, redraw):
         """
@@ -39,70 +41,83 @@ class UI(urwid.MainLoop):
         self.mainframe.set_footer(self.build_statusbar())
         if redraw:
             logger.debug("redraw main widget")
-            self.draw_screen()
+            self.refresh()
 
-    def add_and_set_main_widget(self, widget, redraw=True):
+    def display_buffer(self, buffer, redraw=True):
         """
-        add provided widget to widget list and display it
+        display provided buffer
 
-        :param widget:
+        :param buffer:
         :return:
         """
-        if widget not in self.widgets:
-            logger.debug("adding new widget %r", widget)
-            self.widgets.append(widget)
-        self._set_main_widget(widget, redraw)
+        self.current_buffer = buffer
+        self._set_main_widget(buffer.widget, redraw=redraw)
 
-    def pick_main_widget(self, i):
+    def add_and_display_buffer(self, buffer, redraw=True):
         """
-        pick i-th widget from list and display it
+        add provided buffer to buffer list and display it
 
-        :param i:
+        :param buffer:
         :return:
         """
-        if len(self.widgets) == 1:
+        if buffer not in self.buffers:
+            logger.debug("adding new buffer {!r}".format(buffer))
+            self.buffers.append(buffer)
+        self.display_buffer(buffer, redraw=redraw)
+
+    def pick_and_display_buffer(self, i):
+        """
+        pick i-th buffer from list and display it
+
+        :param i: int
+        :return: None
+        """
+        if len(self.buffers) == 1:
+            # we don't need to display anything
+            # listing is already displayed
             return
         else:
             try:
-                self._set_main_widget(self.widgets[i], True)
+                self.display_buffer(self.buffers[i])
             except IndexError:
                 # i > len
-                self._set_main_widget(self.widgets[0], True)
+                self.display_buffer(self.buffers[0])
 
     @property
-    def current_widget_index(self):
-        return self.widgets.index(self.current_widget)
+    def current_buffer_index(self):
+        return self.buffers.index(self.current_buffer)
 
-    @property
-    def current_widget(self):
-        return self.mainframe.get_body()
-
-    def remove_current_widget(self):
+    def remove_current_buffer(self):
         # don't allow removing main_list
-        if self.current_widget == self.main_list:
+        if isinstance(self.current_buffer, MainListBuffer):
             logger.warning("you can't remove main list widget")
             return
-        self.widgets.remove(self.current_widget)
-        destroy_method = getattr(self.current_widget, "destroy", None)
-        if destroy_method:
-            destroy_method()
+        self.buffers.remove(self.current_buffer)
+        self.current_buffer.destroy()
         # FIXME: we should display last displayed widget here
-        self._set_main_widget(self.main_list, True)
+        self.display_buffer(self.buffers[0], True)
 
     def unhandled_input(self, key):
         logger.debug("got %r", key)
         if key in ('q', 'Q'):
             raise urwid.ExitMainLoop()
         elif key == "p":
-            self.pick_main_widget(self.current_widget_index - 1)
+            self.pick_and_display_buffer(self.current_buffer_index - 1)
         elif key == "n":
-            self.pick_main_widget(self.current_widget_index + 1)
+            self.pick_and_display_buffer(self.current_buffer_index + 1)
         elif key == "x":
-            self.remove_current_widget()
+            self.remove_current_buffer()
 
     def run(self):
-        self.add_and_set_main_widget(self.main_list, redraw=False)
+        main_list = MainListBuffer(self.d, self)
+        self.add_and_display_buffer(main_list, redraw=False)
         super().run()
+
+    def display_logs(self, docker_container):
+        self.add_and_display_buffer(LogsBuffer(docker_container, self))
+
+    def inspect(self, docker_object):
+        self.add_and_display_buffer(InspectBuffer(docker_object))
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
@@ -112,9 +127,14 @@ class UI(urwid.MainLoop):
             all_containers=len(self.d.containers(cached=True, sort_by_time=False)),
             running_containers=len(self.d.containers(cached=True, sort_by_time=False,
                                                      stopped=False)),
-            buffers=len(self.widgets),
         )
-        righttxt = "Buffers: {buffers}".format(buffers=len(self.widgets))
+        t = []
+        for idx, buffer in enumerate(self.buffers):
+            fmt = "[{}] {}"
+            if buffer == self.current_buffer:
+                fmt += "*"
+            t.append(fmt.format(idx, buffer.display_name))
+        righttxt = " ".join(t)
 
         footerleft = urwid.Text(lefttxt, align='left')
 

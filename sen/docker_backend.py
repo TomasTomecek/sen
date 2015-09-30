@@ -1,6 +1,8 @@
 import copy
+import json
 import logging
 import datetime
+import _json
 
 import docker
 import humanize
@@ -110,7 +112,13 @@ class DockerObject:
     def display_time_created(self):
         return humanize.naturaltime(self.created)
 
-    
+    def inspect(self):
+        raise NotImplementedError()
+
+    def display_inspect(self):
+        return json.dumps(self.inspect(), indent=2)
+
+
 def graceful_chain_get(d, *args):
     if not d:
         return None

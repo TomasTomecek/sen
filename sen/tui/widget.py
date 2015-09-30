@@ -172,7 +172,7 @@ class AsyncScrollableListBox(urwid.ListBox):
                 logger.debug("log line emitted: %r", line)
                 walker.append(urwid.Text(("text", line.strip()), align="left", wrap="any"))
                 walker.set_focus(len(walker) - 1)
-                ui.add_and_set_main_widget(self, True)
+                ui.refresh()
 
         self.stop = threading.Event()
         self.thread = threading.Thread(target=fetch_logs, daemon=True)
@@ -180,6 +180,7 @@ class AsyncScrollableListBox(urwid.ListBox):
 
     def destroy(self):
         self.stop.set()
+
 
 class MainListBox(urwid.ListBox):
     def __init__(self, docker_backend, ui):
@@ -210,15 +211,10 @@ class MainListBox(urwid.ListBox):
     def keypress(self, size, key):
         logger.debug("size %r, key %r", size, key)
         if key == "i":
-            inspect_data = self.focused_docker_object.inspect()
-            rendered_json = json.dumps(inspect_data, indent=2)
-            self.ui.add_and_set_main_widget(ScrollableListBox(rendered_json))
+            self.ui.inspect(self.focused_docker_object)
             return
         elif key == "l":
-            if isinstance(self.focused_docker_object, DockerContainer):
-                logs_data, logs_generator = self.focused_docker_object.logs()
-                w = AsyncScrollableListBox(logs_data, logs_generator, self.ui)
-                self.ui.add_and_set_main_widget(w)
+            self.ui.display_logs(self.focused_docker_object)
             return
         elif key == "d":
             self.focused_docker_object.remove()
@@ -226,3 +222,4 @@ class MainListBox(urwid.ListBox):
             return
         key = super(MainListBox, self).keypress(size, key)
         return key
+
