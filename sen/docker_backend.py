@@ -146,7 +146,13 @@ class DockerImage(DockerObject):
             self._names = []
             for t in self.data["RepoTags"]:
                 self._names.append(ImageNameStruct.parse(t))
+            # sort by name length
+            self._names.sort(key=lambda x: len(x.to_str()))
         return self._names
+
+    @property
+    def short_name(self):
+        return self.names[0]
 
     def inspect(self):
         logger.debug("inspect image %r", self.image_id)
@@ -182,6 +188,10 @@ class DockerContainer(DockerObject):
     @property
     def running(self):
         return self.status.startswith("Up")
+
+    @property
+    def short_name(self):
+        return self.name
 
     def inspect(self):
         logger.debug("inspect container %r", self.container_id)
