@@ -1,8 +1,8 @@
 import copy
+import functools
 import json
 import logging
 import datetime
-import _json
 
 import docker
 import humanize
@@ -94,14 +94,41 @@ class ImageNameStruct(object):
             tag=self.tag)
 
 
+def response_time(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        before = datetime.datetime.now()
+        response = func(self, *args, **kwargs)
+        after = datetime.datetime.now()
+        if isinstance(self, DockerBackend):
+            b = self
+        elif isinstance(self, DockerObject):
+            b = self.docker_backend
+        else:
+            raise RuntimeError("wrong instance")
+        b.last_command = func.__name__
+        # we want milliseconds, not seconds
+        b.last_command_took = (after - before).total_seconds() * 1000
+        logger.debug("%s(%s, %s) -> [%f ms]", b.last_command, args, kwargs, b.last_command_took)
+        return response
+    return wrapper
+
+
 class DockerObject:
     """
     Common base for images and containers
     """
-    def __init__(self, data, docker_client):
+    def __init__(self, data, docker_backend):
         self.data = data
-        self.d = docker_client
+        self.docker_backend = docker_backend
         self._created = None
+
+    @property
+    def d(self):
+        """
+        shortcut for instance of Docker client
+        """
+        return self.docker_backend.client
 
     @property
     def created(self):
@@ -162,14 +189,14 @@ class DockerImage(DockerObject):
     def short_name(self):
         return self.names[0]
 
+    @response_time
     def inspect(self):
-        logger.debug("inspect image %r", self.image_id)
         inspect_data = self.d.inspect_image(self.image_id)
         logger.debug(inspect_data)
         return inspect_data
 
+    @response_time
     def remove(self):
-        logger.debug("remove image %r", self.image_id)
         self.d.remove_image(self.image_id)
 
     def __str__(self):
@@ -201,21 +228,38 @@ class DockerContainer(DockerObject):
     def short_name(self):
         return self.name
 
+    @response_time
     def inspect(self):
-        logger.debug("inspect container %r", self.container_id)
         inspect_data = self.d.inspect_container(self.container_id)
         logger.debug(inspect_data)
         return inspect_data
 
+    @response_time
     def logs(self):
-        logger.debug("get logs for container %r", self.container_id)
         logs_data = self.d.logs(self.container_id, stream=False)
         generator = self.d.logs(self.container_id, stream=True, tail=1)
         return logs_data, generator
 
     def remove(self):
-        logger.debug("remove container %r", self.container_id)
         self.d.remove_container(self.container_id)
+
+    def start(self):
+        self.d.start(self.container_id)
+
+    def stop(self):
+        self.d.stop(self.container_id)
+
+    def restart(self):
+        self.d.restart(self.container_id)
+
+    def kill(self):
+        self.d.kill(self.container_id)
+
+    def pause(self):
+        self.d.pause(self.container_id)
+
+    def unpause(self):
+        self.d.unpause(self.container_id)
 
     def __str__(self):
         return "{} ({})".format(self.container_id, self.name)
@@ -230,6 +274,8 @@ class DockerBackend:
         self._client = None
         self._containers = None
         self._images = None
+        self.last_command = ""
+        self.last_command_took = None  # milliseconds
 
     @property
     def client(self):
@@ -237,11 +283,13 @@ class DockerBackend:
             self._client = docker.AutoVersionClient()
         return self._client
 
+    @response_time
     def images(self, cached=True, sort_by_time=True):
         if self._images is None or cached is False:
+            logger.debug("doing images() query")
             self._images = {}
             for i in self.client.images():
-                img = DockerImage(i, self.client)
+                img = DockerImage(i, self)
                 self._images[img.image_id] = img
         if sort_by_time:
             v = list(self._images.values())
@@ -249,11 +297,13 @@ class DockerBackend:
             return v
         return list(self._images.values())
 
+    @response_time
     def containers(self, cached=False, sort_by_time=True, stopped=True):
         if self._containers is None or cached is False:
+            logger.debug("doing containers() query")
             self._containers = {}
             for c in self.client.containers(all=True):
-                container = DockerContainer(c, self.client)
+                container = DockerContainer(c, self)
                 self._containers[container.container_id] = container
         v = list(self._containers.values())
         if stopped is False:

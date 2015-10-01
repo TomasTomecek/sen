@@ -121,13 +121,16 @@ class UI(urwid.MainLoop):
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
-        lefttxt = "Images: {images}, Containers: {all_containers}, Running: {running_containers} ".\
+        lefttxt = ("Images: {images}, Containers: {all_containers},"
+                   " Running: {running_containers}, {last_command}() -> {last_command_took:f} ms".
         format(
+            last_command=self.d.last_command,  # these gotta be first
+            last_command_took=self.d.last_command_took,
             images=len(self.d.images(cached=True, sort_by_time=False)),
             all_containers=len(self.d.containers(cached=True, sort_by_time=False)),
             running_containers=len(self.d.containers(cached=True, sort_by_time=False,
                                                      stopped=False)),
-        )
+        ))
         t = []
         for idx, buffer in enumerate(self.buffers):
             fmt = "[{}] {}"
