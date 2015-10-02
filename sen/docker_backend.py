@@ -97,6 +97,9 @@ class ImageNameStruct(object):
 def response_time(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
+        # cached queries do not access backend -- we don't care about that
+        if kwargs.get("cached", False) is True:
+            return func(self, *args, **kwargs)
         before = datetime.datetime.now()
         response = func(self, *args, **kwargs)
         after = datetime.datetime.now()
@@ -122,6 +125,8 @@ class DockerObject:
         self.data = data
         self.docker_backend = docker_backend
         self._created = None
+        self._inspect = None
+        self._names = None
 
     @property
     def d(self):
@@ -159,11 +164,6 @@ def graceful_chain_get(d, *args):
 
 
 class DockerImage(DockerObject):
-    def __init__(self, data, docker_client):
-        super().__init__(data, docker_client)
-        self._inspect = None
-        self._names = None
-
     @property
     def image_id(self):
         return self.data["Id"]
@@ -190,10 +190,10 @@ class DockerImage(DockerObject):
         return self.names[0]
 
     @response_time
-    def inspect(self):
-        inspect_data = self.d.inspect_image(self.image_id)
-        logger.debug(inspect_data)
-        return inspect_data
+    def inspect(self, cached=False):
+        if cached is False or self._inspect is None:
+            self._inspect = self.d.inspect_image(self.image_id)
+        return self._inspect
 
     @response_time
     def remove(self):
@@ -209,8 +209,14 @@ class DockerContainer(DockerObject):
         return self.data["Id"]
 
     @property
-    def name(self):
-        return self.data["Names"]
+    def names(self):
+        if self._names is None:
+            self._names = []
+            for t in self.data["Names"]:
+                self._names.append(t)
+            # sort by name length
+            self._names.sort(key=lambda x: len(x))
+        return self._names
 
     @property
     def command(self):
@@ -226,13 +232,13 @@ class DockerContainer(DockerObject):
 
     @property
     def short_name(self):
-        return self.name
+        return self.names[0]
 
     @response_time
-    def inspect(self):
-        inspect_data = self.d.inspect_container(self.container_id)
-        logger.debug(inspect_data)
-        return inspect_data
+    def inspect(self, cached=False):
+        if cached is False or self._inspect is None:
+            self._inspect = self.d.inspect_container(self.container_id)
+        return self._inspect
 
     @response_time
     def logs(self):
@@ -262,7 +268,7 @@ class DockerContainer(DockerObject):
         self.d.unpause(self.container_id)
 
     def __str__(self):
-        return "{} ({})".format(self.container_id, self.name)
+        return "{} ({})".format(self.container_id, self.short_name)
 
 
 class DockerBackend:

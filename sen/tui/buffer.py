@@ -31,6 +31,10 @@ class MainListBuffer(Buffer):
     def __init__(self, docker_backend, ui):
         self.widget = MainListBox(docker_backend, ui)
         super().__init__()
+        self.refresh()
+
+    def refresh(self):
+        self.widget.populate()
 
 
 class LogsBuffer(Buffer):

@@ -1,12 +1,11 @@
 import datetime
-import json
 import logging
 import threading
 
 import urwid
 
-from sen.tui.constants import PALLETE, MAIN_LIST_FOCUS
-from sen.docker_backend import DockerBackend, DockerImage, DockerContainer
+from sen.tui.constants import MAIN_LIST_FOCUS
+from sen.docker_backend import DockerImage, DockerContainer
 
 
 logger = logging.getLogger(__name__)
@@ -73,30 +72,32 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(fourth)
             columns.append((self.FOURTH_COL, fourth))
 
-            names_markup = []
+            names_widgets = []
+
+            def add_subwidget(markup, color_attr):
+                w = AdHocAttrMap(urwid.Text(markup), get_map(color_attr))
+                names_widgets.append((len(markup), w))
+                self.widgets.append(w)
+
             for n in o.names:
-                logger.debug(n)
                 if n.registry:
-                    names_markup.append(("main_list_dg", n.registry + "/"))
+                    add_subwidget(n.registry + "/", "main_list_dg")
                 if n.namespace and n.repo:
-                    names_markup.append(("main_list_lg", n.namespace + "/" + n.repo))
+                    add_subwidget(n.namespace + "/" + n.repo, "main_list_lg")
                 else:
                     if n.repo == "<none>":
-                        names_markup.append(("main_list_dg", n.repo))
+                        add_subwidget(n.repo, "main_list_dg")
                     else:
-                        names_markup.append(("main_list_lg", n.repo))
+                        add_subwidget(n.repo, "main_list_lg")
                 if n.tag:
-                    if n.tag in ["<none>", "latest"]:
-                        logger.debug("not displaying tag %r for image %s", n.tag, n)
-                    else:
-                        names_markup.append(("main_list_lg", ":" + n.tag))
-                names_markup.append(("main_list_dg", ", "))
-            names_markup = names_markup[:-1]
-            names = AdHocAttrMap(urwid.Text(names_markup, wrap="clip"), get_map())
+                    if n.tag not in ["<none>", "latest"]:
+                        add_subwidget(n.tag, "main_list_lg")
+                add_subwidget(", ", "main_list_dg")
+            names_widgets = names_widgets[:-1]
+            names = AdHocAttrMap(urwid.Columns(names_widgets), get_map())
+            logger.debug(names)
             self.widgets.append(names)
             columns.append(names)
-
-            self.widgets = [image_id, names, time]
 
         elif isinstance(o, DockerContainer):
             container_id = AdHocAttrMap(urwid.Text(o.container_id[:12]), get_map())
@@ -123,7 +124,7 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(status)
             columns.append((self.FOURTH_COL, status))
 
-            name = AdHocAttrMap(urwid.Text(o.name, wrap="clip"), get_map())
+            name = AdHocAttrMap(urwid.Text(o.short_name, wrap="clip"), get_map())
             self.widgets.append(name)
             columns.append(name)
 
@@ -165,6 +166,7 @@ class AsyncScrollableListBox(urwid.ListBox):
                 self.log_texts.append(urwid.Text(("text", log_entry), align="left", wrap="any"))
         walker = urwid.SimpleFocusListWalker(self.log_texts)
         super(AsyncScrollableListBox, self).__init__(walker)
+
         def fetch_logs():
             for line in generator:
                 if self.stop.is_set():
@@ -186,16 +188,12 @@ class MainListBox(urwid.ListBox):
     def __init__(self, docker_backend, ui):
         self.d = docker_backend
         self.ui = ui
-        self.walker = None
-        self.populate()
+        self.walker = urwid.SimpleFocusListWalker([])
         super(MainListBox, self).__init__(self.walker)
 
     def populate(self):
         widgets = self._assemble_initial_content()
-        if self.walker:
-            self.walker[:] = widgets
-        else:
-            self.walker = urwid.SimpleFocusListWalker(widgets)
+        self.walker[:] = widgets
 
     def _assemble_initial_content(self):
         widgets = []
@@ -218,8 +216,7 @@ class MainListBox(urwid.ListBox):
             return
         elif key == "d":
             self.focused_docker_object.remove()
-            self.populate()
+            self.ui.refresh_main_buffer()
             return
         key = super(MainListBox, self).keypress(size, key)
         return key
-

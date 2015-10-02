@@ -17,6 +17,7 @@ class UI(urwid.MainLoop):
         # root widget
         self.mainframe = urwid.Frame(urwid.SolidFill())
         root_widget = urwid.AttrMap(self.mainframe, "root")
+        self.main_list_buffer = None  # singleton
 
         screen = urwid.raw_display.Screen()
         screen.set_terminal_properties(256)
@@ -47,7 +48,7 @@ class UI(urwid.MainLoop):
         """
         display provided buffer
 
-        :param buffer:
+        :param buffer: Buffer
         :return:
         """
         self.current_buffer = buffer
@@ -109,8 +110,8 @@ class UI(urwid.MainLoop):
             self.remove_current_buffer()
 
     def run(self):
-        main_list = MainListBuffer(self.d, self)
-        self.add_and_display_buffer(main_list, redraw=False)
+        self.main_list_buffer = MainListBuffer(self.d, self)
+        self.add_and_display_buffer(self.main_list_buffer, redraw=False)
         super().run()
 
     def display_logs(self, docker_container):
@@ -118,6 +119,11 @@ class UI(urwid.MainLoop):
 
     def inspect(self, docker_object):
         self.add_and_display_buffer(InspectBuffer(docker_object))
+
+    def refresh_main_buffer(self):
+        assert self.main_list_buffer is not None
+        self.main_list_buffer.refresh()
+        self.display_buffer(self.main_list_buffer)
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
@@ -141,8 +147,8 @@ class UI(urwid.MainLoop):
 
         footerleft = urwid.Text(lefttxt, align='left')
 
-        footerright = urwid.Text(righttxt, align='right')
+        footerright = urwid.Text(righttxt, align='right', wrap="clip")
         columns = urwid.Columns([
             footerleft,
-            ('fixed', len(righttxt), footerright)])
+            footerright])
         return urwid.AttrMap(columns, "default")
