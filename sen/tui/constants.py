@@ -7,6 +7,7 @@ PALLETE = [
     (MAIN_LIST_FOCUS, 'default', 'brown', "default", "white", "#da0"),
     ('main_list_lg', 'light gray', 'default', "default", "g100", "default"),
     ('main_list_dg', 'dark gray', 'default', "default", "g78", "default"),
+    ('main_list_ddg', 'dark gray', 'default', "default", "g56", "default"),
     ('main_list_white', 'white', 'default', "default", "white", "default"),
     ('main_list_green', 'dark green', 'default', "default", "#0f0", "default"),
     ('main_list_yellow', 'brown', 'default', "default", "#ff0", "default"),

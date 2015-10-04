@@ -158,7 +158,7 @@ def graceful_chain_get(d, *args):
     for arg in args:
         try:
             t = t[arg]
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, TypeError):
             return None
     return t
 
@@ -170,7 +170,7 @@ class DockerImage(DockerObject):
 
     @property
     def command(self):
-        cmd = graceful_chain_get(self.data, "Config", "Cmd")
+        cmd = graceful_chain_get(self.inspect(cached=True), "Config", "Cmd")
         if cmd:
             return " ".join(cmd)
         return ""

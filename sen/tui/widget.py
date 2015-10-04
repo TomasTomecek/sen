@@ -60,7 +60,7 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(image_id)
             columns.append((self.FIRST_COL, image_id))
 
-            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"), get_map())
+            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"), get_map(defult="main_list_ddg"))
             self.widgets.append(command)
             columns.append(command)
 
@@ -104,7 +104,7 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(container_id)
             columns.append((12, container_id))
 
-            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"), get_map())
+            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"), get_map(defult="main_list_ddg"))
             self.widgets.append(command)
             columns.append(command)
 
