@@ -121,7 +121,8 @@ class DockerObject:
     """
     Common base for images and containers
     """
-    def __init__(self, data, docker_backend):
+    def __init__(self, data, docker_backend, object_id=None):
+        self._id = object_id
         self.data = data
         self.docker_backend = docker_backend
         self._created = None
@@ -166,7 +167,26 @@ def graceful_chain_get(d, *args):
 class DockerImage(DockerObject):
     @property
     def image_id(self):
-        return self.data["Id"]
+        if self._id is None:
+            try:
+                self._id = self.data["Id"]
+            except KeyError:
+                raise RuntimeError("initial data not specified")
+        return self._id
+
+    @property
+    def parent_id(self):
+        if self.data:
+            return self.data.get("ParentId", None)
+        else:
+            return self.inspect(cached=True).get("Parent", None)
+
+    @property
+    def parent_image(self):
+        parent_id = self.parent_id
+        if parent_id:
+            return DockerImage(None, self.docker_backend, object_id=parent_id)
+        raise RuntimeError("{} has no parent".format(self))
 
     @property
     def command(self):
@@ -179,6 +199,8 @@ class DockerImage(DockerObject):
     def names(self):
         if self._names is None:
             self._names = []
+            if self.data is None:
+                return self._names
             for t in self.data["RepoTags"]:
                 self._names.append(ImageNameStruct.parse(t))
             # sort by name length
@@ -187,7 +209,23 @@ class DockerImage(DockerObject):
 
     @property
     def short_name(self):
-        return self.names[0]
+        try:
+            return self.names[0]
+        except IndexError:
+            return self.image_id[:12]
+
+    def base_image(self):
+        child_image = self
+        while True:
+            parent_image = self.docker_backend.get_image_by_id(child_image.parent_id)
+            if parent_image is None:
+                try:
+                    child_image = child_image.parent_image
+                except RuntimeError:
+                    logger.info("no base image for %s", self)
+                    return None
+            else:
+                return parent_image
 
     @response_time
     def inspect(self, cached=False):
@@ -233,6 +271,9 @@ class DockerContainer(DockerObject):
     @property
     def short_name(self):
         return self.names[0]
+
+    def image_name(self):
+        return self.data["Image"]
 
     @response_time
     def inspect(self, cached=False):
@@ -317,6 +358,10 @@ class DockerBackend:
         if sort_by_time:
             v.sort(key=lambda x: x.time_created, reverse=True)
         return v
+
+    def get_image_by_id(self, image_id):
+        # self._images or self.images(cached=True, sort_by_time=False)
+        return self._images.get(image_id, None)
 
     def initial_content(self):
         content = self.images(sort_by_time=False) + self.containers(sort_by_time=False)

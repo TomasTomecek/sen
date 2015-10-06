@@ -64,13 +64,17 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(command)
             columns.append(command)
 
+            base_image = o.base_image()
+            base_image_text = ""
+            if base_image:
+                base_image_text = base_image.short_name.to_str()
+            base_image_w = AdHocAttrMap(urwid.Text(base_image_text, wrap="clip"), get_map())
+            self.widgets.append(base_image_w)
+            columns.append((self.THIRD_COL, base_image_w))
+
             time = AdHocAttrMap(urwid.Text(o.display_time_created()), get_time_attr_map(o.created))
             self.widgets.append(time)
-            columns.append((self.THIRD_COL, time))
-
-            fourth = AdHocAttrMap(urwid.Text(" "), get_map())
-            self.widgets.append(fourth)
-            columns.append((self.FOURTH_COL, fourth))
+            columns.append((self.FOURTH_COL, time))
 
             names_widgets = []
 
@@ -108,9 +112,9 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(command)
             columns.append(command)
 
-            time = AdHocAttrMap(urwid.Text(o.display_time_created()), get_time_attr_map(o.created))
-            self.widgets.append(time)
-            columns.append((self.THIRD_COL, time))
+            image = AdHocAttrMap(urwid.Text(o.image_name()), get_map())
+            self.widgets.append(image)
+            columns.append((self.THIRD_COL, image))
 
             if o.status.startswith("Up"):
                 attr_map = get_map("main_list_green")
