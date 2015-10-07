@@ -1,6 +1,6 @@
 import logging
 
-from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer
+from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
 from sen.tui.constants import PALLETE
 from sen.docker_backend import DockerBackend
 
@@ -108,6 +108,8 @@ class UI(urwid.MainLoop):
             self.pick_and_display_buffer(self.current_buffer_index + 1)
         elif key == "x":
             self.remove_current_buffer()
+        elif key in ["h", "?"]:
+            self.display_help()
 
     def run(self):
         self.main_list_buffer = MainListBuffer(self.d, self)
@@ -124,6 +126,9 @@ class UI(urwid.MainLoop):
         assert self.main_list_buffer is not None
         self.main_list_buffer.refresh()
         self.display_buffer(self.main_list_buffer)
+
+    def display_help(self):
+        self.add_and_display_buffer(HelpBuffer())
 
     def build_statusbar(self):
         """construct and return statusbar widget"""

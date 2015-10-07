@@ -17,3 +17,24 @@ PALLETE = [
     #("image_names", "light red", "default"),
     #('root', "light gray", "default"),
 ]
+
+HELP_TEXT = """\
+# Keybindings
+
+## Listing
+
+p   previous buffer
+n   next buffer
+x   remove buffer
+
+### Image
+
+i   inspect image
+d   remove image (irreversible!)
+
+### Container
+
+i   inspect container
+l   display logs of container
+d   remove container (irreversible!)
+"""

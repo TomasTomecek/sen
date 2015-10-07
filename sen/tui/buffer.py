@@ -1,5 +1,6 @@
 import logging
 from sen.docker_backend import DockerContainer
+from sen.tui.constants import HELP_TEXT
 from sen.tui.widget import AsyncScrollableListBox, MainListBox, ScrollableListBox
 
 logger = logging.getLogger(__name__)
@@ -62,4 +63,13 @@ class InspectBuffer(Buffer):
         inspect_data = docker_object.display_inspect()
         self.widget = ScrollableListBox(inspect_data)
         self.display_name = "{} inspect".format(docker_object.short_name)
+        super().__init__()
+
+
+class HelpBuffer(Buffer):
+    def __init__(self):
+        """
+        """
+        self.widget = ScrollableListBox(HELP_TEXT)
+        self.display_name = "[H]"
         super().__init__()
