@@ -95,7 +95,7 @@ class MainLineWidget(urwid.AttrMap):
                         add_subwidget(n.repo, "main_list_lg")
                 if n.tag:
                     if n.tag not in ["<none>", "latest"]:
-                        add_subwidget(n.tag, "main_list_lg")
+                        add_subwidget(":" + n.tag, "main_list_dg")
                 add_subwidget(", ", "main_list_dg")
             names_widgets = names_widgets[:-1]
             names = AdHocAttrMap(urwid.Columns(names_widgets), get_map())
