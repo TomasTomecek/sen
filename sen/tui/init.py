@@ -132,10 +132,9 @@ class UI(urwid.MainLoop):
         format(
             last_command=self.d.last_command,  # these gotta be first
             last_command_took=self.d.last_command_took,
-            images=len(self.d.images(cached=True, sort_by_time=False)),
-            all_containers=len(self.d.containers(cached=True, sort_by_time=False)),
-            running_containers=len(self.d.containers(cached=True, sort_by_time=False,
-                                                     stopped=False)),
+            images=len(self.d.images),
+            all_containers=len(self.d.containers),
+            running_containers=len(self.d.sorted_containers(sort_by_time=False, stopped=False)),
         ))
         t = []
         for idx, buffer in enumerate(self.buffers):

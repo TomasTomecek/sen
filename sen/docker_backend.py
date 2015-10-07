@@ -123,7 +123,7 @@ class DockerObject:
     """
     def __init__(self, data, docker_backend, object_id=None):
         self._id = object_id
-        self.data = data
+        self.data = data  # `client.containers` or `client.images`
         self.docker_backend = docker_backend
         self._created = None
         self._inspect = None
@@ -250,7 +250,7 @@ class DockerContainer(DockerObject):
     def names(self):
         if self._names is None:
             self._names = []
-            for t in self.data["Names"]:
+            for t in self.data["Names"] or []:
                 self._names.append(t)
             # sort by name length
             self._names.sort(key=lambda x: len(x))
@@ -270,10 +270,18 @@ class DockerContainer(DockerObject):
 
     @property
     def short_name(self):
-        return self.names[0]
+        try:
+            return self.names[0]
+        except IndexError:
+            return self.container_id[:12]
 
     def image_name(self):
-        return self.data["Image"]
+        image_name = self.data["Image"]
+        image = self.docker_backend.get_image_by_id(image_name)
+        if image is not None:
+            return image.short_name.to_str()
+        else:
+            return image_name[:12]
 
     @response_time
     def inspect(self, cached=False):
@@ -324,46 +332,72 @@ class DockerBackend:
         self.last_command = ""
         self.last_command_took = None  # milliseconds
 
+    # lazy properties
+
     @property
     def client(self):
         if self._client is None:
             self._client = docker.AutoVersionClient()
         return self._client
 
-    @response_time
-    def images(self, cached=True, sort_by_time=True):
-        if self._images is None or cached is False:
-            logger.debug("doing images() query")
-            self._images = {}
-            for i in self.client.images():
-                img = DockerImage(i, self)
-                self._images[img.image_id] = img
-        if sort_by_time:
-            v = list(self._images.values())
-            v.sort(key=lambda x: x.time_created, reverse=True)
-            return v
-        return list(self._images.values())
+    @property
+    def images(self):
+        if self._images is None:
+            self.get_images()
+        return self._images
+
+    @property
+    def containers(self):
+        if self._containers is None:
+            self.get_containers()
+        return self._containers
+
+    # backend queries
 
     @response_time
-    def containers(self, cached=False, sort_by_time=True, stopped=True):
-        if self._containers is None or cached is False:
-            logger.debug("doing containers() query")
-            self._containers = {}
-            for c in self.client.containers(all=True):
-                container = DockerContainer(c, self)
-                self._containers[container.container_id] = container
-        v = list(self._containers.values())
+    def get_images(self, return_list=True):
+        logger.debug("doing images() query")
+        self._images = {}
+        for i in self.client.images():
+            img = DockerImage(i, self)
+            self._images[img.image_id] = img
+        if return_list:
+            return list(self._images.values())
+        else:
+            return self._images
+
+    def sorted_images(self, sort_by_time=False):
+        v = list(self.images.values())
+        if sort_by_time:
+            v.sort(key=lambda x: x.time_created, reverse=True)
+        return v
+
+    @response_time
+    def get_containers(self, return_list=True):
+        logger.debug("doing containers() query")
+        self._containers = {}
+        for c in self.client.containers(all=True):
+            container = DockerContainer(c, self)
+            self._containers[container.container_id] = container
+        if return_list:
+            return list(self._containers.values())
+        else:
+            return self._containers
+
+    def sorted_containers(self, sort_by_time=False, stopped=True):
+        v = list(self.containers.values())
         if stopped is False:
             v = [x for x in v if x.running]
         if sort_by_time:
             v.sort(key=lambda x: x.time_created, reverse=True)
         return v
 
+    # service methods
+
     def get_image_by_id(self, image_id):
-        # self._images or self.images(cached=True, sort_by_time=False)
         return self._images.get(image_id, None)
 
     def initial_content(self):
-        content = self.images(sort_by_time=False) + self.containers(sort_by_time=False)
+        content = self.get_containers() + self.get_images()
         content.sort(key=lambda x: x.created, reverse=True)
         return content
