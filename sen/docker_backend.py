@@ -290,10 +290,10 @@ class DockerContainer(DockerObject):
         return self._inspect
 
     @response_time
-    def logs(self):
-        logs_data = self.d.logs(self.container_id, stream=False)
-        generator = self.d.logs(self.container_id, stream=True, tail=1)
-        return logs_data, generator
+    def logs(self, follow=False):
+        # when tail is set to all, it takes ages to populate widget
+        logs_data = self.d.logs(self.container_id, stream=follow, tail=16)
+        return logs_data
 
     def remove(self):
         self.d.remove_container(self.container_id)

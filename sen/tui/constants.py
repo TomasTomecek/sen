@@ -36,5 +36,6 @@ d   remove image (irreversible!)
 
 i   inspect container
 l   display logs of container
+f   follow logs of container
 d   remove container (irreversible!)
 """

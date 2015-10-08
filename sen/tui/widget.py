@@ -162,12 +162,13 @@ class ScrollableListBox(urwid.ListBox):
 
 
 class AsyncScrollableListBox(urwid.ListBox):
-    def __init__(self, static_data, generator, ui):
+    def __init__(self, generator, ui, static_data=None):
         self.log_texts = []
-        for d in static_data.decode("utf-8").split("\n"):
-            log_entry = d.strip()
-            if log_entry:
-                self.log_texts.append(urwid.Text(("text", log_entry), align="left", wrap="any"))
+        if static_data:
+            for d in static_data.decode("utf-8").split("\n"):
+                log_entry = d.strip()
+                if log_entry:
+                    self.log_texts.append(urwid.Text(("text", log_entry), align="left", wrap="any"))
         walker = urwid.SimpleFocusListWalker(self.log_texts)
         super(AsyncScrollableListBox, self).__init__(walker)
 
@@ -217,6 +218,9 @@ class MainListBox(urwid.ListBox):
             return
         elif key == "l":
             self.ui.display_logs(self.focused_docker_object)
+            return
+        elif key == "f":
+            self.ui.display_and_follow_logs(self.focused_docker_object)
             return
         elif key == "d":
             self.focused_docker_object.remove()

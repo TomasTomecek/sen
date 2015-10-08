@@ -39,16 +39,20 @@ class MainListBuffer(Buffer):
 
 
 class LogsBuffer(Buffer):
-    def __init__(self, docker_object, ui):
+    def __init__(self, docker_object, ui, follow=False):
         """
 
         :param docker_object: container to display logs
         :param ui: ui object so we refresh
         """
-        self.display_name = "{} logs".format(docker_object.short_name)
+        self.display_name = "[{}] {}".format("F" if follow else "L", docker_object.short_name)
         if isinstance(docker_object, DockerContainer):
-            logs_data, logs_generator = docker_object.logs()
-            self.widget = AsyncScrollableListBox(logs_data, logs_generator, ui)
+            if follow:
+                logs_generator = docker_object.logs(follow=follow)
+                self.widget = AsyncScrollableListBox(logs_generator, ui)
+            else:
+                logs_data = docker_object.logs(follow=follow)
+                self.widget = ScrollableListBox(logs_data)
         else:
             raise Exception("Only containers have logs.")
         super().__init__()

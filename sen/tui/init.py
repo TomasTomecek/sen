@@ -119,6 +119,9 @@ class UI(urwid.MainLoop):
     def display_logs(self, docker_container):
         self.add_and_display_buffer(LogsBuffer(docker_container, self))
 
+    def display_and_follow_logs(self, docker_container):
+        self.add_and_display_buffer(LogsBuffer(docker_container, self, follow=True))
+
     def inspect(self, docker_object):
         self.add_and_display_buffer(InspectBuffer(docker_object))
 
