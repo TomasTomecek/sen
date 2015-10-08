@@ -214,6 +214,16 @@ class MainListBox(urwid.ListBox):
         return self.get_focus()[0].docker_object
 
     def keypress(self, size, key):
+        def run_and_report_on_fail(f):
+            try:
+                f()
+            except AttributeError:
+                self.ui.notify("you can't {} {}".format(f.__name__, self.focused_docker_object),
+                               level="error")
+            except Exception as ex:
+                self.ui.notify(str(ex), level="error")
+            self.ui.refresh_main_buffer()
+
         logger.debug("size %r, key %r", size, key)
         if key == "i":
             self.ui.inspect(self.focused_docker_object)
@@ -225,28 +235,22 @@ class MainListBox(urwid.ListBox):
             self.ui.display_and_follow_logs(self.focused_docker_object)
             return
         elif key == "d":
-            self.focused_docker_object.remove()
-            self.ui.refresh_main_buffer()
+            run_and_report_on_fail(self.focused_docker_object.remove)
             return
         elif key == "s":
-            self.focused_docker_object.start()
-            self.ui.refresh_main_buffer()
+            run_and_report_on_fail(self.focused_docker_object.start)
             return
         elif key == "t":
-            self.focused_docker_object.stop()
-            self.ui.refresh_main_buffer()
+            run_and_report_on_fail(self.focused_docker_object.stop)
             return
         elif key == "p":
-            self.focused_docker_object.pause()
-            self.ui.refresh_main_buffer()
+            run_and_report_on_fail(self.focused_docker_object.pause)
             return
         elif key == "u":
-            self.focused_docker_object.unpause()
-            self.ui.refresh_main_buffer()
+            run_and_report_on_fail(self.focused_docker_object.unpause)
             return
         elif key == "X":
-            self.focused_docker_object.kill()
-            self.ui.refresh_main_buffer()
+            run_and_report_on_fail(self.focused_docker_object.kill)
             return
         key = super(MainListBox, self).keypress(size, key)
         return key
