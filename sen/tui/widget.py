@@ -199,6 +199,7 @@ class MainListBox(urwid.ListBox):
     def populate(self):
         widgets = self._assemble_initial_content()
         self.walker[:] = widgets
+        self.set_focus(0)
 
     def _assemble_initial_content(self):
         widgets = []
