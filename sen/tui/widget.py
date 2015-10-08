@@ -252,5 +252,9 @@ class MainListBox(urwid.ListBox):
         elif key == "X":
             run_and_report_on_fail(self.focused_docker_object.kill)
             return
+        elif key == "j":
+            return super().keypress(size, "down")
+        elif key == "k":
+            return super().keypress(size, "up")
         key = super(MainListBox, self).keypress(size, key)
         return key
