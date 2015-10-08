@@ -32,10 +32,10 @@ class MainListBuffer(Buffer):
     def __init__(self, docker_backend, ui):
         self.widget = MainListBox(docker_backend, ui)
         super().__init__()
-        self.refresh()
+        self.refresh(focus_on_top=True)
 
-    def refresh(self):
-        self.widget.populate()
+    def refresh(self, focus_on_top=False):
+        self.widget.populate(focus_on_top=focus_on_top)
 
 
 class LogsBuffer(Buffer):

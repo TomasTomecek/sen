@@ -196,10 +196,11 @@ class MainListBox(urwid.ListBox):
         self.walker = urwid.SimpleFocusListWalker([])
         super(MainListBox, self).__init__(self.walker)
 
-    def populate(self):
+    def populate(self, focus_on_top=False):
         widgets = self._assemble_initial_content()
         self.walker[:] = widgets
-        self.set_focus(0)
+        if focus_on_top:
+            self.set_focus(0)
 
     def _assemble_initial_content(self):
         widgets = []
