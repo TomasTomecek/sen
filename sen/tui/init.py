@@ -16,6 +16,8 @@ class UI(urwid.MainLoop):
 
         # root widget
         self.mainframe = urwid.Frame(urwid.SolidFill())
+        self.status_bar = None
+        self.notif_bar = None
         root_widget = urwid.AttrMap(self.mainframe, "root")
         self.main_list_buffer = None  # singleton
 
@@ -39,7 +41,12 @@ class UI(urwid.MainLoop):
         :return:
         """
         self.mainframe.set_body(widget)
-        self.mainframe.set_footer(self.build_statusbar())
+        bottom = []
+        if self.notif_bar:
+            bottom.append(self.notif_bar)
+        self.status_bar = self.build_statusbar()
+        bottom.append(self.status_bar)
+        self.mainframe.set_footer(urwid.Pile(bottom))
         if redraw:
             logger.debug("redraw main widget")
             self.refresh()
@@ -159,3 +166,33 @@ class UI(urwid.MainLoop):
             footerleft,
             footerright])
         return urwid.AttrMap(columns, "default")
+
+    def notify(self, message, level="info"):
+        """
+        :param level: str, {info, error}
+
+        opens notification popup.
+        """
+        msgs = [urwid.AttrMap(urwid.Text(message), "notif_{}".format(level))]
+
+        # stack errors, don't overwrite them
+        if not self.notif_bar:
+            self.notif_bar = urwid.Pile(msgs)
+        else:
+            newpile = self.notif_bar.widget_list + msgs
+            self.notif_bar = urwid.Pile(newpile)
+
+        self.refresh_main_buffer()
+
+        def clear(*args):
+            newpile = self.notif_bar.widget_list
+            for l in msgs:
+                if l in newpile:
+                    newpile.remove(l)
+            if newpile:
+                self.notif_bar = urwid.Pile(newpile)
+            else:
+                self.notif_bar = None
+            self.refresh_main_buffer()
+
+        self.set_alarm_in(10, clear)

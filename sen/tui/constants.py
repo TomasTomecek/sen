@@ -14,6 +14,8 @@ PALLETE = [
     ('main_list_orange', 'light red', 'default', "default", "#f60", "default"),
     ('main_list_red', 'dark red', 'default', "default", "#f00", "default"),
     ('image_names', 'light magenta', 'default', "default", "#F0F", "default"),
+    ('notif_error', "white", 'dark red', "default", "white", "#f00",),
+    ('notif_info', 'white', 'default', "default", "white", "default"),
     #("image_names", "light red", "default"),
     #('root', "light gray", "default"),
 ]
