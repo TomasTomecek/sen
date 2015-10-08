@@ -102,7 +102,7 @@ class UI(urwid.MainLoop):
         logger.debug("got %r", key)
         if key in ('q', 'Q'):
             raise urwid.ExitMainLoop()
-        elif key == "p":
+        elif key == "N":
             self.pick_and_display_buffer(self.current_buffer_index - 1)
         elif key == "n":
             self.pick_and_display_buffer(self.current_buffer_index + 1)

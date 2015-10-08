@@ -23,7 +23,7 @@ HELP_TEXT = """\
 
 ## Listing
 
-p   previous buffer
+N   previous buffer
 n   next buffer
 x   remove buffer
 
@@ -38,4 +38,9 @@ i   inspect container
 l   display logs of container
 f   follow logs of container
 d   remove container (irreversible!)
+s   stop container
+t   start container
+p   pause container
+u   unpause container
+X   kill container
 """

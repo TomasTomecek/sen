@@ -295,24 +295,31 @@ class DockerContainer(DockerObject):
         logs_data = self.d.logs(self.container_id, stream=follow, tail=16)
         return logs_data
 
+    @response_time
     def remove(self):
         self.d.remove_container(self.container_id)
 
+    @response_time
     def start(self):
         self.d.start(self.container_id)
 
+    @response_time
     def stop(self):
         self.d.stop(self.container_id)
 
+    @response_time
     def restart(self):
         self.d.restart(self.container_id)
 
+    @response_time
     def kill(self):
         self.d.kill(self.container_id)
 
+    @response_time
     def pause(self):
         self.d.pause(self.container_id)
 
+    @response_time
     def unpause(self):
         self.d.unpause(self.container_id)
 

@@ -226,5 +226,25 @@ class MainListBox(urwid.ListBox):
             self.focused_docker_object.remove()
             self.ui.refresh_main_buffer()
             return
+        elif key == "s":
+            self.focused_docker_object.start()
+            self.ui.refresh_main_buffer()
+            return
+        elif key == "t":
+            self.focused_docker_object.stop()
+            self.ui.refresh_main_buffer()
+            return
+        elif key == "p":
+            self.focused_docker_object.pause()
+            self.ui.refresh_main_buffer()
+            return
+        elif key == "u":
+            self.focused_docker_object.unpause()
+            self.ui.refresh_main_buffer()
+            return
+        elif key == "X":
+            self.focused_docker_object.kill()
+            self.ui.refresh_main_buffer()
+            return
         key = super(MainListBox, self).keypress(size, key)
         return key
