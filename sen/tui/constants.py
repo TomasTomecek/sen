@@ -23,19 +23,19 @@ PALLETE = [
 HELP_TEXT = """\
 # Keybindings
 
-## Listing
+## Global
 
 N      previous buffer
 n      next buffer
 x      remove buffer
 h, ?   show help
 
-## Image
+## Image commands in listing
 
 i      inspect image
 d      remove image (irreversible!)
 
-## Container
+## Container commands in listing
 
 i      inspect container
 l      display logs of container
