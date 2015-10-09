@@ -25,24 +25,25 @@ HELP_TEXT = """\
 
 ## Listing
 
-N   previous buffer
-n   next buffer
-x   remove buffer
+N      previous buffer
+n      next buffer
+x      remove buffer
+h, ?   show help
 
-### Image
+## Image
 
-i   inspect image
-d   remove image (irreversible!)
+i      inspect image
+d      remove image (irreversible!)
 
-### Container
+## Container
 
-i   inspect container
-l   display logs of container
-f   follow logs of container
-d   remove container (irreversible!)
-s   stop container
-t   start container
-p   pause container
-u   unpause container
-X   kill container
+i      inspect container
+l      display logs of container
+f      follow logs of container
+d      remove container (irreversible!)
+s      stop container
+t      start container
+p      pause container
+u      unpause container
+X      kill container
 """
