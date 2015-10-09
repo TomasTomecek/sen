@@ -26,18 +26,23 @@ $ sen
 
 ## Listing
 
+```
 N      previous buffer
 n      next buffer
 x      remove buffer
 h, ?   show help
+```
 
 ## Image
 
+```
 i      inspect image
 d      remove image (irreversible!)
+```
 
 ## Container
 
+```
 i      inspect container
 l      display logs of container
 f      follow logs of container
@@ -47,3 +52,4 @@ t      start container
 p      pause container
 u      unpause container
 X      kill container
+```
