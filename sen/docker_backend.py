@@ -142,6 +142,13 @@ class DockerObject:
             self._created = datetime.datetime.fromtimestamp(self.data["Created"])
         return self._created
 
+    def set_id(self):
+        if self._id is None:
+            try:
+                self._id = self.data["Id"]
+            except KeyError:
+                raise RuntimeError("initial data not specified")
+
     def display_time_created(self):
         return humanize.naturaltime(self.created)
 
@@ -168,10 +175,7 @@ class DockerImage(DockerObject):
     @property
     def image_id(self):
         if self._id is None:
-            try:
-                self._id = self.data["Id"]
-            except KeyError:
-                raise RuntimeError("initial data not specified")
+            self.set_id()
         return self._id
 
     @property
@@ -229,7 +233,7 @@ class DockerImage(DockerObject):
 
     @response_time
     def inspect(self, cached=False):
-        if cached is False or self._inspect is None:
+        if self._inspect is None or cached is False:
             self._inspect = self.d.inspect_image(self.image_id)
         return self._inspect
 
@@ -242,9 +246,18 @@ class DockerImage(DockerObject):
 
 
 class DockerContainer(DockerObject):
+    """
+    Container related logic
+    """
+
+    def __str__(self):
+        return "{} ({})".format(self.container_id, self.short_name)
+
     @property
     def container_id(self):
-        return self.data["Id"]
+        if self._id is None:
+            self.set_id()
+        return self._id
 
     @property
     def names(self):
@@ -322,9 +335,6 @@ class DockerContainer(DockerObject):
     @response_time
     def unpause(self):
         self.d.unpause(self.container_id)
-
-    def __str__(self):
-        return "{} ({})".format(self.container_id, self.short_name)
 
 
 class DockerBackend:
