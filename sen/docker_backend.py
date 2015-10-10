@@ -3,6 +3,7 @@ import functools
 import json
 import logging
 import datetime
+from collections import deque
 
 import docker
 import humanize
@@ -94,27 +95,32 @@ class ImageNameStruct(object):
             tag=self.tag)
 
 
-def response_time(func):
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        # cached queries do not access backend -- we don't care about that
-        if kwargs.get("cached", False) is True:
-            return func(self, *args, **kwargs)
-        before = datetime.datetime.now()
-        response = func(self, *args, **kwargs)
-        after = datetime.datetime.now()
-        if isinstance(self, DockerBackend):
-            b = self
-        elif isinstance(self, DockerObject):
-            b = self.docker_backend
-        else:
-            raise RuntimeError("wrong instance")
-        b.last_command = func.__name__
-        # we want milliseconds, not seconds
-        b.last_command_took = (after - before).total_seconds() * 1000
-        logger.debug("%s(%s, %s) -> [%f ms]", b.last_command, args, kwargs, b.last_command_took)
-        return response
-    return wrapper
+def response_time(call_name):
+    def wrap(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # cached queries do not access backend -- we don't care about that
+            if kwargs.get("cached", False) is True:
+                return func(self, *args, **kwargs)
+            before = datetime.datetime.now()
+            response = func(self, *args, **kwargs)
+            after = datetime.datetime.now()
+            if isinstance(self, DockerBackend):
+                b = self
+            elif isinstance(self, DockerObject):
+                b = self.docker_backend
+            else:
+                raise RuntimeError("wrong instance")
+            command_name = call_name or func.__name__
+            # we want milliseconds, not seconds
+            command_took = (after - before).total_seconds() * 1000
+            s = (command_name, command_took)
+            b.last_command.append(s)
+            logger.debug("%s(%s, %s) -> [%f ms]", command_name, args, kwargs, command_took)
+            logger.debug(b.last_command)
+            return response
+        return wrapper
+    return wrap
 
 
 class DockerObject:
@@ -231,13 +237,13 @@ class DockerImage(DockerObject):
             else:
                 return parent_image
 
-    @response_time
+    @response_time("inspect image")
     def inspect(self, cached=False):
         if self._inspect is None or cached is False:
             self._inspect = self.d.inspect_image(self.image_id)
         return self._inspect
 
-    @response_time
+    @response_time("remove image")
     def remove(self):
         self.d.remove_image(self.image_id)
 
@@ -296,13 +302,13 @@ class DockerContainer(DockerObject):
         else:
             return image_name[:12]
 
-    @response_time
+    @response_time("inspect container")
     def inspect(self, cached=False):
         if cached is False or self._inspect is None:
             self._inspect = self.d.inspect_container(self.container_id)
         return self._inspect
 
-    @response_time
+    @response_time("logs")
     def logs(self, follow=False):
         # when tail is set to all, it takes ages to populate widget
         logs_data = self.d.logs(self.container_id, stream=follow, tail=16)
@@ -346,8 +352,7 @@ class DockerBackend:
         self._client = None
         self._containers = None
         self._images = None
-        self.last_command = ""
-        self.last_command_took = None  # milliseconds
+        self.last_command = deque()
 
     # lazy properties
 
@@ -371,7 +376,7 @@ class DockerBackend:
 
     # backend queries
 
-    @response_time
+    @response_time("images")
     def get_images(self, return_list=True):
         logger.debug("doing images() query")
         self._images = {}
@@ -389,7 +394,7 @@ class DockerBackend:
             v.sort(key=lambda x: x.time_created, reverse=True)
         return v
 
-    @response_time
+    @response_time("containers")
     def get_containers(self, return_list=True):
         logger.debug("doing containers() query")
         self._containers = {}

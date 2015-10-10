@@ -5,7 +5,7 @@ from sen.tui.constants import PALLETE
 from sen.docker_backend import DockerBackend
 
 import urwid
-
+from sen.tui.widget import AdHocAttrMap, get_map
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +41,19 @@ class UI(urwid.MainLoop):
         :return:
         """
         self.mainframe.set_body(widget)
+        self.reload_footer()
+        if redraw:
+            logger.debug("redraw main widget")
+            self.refresh()
+
+    def reload_footer(self):
+        logger.debug("reload footer")
         bottom = []
         if self.notif_bar:
             bottom.append(self.notif_bar)
         self.status_bar = self.build_statusbar()
         bottom.append(self.status_bar)
         self.mainframe.set_footer(urwid.Pile(bottom))
-        if redraw:
-            logger.debug("redraw main widget")
-            self.refresh()
 
     def display_buffer(self, buffer, redraw=True):
         """
@@ -142,15 +146,61 @@ class UI(urwid.MainLoop):
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
-        lefttxt = ("Images: {images}, Containers: {all_containers},"
-                   " Running: {running_containers}, {last_command}() -> {last_command_took:f} ms".
-        format(
-            last_command=self.d.last_command,  # these gotta be first
-            last_command_took=self.d.last_command_took,
-            images=len(self.d.images),
-            all_containers=len(self.d.containers),
-            running_containers=len(self.d.sorted_containers(sort_by_time=False, stopped=False)),
-        ))
+        columns_list = []
+
+        def add_subwidget(markup, color_attr=None):
+            if color_attr is None:
+                w = AdHocAttrMap(urwid.Text(markup), get_map("main_list_ddg"))
+            else:
+                w = AdHocAttrMap(urwid.Text(markup), get_map(color_attr))
+            columns_list.append((len(markup), w))
+
+        add_subwidget("Images: ")
+        images_count = len(self.d.images)
+        if images_count < 10:
+            add_subwidget(str(images_count), "main_list_green")
+        elif images_count < 50:
+            add_subwidget(str(images_count), "main_list_yellow")
+        else:
+            add_subwidget(str(images_count), "main_list_orange")
+
+        add_subwidget(", Containers: ")
+        containers_count = len(self.d.containers)
+        if containers_count < 5:
+            add_subwidget(str(containers_count), "main_list_green")
+        elif containers_count < 30:
+            add_subwidget(str(containers_count), "main_list_yellow")
+        elif containers_count < 100:
+            add_subwidget(str(containers_count), "main_list_orange")
+        else:
+            add_subwidget(str(containers_count), "main_list_red")
+
+        add_subwidget(", Running: ")
+        add_subwidget(str(len(self.d.sorted_containers(sort_by_time=False, stopped=False))),
+                      "main_list_green")
+
+        try:
+            command_name, command_took = self.d.last_command.popleft()
+        except IndexError:
+            command_name, command_took = None, None
+        if command_name and command_took:
+            add_subwidget(", {}() -> ".format(command_name))
+            command_took_str = "{:.2f}".format(command_took)
+            if command_took < 3:
+                add_subwidget(command_took_str, "main_list_lg")
+            elif containers_count < 10:
+                add_subwidget(command_took_str, "main_list_green")
+            elif containers_count < 100:
+                add_subwidget(command_took_str, "main_list_yellow")
+            elif containers_count < 1000:
+                add_subwidget(command_took_str, "main_list_orange")
+            else:
+                add_subwidget(command_took_str, "main_list_red")
+            add_subwidget(" ms")
+            def reload_footer(*args):
+                self.reload_footer()
+            self.set_alarm_in(10, reload_footer)
+
         t = []
         for idx, buffer in enumerate(self.buffers):
             fmt = "[{}] {}"
@@ -159,12 +209,9 @@ class UI(urwid.MainLoop):
             t.append(fmt.format(idx, buffer.display_name))
         righttxt = " ".join(t)
 
-        footerleft = urwid.Text(lefttxt, align='left')
-
-        footerright = urwid.Text(righttxt, align='right', wrap="clip")
-        columns = urwid.Columns([
-            footerleft,
-            footerright])
+        columns_list.append(AdHocAttrMap(urwid.Text(righttxt, align="right", wrap="clip"),
+                                         get_map("main_list_ddg")))
+        columns = urwid.Columns(columns_list)
         return urwid.AttrMap(columns, "default")
 
     def notify(self, message, level="info"):

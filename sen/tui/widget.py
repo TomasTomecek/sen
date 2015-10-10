@@ -99,7 +99,6 @@ class MainLineWidget(urwid.AttrMap):
                 add_subwidget(", ", "main_list_dg")
             names_widgets = names_widgets[:-1]
             names = AdHocAttrMap(urwid.Columns(names_widgets), get_map())
-            logger.debug(names)
             self.widgets.append(names)
             columns.append(names)
 
@@ -176,7 +175,6 @@ class AsyncScrollableListBox(urwid.ListBox):
             for line in generator:
                 if self.stop.is_set():
                     break
-                logger.debug("log line emitted: %r", line)
                 walker.append(urwid.Text(("text", line.strip()), align="left", wrap="any"))
                 walker.set_focus(len(walker) - 1)
                 ui.refresh()
