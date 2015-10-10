@@ -213,12 +213,15 @@ class MainListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         def run_and_report_on_fail(f):
+            logger.debug("running command %r for key %r", f.__name__, key)
             try:
                 f()
             except AttributeError:
-                self.ui.notify("you can't {} {}".format(f.__name__, self.focused_docker_object),
-                               level="error")
+                txt = "you can't {} {}".format(f.__name__, self.focused_docker_object)
+                logger.error(txt)
+                self.ui.notify(txt, level="error")
             except Exception as ex:
+                logger.error(repr(ex))
                 self.ui.notify(str(ex), level="error")
             self.ui.refresh_main_buffer()
 
