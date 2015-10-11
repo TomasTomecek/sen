@@ -232,9 +232,12 @@ class DockerImage(DockerObject):
     @property
     def short_name(self):
         try:
-            return self.names[0]
+            ins = self.names[0]
         except IndexError:
             return self.short_id
+        if ins.repo == "<none>":
+            return self.short_id
+        return ins.to_str()
 
     def base_image(self):
         child_image = self
@@ -317,7 +320,7 @@ class DockerContainer(DockerObject):
         image_id = self.data["Image"]
         image = self.docker_backend.get_image_by_id(image_id)
         if image is not None:
-            return image.short_name.to_str()
+            return image.short_name
         else:
             return image_id[:12]
 

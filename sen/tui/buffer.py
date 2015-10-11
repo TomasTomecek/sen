@@ -42,7 +42,6 @@ class MainListBuffer(Buffer):
 
 
 class LogsBuffer(Buffer):
-    tag = "L"
 
     def __init__(self, docker_object, ui, follow=False):
         """
@@ -50,7 +49,8 @@ class LogsBuffer(Buffer):
         :param docker_object: container to display logs
         :param ui: ui object so we refresh
         """
-        self.display_name = "[{}] {}".format("F" if follow else "L", docker_object.short_name)
+        self.tag = "F" if follow else "L"
+        self.display_name = docker_object.short_name
         if isinstance(docker_object, DockerContainer):
             if follow:
                 logs_generator = docker_object.logs(follow=follow)
@@ -71,18 +71,19 @@ class InspectBuffer(Buffer):
 
         :param docker_object: object to inspect
         """
+        self.display_name = docker_object.short_name
         inspect_data = docker_object.display_inspect()
         self.widget = ScrollableListBox(inspect_data)
-        self.display_name = "{} inspect".format(docker_object.short_name)
+        self.display_name = docker_object.short_name
         super().__init__()
 
 
 class HelpBuffer(Buffer):
     tag = "H"
+    display_name = ""
 
     def __init__(self):
         """
         """
         self.widget = ScrollableListBox(HELP_TEXT)
-        self.display_name = "[H]"
         super().__init__()
