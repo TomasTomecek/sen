@@ -8,7 +8,7 @@ from sen.tui.constants import PALLETE, MAIN_LIST_FOCUS
 from sen.docker_backend import DockerBackend
 
 import urwid
-from sen.tui.widget import AdHocAttrMap, get_map
+from sen.tui.widget import AdHocAttrMap
 
 logger = logging.getLogger(__name__)
 
@@ -165,34 +165,34 @@ class UI(urwid.MainLoop):
 
         def add_subwidget(markup, color_attr=None):
             if color_attr is None:
-                w = AdHocAttrMap(urwid.Text(markup), get_map("main_list_ddg"))
+                w = urwid.AttrMap(urwid.Text(markup), "status_text")
             else:
-                w = AdHocAttrMap(urwid.Text(markup), get_map(color_attr))
+                w = urwid.AttrMap(urwid.Text(markup), color_attr)
             columns_list.append((len(markup), w))
 
         add_subwidget("Images: ")
         images_count = len(self.d.images)
         if images_count < 10:
-            add_subwidget(str(images_count), "main_list_green")
+            add_subwidget(str(images_count), "status_text_green")
         elif images_count < 50:
-            add_subwidget(str(images_count), "main_list_yellow")
+            add_subwidget(str(images_count), "status_text_yellow")
         else:
-            add_subwidget(str(images_count), "main_list_orange")
+            add_subwidget(str(images_count), "status_text_orange")
 
         add_subwidget(", Containers: ")
         containers_count = len(self.d.containers)
         if containers_count < 5:
-            add_subwidget(str(containers_count), "main_list_green")
+            add_subwidget(str(containers_count), "status_text_green")
         elif containers_count < 30:
-            add_subwidget(str(containers_count), "main_list_yellow")
+            add_subwidget(str(containers_count), "status_text_yellow")
         elif containers_count < 100:
-            add_subwidget(str(containers_count), "main_list_orange")
+            add_subwidget(str(containers_count), "status_text_orange")
         else:
-            add_subwidget(str(containers_count), "main_list_red")
+            add_subwidget(str(containers_count), "status_text_red")
 
         add_subwidget(", Running: ")
         add_subwidget(str(len(self.d.sorted_containers(sort_by_time=False, stopped=False))),
-                      "main_list_green")
+                      "status_text_green")
 
         try:
             command_name, command_took = self.d.last_command.popleft()
@@ -202,16 +202,19 @@ class UI(urwid.MainLoop):
             add_subwidget(", {}() -> ".format(command_name))
             command_took_str = "{:.2f}".format(command_took)
             if command_took < 3:
-                add_subwidget(command_took_str, "main_list_lg")
-            elif containers_count < 10:
-                add_subwidget(command_took_str, "main_list_green")
-            elif containers_count < 100:
-                add_subwidget(command_took_str, "main_list_yellow")
-            elif containers_count < 1000:
-                add_subwidget(command_took_str, "main_list_orange")
+                add_subwidget(command_took_str)
+            elif command_took < 10:
+                add_subwidget(command_took_str, "status_text_green")
+            elif command_took < 100:
+                add_subwidget(command_took_str, "status_text_yellow")
+            elif command_took < 1000:
+                add_subwidget(command_took_str, "status_text_orange")
             else:
-                add_subwidget(command_took_str, "main_list_red")
-            add_subwidget(" ms")
+                command_took_str = "{:.2f}".format(command_took / 1000.0)
+                add_subwidget(command_took_str, "status_text_red")
+                add_subwidget(" s")
+            if command_took < 1000:
+                add_subwidget(" ms")
 
             def reload_footer(*args):
                 self.reload_footer()
@@ -223,7 +226,7 @@ class UI(urwid.MainLoop):
             fmt = "#{idx} [{tag}] {name}"
             markup = fmt.format(idx=idx, tag=buffer.tag, name=buffer.display_name)
             text_list.append((
-                MAIN_LIST_FOCUS if buffer == self.current_buffer else "status_box",
+                "status_box_focus" if buffer == self.current_buffer else "status_box",
                 markup,
             ))
             text_list.append(" ")
@@ -232,7 +235,7 @@ class UI(urwid.MainLoop):
         right_cols = urwid.Text(text_list, align="right")
         columns_list.append(right_cols)
         columns = urwid.Columns(columns_list)
-        return urwid.AttrMap(columns, "default")
+        return urwid.AttrMap(columns, "status")
 
     def append_status_alarm(self, in_s, f):
         def chain_f(this_function, callback, loop, *args):
