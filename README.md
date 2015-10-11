@@ -8,10 +8,21 @@ So I realized that if I want make my dream come true, I need to do it myself. Th
 
 `sen` is a python 3 only project. I recommend using at least python 3.4.
 
+## git
+
 ```
 $ git clone https://github.com/TomasTomecek/sen
 $ cd sen
 $ ./setup.py install
+```
+
+## docker
+
+You can run `sen` from docker container!
+
+```
+$ docker build --tag=sen git://github.com/TomasTomecek/sen
+$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=screen sen
 ```
 
 # Usage
