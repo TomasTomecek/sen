@@ -158,7 +158,7 @@ class MainLineWidget(urwid.AttrMap):
 
 class ScrollableListBox(urwid.ListBox):
     def __init__(self, text):
-        text = urwid.Text(("text", text), align="left", wrap="any")
+        text = urwid.Text(("main_list_dg", text), align="left", wrap="any")
         body = urwid.SimpleFocusListWalker([text])
         super(ScrollableListBox, self).__init__(body)
 
@@ -170,7 +170,8 @@ class AsyncScrollableListBox(urwid.ListBox):
             for d in static_data.decode("utf-8").split("\n"):
                 log_entry = d.strip()
                 if log_entry:
-                    self.log_texts.append(urwid.Text(("text", log_entry), align="left", wrap="any"))
+                    self.log_texts.append(urwid.Text(("main_list_dg", log_entry),
+                                                     align="left", wrap="any"))
         walker = urwid.SimpleFocusListWalker(self.log_texts)
         super(AsyncScrollableListBox, self).__init__(walker)
 
@@ -178,7 +179,7 @@ class AsyncScrollableListBox(urwid.ListBox):
             for line in generator:
                 if self.stop.is_set():
                     break
-                walker.append(urwid.Text(("text", line.strip()), align="left", wrap="any"))
+                walker.append(urwid.Text(("main_list_dg", line.strip()), align="left", wrap="any"))
                 walker.set_focus(len(walker) - 1)
                 ui.refresh()
 
