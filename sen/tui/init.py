@@ -1,7 +1,7 @@
 import logging
 
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
-from sen.tui.constants import PALLETE
+from sen.tui.constants import PALLETE, MAIN_LIST_FOCUS
 from sen.docker_backend import DockerBackend
 
 import urwid
@@ -201,16 +201,20 @@ class UI(urwid.MainLoop):
                 self.reload_footer()
             self.set_alarm_in(10, reload_footer)
 
-        t = []
+        text_list = []
         for idx, buffer in enumerate(self.buffers):
-            fmt = "[{}] {}"
-            if buffer == self.current_buffer:
-                fmt += "*"
-            t.append(fmt.format(idx, buffer.display_name))
-        righttxt = " ".join(t)
+            #  #1 [I] fedora #2 [L]
+            fmt = "#{idx} [{tag}] {name}"
+            markup = fmt.format(idx=idx, tag=buffer.tag, name=buffer.display_name)
+            text_list.append((
+                MAIN_LIST_FOCUS if buffer == self.current_buffer else "status_box",
+                markup,
+            ))
+            text_list.append(" ")
+        text_list = text_list[:-1]
 
-        columns_list.append(AdHocAttrMap(urwid.Text(righttxt, align="right", wrap="clip"),
-                                         get_map("main_list_ddg")))
+        right_cols = urwid.Text(text_list, align="right")
+        columns_list.append(right_cols)
         columns = urwid.Columns(columns_list)
         return urwid.AttrMap(columns, "default")
 

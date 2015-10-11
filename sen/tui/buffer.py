@@ -12,6 +12,7 @@ class Buffer:
     """
     display_name = None  # display in status bar
     widget = None  # display this in main frame
+    tag = None  # single char, for status
 
     def __init__(self):
         logger.debug("creating buffer %r", self)
@@ -28,6 +29,7 @@ class Buffer:
 
 class MainListBuffer(Buffer):
     display_name = "Listing"
+    tag = "M"
 
     def __init__(self, docker_backend, ui):
         self.widget = MainListBox(docker_backend, ui)
@@ -39,6 +41,8 @@ class MainListBuffer(Buffer):
 
 
 class LogsBuffer(Buffer):
+    tag = "L"
+
     def __init__(self, docker_object, ui, follow=False):
         """
 
@@ -59,6 +63,8 @@ class LogsBuffer(Buffer):
 
 
 class InspectBuffer(Buffer):
+    tag = "I"
+
     def __init__(self, docker_object):
         """
 
@@ -71,6 +77,8 @@ class InspectBuffer(Buffer):
 
 
 class HelpBuffer(Buffer):
+    tag = "H"
+
     def __init__(self):
         """
         """
