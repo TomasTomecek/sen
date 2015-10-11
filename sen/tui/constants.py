@@ -31,6 +31,8 @@ PALLETE = [
 HELP_TEXT = """\
 # Keybindings
 
+Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
+
 ## Global
 
 N      previous buffer
@@ -51,6 +53,7 @@ f      follow logs of container
 d      remove container (irreversible!)
 s      stop container
 t      start container
+r      restart container
 p      pause container
 u      unpause container
 X      kill container
