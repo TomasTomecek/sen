@@ -230,7 +230,8 @@ class MainListBox(urwid.ListBox):
             except Exception as ex:
                 logger.error(repr(ex))
                 self.ui.notify(str(ex), level="error")
-            self.ui.notify(message, level=notif_level)
+            else:
+                self.ui.notify(message, level=notif_level)
             self.ui.refresh_main_buffer()
 
         def do_and_report_on_fail(f):

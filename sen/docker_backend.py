@@ -244,7 +244,6 @@ class DockerImage(DockerObject):
                 try:
                     child_image = child_image.parent_image
                 except RuntimeError:
-                    logger.info("no base image for %s", self)
                     return None
             else:
                 return parent_image

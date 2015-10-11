@@ -1,4 +1,7 @@
+from collections import deque
+from functools import partial
 import logging
+import threading
 
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
 from sen.tui.constants import PALLETE, MAIN_LIST_FOCUS
@@ -18,6 +21,10 @@ class UI(urwid.MainLoop):
         self.mainframe = urwid.Frame(urwid.SolidFill())
         self.status_bar = None
         self.notif_bar = None
+        self.status_alarms = deque()
+        self.status_alarm_lock = threading.Lock()
+        self.status_alarm_is_active = False
+
         root_widget = urwid.AttrMap(self.mainframe, "root")
         self.main_list_buffer = None  # singleton
 
@@ -45,6 +52,14 @@ class UI(urwid.MainLoop):
         if redraw:
             logger.debug("redraw main widget")
             self.refresh()
+
+    def reload_notif_bar(self):
+        logger.debug("reload notif bar")
+        bottom = []
+        if self.notif_bar:
+            bottom.append(self.notif_bar)
+        bottom.append(self.status_bar)
+        self.mainframe.set_footer(urwid.Pile(bottom))
 
     def reload_footer(self):
         logger.debug("reload footer")
@@ -197,9 +212,10 @@ class UI(urwid.MainLoop):
             else:
                 add_subwidget(command_took_str, "main_list_red")
             add_subwidget(" ms")
+
             def reload_footer(*args):
                 self.reload_footer()
-            self.set_alarm_in(10, reload_footer)
+            self.append_status_alarm(10, reload_footer)
 
         text_list = []
         for idx, buffer in enumerate(self.buffers):
@@ -217,6 +233,24 @@ class UI(urwid.MainLoop):
         columns_list.append(right_cols)
         columns = urwid.Columns(columns_list)
         return urwid.AttrMap(columns, "default")
+
+    def append_status_alarm(self, in_s, f):
+        def chain_f(this_function, callback, loop, *args):
+            callback()
+            with self.status_alarm_lock:
+                try:
+                    s, func = self.status_alarms.popleft()
+                except IndexError:
+                    self.status_alarm_is_active = False
+                else:
+                    self.set_alarm_in(s, partial(this_function, this_function, func))
+
+        with self.status_alarm_lock:
+            if self.status_alarm_is_active:
+                self.status_alarms.append((in_s, f))
+            else:
+                self.status_alarm_is_active = True
+                self.set_alarm_in(in_s, partial(chain_f, chain_f, f))
 
     def notify(self, message, level="info"):
         """
@@ -244,6 +278,6 @@ class UI(urwid.MainLoop):
                 self.notif_bar = urwid.Pile(newpile)
             else:
                 self.notif_bar = None
-            self.refresh_main_buffer()
+            self.reload_notif_bar()
 
         self.set_alarm_in(10, clear)
