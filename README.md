@@ -22,7 +22,7 @@ You can run `sen` from docker container!
 
 ```
 $ docker build --tag=sen git://github.com/TomasTomecek/sen
-$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=screen sen
+$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM sen
 ```
 
 # Usage
