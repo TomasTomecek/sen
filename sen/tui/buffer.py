@@ -1,5 +1,6 @@
 import logging
 from sen.docker_backend import DockerContainer
+from sen.exceptions import NotifyError
 from sen.tui.constants import HELP_TEXT
 from sen.tui.widget import AsyncScrollableListBox, MainListBox, ScrollableListBox
 
@@ -58,7 +59,7 @@ class LogsBuffer(Buffer):
                 logs_data = docker_object.logs(follow=follow)
                 self.widget = ScrollableListBox(logs_data)
         else:
-            raise Exception("Only containers have logs.")
+            raise NotifyError("Only containers have logs.")
         super().__init__()
 
 

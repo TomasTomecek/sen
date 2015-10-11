@@ -3,6 +3,7 @@ import logging
 import threading
 
 import urwid
+from sen.exceptions import NotifyError
 
 from sen.tui.constants import MAIN_LIST_FOCUS
 from sen.docker_backend import DockerImage, DockerContainer
@@ -60,7 +61,8 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(image_id)
             columns.append((self.FIRST_COL, image_id))
 
-            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"), get_map(defult="main_list_ddg"))
+            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"),
+                                   get_map(defult="main_list_ddg"))
             self.widgets.append(command)
             columns.append(command)
 
@@ -107,7 +109,8 @@ class MainLineWidget(urwid.AttrMap):
             self.widgets.append(container_id)
             columns.append((12, container_id))
 
-            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"), get_map(defult="main_list_ddg"))
+            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"),
+                                   get_map(defult="main_list_ddg"))
             self.widgets.append(command)
             columns.append(command)
 
@@ -212,46 +215,77 @@ class MainListBox(urwid.ListBox):
         return self.get_focus()[0].docker_object
 
     def keypress(self, size, key):
-        def run_and_report_on_fail(f):
+        def run_and_report_on_fail(f, message, notif_level="info"):
             logger.debug("running command %r for key %r", f.__name__, key)
             try:
                 f()
             except AttributeError:
-                txt = "you can't {} {}".format(f.__name__, self.focused_docker_object)
-                logger.error(txt)
-                self.ui.notify(txt, level="error")
+                notif_txt = "You can't {} {} {}.".format(
+                    f.__name__,
+                    self.focused_docker_object.pretty_object_type.lower(),
+                    self.focused_docker_object.short_name)
+                log_txt = "you can't {} {}".format(f.__name__, self.focused_docker_object)
+                logger.error(log_txt)
+                self.ui.notify(notif_txt, level="error")
             except Exception as ex:
                 logger.error(repr(ex))
                 self.ui.notify(str(ex), level="error")
+            self.ui.notify(message, level=notif_level)
             self.ui.refresh_main_buffer()
+
+        def do_and_report_on_fail(f):
+            try:
+                f(self.focused_docker_object)
+            except NotifyError as ex:
+                self.ui.notify(str(ex), level="error")
+                logger.error(repr(ex))
 
         logger.debug("size %r, key %r", size, key)
         if key == "i":
-            self.ui.inspect(self.focused_docker_object)
+            do_and_report_on_fail(self.ui.inspect)
             return
         elif key == "l":
-            self.ui.display_logs(self.focused_docker_object)
+            do_and_report_on_fail(self.ui.display_logs)
             return
         elif key == "f":
-            self.ui.display_and_follow_logs(self.focused_docker_object)
+            do_and_report_on_fail(self.ui.display_and_follow_logs)
             return
         elif key == "d":
-            run_and_report_on_fail(self.focused_docker_object.remove)
+            run_and_report_on_fail(self.focused_docker_object.remove,
+                                   "{} {} removed!".format(
+                                       self.focused_docker_object.pretty_object_type,
+                                       self.focused_docker_object.short_name),
+                                   "error")
             return
         elif key == "s":
-            run_and_report_on_fail(self.focused_docker_object.start)
+            run_and_report_on_fail(self.focused_docker_object.start,
+                                   "Container {} started.".format(
+                                       self.focused_docker_object.short_name))
+            return
+        elif key == "r":
+            run_and_report_on_fail(self.focused_docker_object.restart,
+                                   "Container {} restarted.".format(
+                                       self.focused_docker_object.short_name))
             return
         elif key == "t":
-            run_and_report_on_fail(self.focused_docker_object.stop)
+            run_and_report_on_fail(self.focused_docker_object.stop,
+                                   "Container {} stopped.".format(
+                                       self.focused_docker_object.short_name))
             return
         elif key == "p":
-            run_and_report_on_fail(self.focused_docker_object.pause)
+            run_and_report_on_fail(self.focused_docker_object.pause,
+                                   "Container {} paused.".format(
+                                       self.focused_docker_object.short_name))
             return
         elif key == "u":
-            run_and_report_on_fail(self.focused_docker_object.unpause)
+            run_and_report_on_fail(self.focused_docker_object.unpause,
+                                   "Container {} unpaused.".format(
+                                       self.focused_docker_object.short_name))
             return
         elif key == "X":
-            run_and_report_on_fail(self.focused_docker_object.kill)
+            run_and_report_on_fail(self.focused_docker_object.kill,
+                                   "Container {} killed.".format(
+                                       self.focused_docker_object.short_name))
             return
         elif key == "j":
             return super().keypress(size, "down")

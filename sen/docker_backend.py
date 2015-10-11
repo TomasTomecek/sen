@@ -129,6 +129,7 @@ class DockerObject:
     """
     def __init__(self, data, docker_backend, object_id=None):
         self._id = object_id
+        self._short_id = None
         self.data = data  # `client.containers` or `client.images`
         self.docker_backend = docker_backend
         self._created = None
@@ -154,6 +155,13 @@ class DockerObject:
                 self._id = self.data["Id"]
             except KeyError:
                 raise RuntimeError("initial data not specified")
+
+    @property
+    def short_id(self):
+        if self._short_id is None:
+            self.set_id()
+            self._short_id = self._id[:12]
+        return self._short_id
 
     def display_time_created(self):
         return humanize.naturaltime(self.created)
@@ -192,6 +200,10 @@ class DockerImage(DockerObject):
             return self.inspect(cached=True).get("Parent", None)
 
     @property
+    def pretty_object_type(self):
+        return "Image"
+
+    @property
     def parent_image(self):
         parent_id = self.parent_id
         if parent_id:
@@ -222,7 +234,7 @@ class DockerImage(DockerObject):
         try:
             return self.names[0]
         except IndexError:
-            return self.image_id[:12]
+            return self.short_id
 
     def base_image(self):
         child_image = self
@@ -259,6 +271,8 @@ class DockerContainer(DockerObject):
     def __str__(self):
         return "{} ({})".format(self.container_id, self.short_name)
 
+    # properties
+
     @property
     def container_id(self):
         if self._id is None:
@@ -292,15 +306,23 @@ class DockerContainer(DockerObject):
         try:
             return self.names[0]
         except IndexError:
-            return self.container_id[:12]
+            return self.short_id
+
+    @property
+    def pretty_object_type(self):
+        return "Container"
+
+    # methods
 
     def image_name(self):
-        image_name = self.data["Image"]
-        image = self.docker_backend.get_image_by_id(image_name)
+        image_id = self.data["Image"]
+        image = self.docker_backend.get_image_by_id(image_id)
         if image is not None:
             return image.short_name.to_str()
         else:
-            return image_name[:12]
+            return image_id[:12]
+
+    # api calls
 
     @response_time("inspect container")
     def inspect(self, cached=False):
