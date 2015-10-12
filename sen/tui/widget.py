@@ -196,6 +196,8 @@ class MainListBox(urwid.ListBox):
         self.d = docker_backend
         self.ui = ui
         self.walker = urwid.SimpleFocusListWalker([])
+        # we want "gg"!
+        self.cached_key = None
         super(MainListBox, self).__init__(self.walker)
 
     def populate(self, focus_on_top=False):
@@ -216,6 +218,10 @@ class MainListBox(urwid.ListBox):
         return self.get_focus()[0].docker_object
 
     def keypress(self, size, key):
+        # FIXME: workaround so we allow "gg" only, and not "g*"
+        if self.cached_key == "g" and key != "g":
+            self.cached_key = None
+
         def run_and_report_on_fail(f, message, notif_level="info"):
             logger.debug("running command %r for key %r", f.__name__, key)
             try:
@@ -293,5 +299,33 @@ class MainListBox(urwid.ListBox):
             return super().keypress(size, "down")
         elif key == "k":
             return super().keypress(size, "up")
+        elif key == "ctrl d":
+            try:
+                self.set_focus(self.get_focus()[1] + 10)
+            except IndexError:
+                self.set_focus(len(self.walker) - 1)
+            # this is the easiest way to refresh walker
+            self.walker[:] = self.walker
+            return
+        elif key == "ctrl u":
+            try:
+                self.set_focus(self.get_focus()[1] - 10)
+            except IndexError:
+                self.set_focus(0)
+            # this is the easiest way to refresh walker
+            self.walker[:] = self.walker
+            return
+        elif key == "G":
+            self.set_focus(len(self.walker) - 1)
+            self.walker[:] = self.walker
+            return
+        elif key == "g":
+            if self.cached_key is None:
+                self.cached_key = "g"
+            elif self.cached_key == "g":
+                self.set_focus(0)
+                self.walker[:] = self.walker
+                self.cached_key = None
+            return
         key = super(MainListBox, self).keypress(size, key)
         return key

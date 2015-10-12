@@ -151,9 +151,10 @@ class UI(urwid.MainLoop):
     def inspect(self, docker_object):
         self.add_and_display_buffer(InspectBuffer(docker_object))
 
-    def refresh_main_buffer(self):
+    def refresh_main_buffer(self, refresh_buffer=True):
         assert self.main_list_buffer is not None
-        self.main_list_buffer.refresh()
+        if refresh_buffer:
+            self.main_list_buffer.refresh()
         self.display_buffer(self.main_list_buffer)
 
     def display_help(self):
