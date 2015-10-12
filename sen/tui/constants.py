@@ -40,6 +40,17 @@ n      next buffer
 x      remove buffer
 h, ?   show help
 
+## Movement
+
+gg     go to first item
+G      go to last item
+j      go one line down
+k      go one line up
+pg up
+ctrl u go 10 lines up
+pg down
+ctrl d go 10 lines down
+
 ## Image commands in listing
 
 i      inspect image
