@@ -21,7 +21,12 @@ def main():
 
     args = parser.parse_args()
 
-    set_logging()
+    if args.debug:
+        set_logging(level=logging.DEBUG)
+    else:
+        set_logging(level=logging.INFO)
+
+    logger.info("application started")
 
     ui = UI()
 
