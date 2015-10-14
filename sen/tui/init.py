@@ -192,8 +192,10 @@ class UI(urwid.MainLoop):
             add_subwidget(str(containers_count), "status_text_red")
 
         add_subwidget(", Running: ")
-        add_subwidget(str(len(self.d.sorted_containers(sort_by_time=False, stopped=False))),
-                      "status_text_green")
+        running_containers = self.d.sorted_containers(sort_by_time=False, stopped=False)
+        running_containers_n = len(running_containers)
+        add_subwidget(str(running_containers_n),
+                      "status_text_green" if running_containers_n > 0 else "status_text")
 
         try:
             command_name, command_took = self.d.last_command.popleft()
