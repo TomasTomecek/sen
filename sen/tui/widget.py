@@ -222,16 +222,16 @@ class MainListBox(urwid.ListBox):
         if self.cached_key == "g" and key != "g":
             self.cached_key = None
 
-        def run_and_report_on_fail(f, message, notif_level="info"):
-            logger.debug("running command %r for key %r", f.__name__, key)
+        def run_and_report_on_fail(fn_name, message, notif_level="info"):
+            logger.debug("running command %r for key %r", fn_name, key)
             try:
-                f()
+                getattr(self.focused_docker_object, fn_name)()
             except AttributeError:
-                notif_txt = "You can't {} {} {}.".format(
-                    f.__name__,
+                notif_txt = "You can't {} {} {!r}.".format(
+                    fn_name,
                     self.focused_docker_object.pretty_object_type.lower(),
                     self.focused_docker_object.short_name)
-                log_txt = "you can't {} {}".format(f.__name__, self.focused_docker_object)
+                log_txt = "you can't {} {}".format(fn_name, self.focused_docker_object)
                 logger.error(log_txt)
                 self.ui.notify(notif_txt, level="error")
             except Exception as ex:
@@ -259,39 +259,39 @@ class MainListBox(urwid.ListBox):
             do_and_report_on_fail(self.ui.display_and_follow_logs)
             return
         elif key == "d":
-            run_and_report_on_fail(self.focused_docker_object.remove,
+            run_and_report_on_fail("remove",
                                    "{} {} removed!".format(
                                        self.focused_docker_object.pretty_object_type,
                                        self.focused_docker_object.short_name),
                                    "error")
             return
         elif key == "s":
-            run_and_report_on_fail(self.focused_docker_object.start,
+            run_and_report_on_fail("start",
                                    "Container {} started.".format(
                                        self.focused_docker_object.short_name))
             return
         elif key == "r":
-            run_and_report_on_fail(self.focused_docker_object.restart,
+            run_and_report_on_fail("restart",
                                    "Container {} restarted.".format(
                                        self.focused_docker_object.short_name))
             return
         elif key == "t":
-            run_and_report_on_fail(self.focused_docker_object.stop,
+            run_and_report_on_fail("stop",
                                    "Container {} stopped.".format(
                                        self.focused_docker_object.short_name))
             return
         elif key == "p":
-            run_and_report_on_fail(self.focused_docker_object.pause,
+            run_and_report_on_fail("pause",
                                    "Container {} paused.".format(
                                        self.focused_docker_object.short_name))
             return
         elif key == "u":
-            run_and_report_on_fail(self.focused_docker_object.unpause,
+            run_and_report_on_fail("unpause",
                                    "Container {} unpaused.".format(
                                        self.focused_docker_object.short_name))
             return
         elif key == "X":
-            run_and_report_on_fail(self.focused_docker_object.kill,
+            run_and_report_on_fail("kill",
                                    "Container {} killed.".format(
                                        self.focused_docker_object.short_name))
             return
