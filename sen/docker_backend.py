@@ -205,10 +205,13 @@ class DockerImage(DockerObject):
 
     @property
     def parent_image(self):
-        parent_id = self.parent_id
+        try:
+            parent_id = self.parent_id
+        except Exception as ex:
+            logger.error("error while getting parent ID of image %s: %r", self, ex)
+            raise
         if parent_id:
             return DockerImage(None, self.docker_backend, object_id=parent_id)
-        raise RuntimeError("{} has no parent".format(self))
 
     @property
     def command(self):
@@ -242,11 +245,18 @@ class DockerImage(DockerObject):
     def base_image(self):
         child_image = self
         while True:
-            parent_image = self.docker_backend.get_image_by_id(child_image.parent_id)
+            try:
+                parent_image = self.docker_backend.get_image_by_id(child_image.parent_id)
+            except Exception as ex:
+                logger.warning("error while getting image by ID: %r", ex)
+                parent_image = None
             if parent_image is None:
                 try:
                     child_image = child_image.parent_image
-                except RuntimeError:
+                except Exception as ex:
+                    logger.error("error while getting parent image for image %s: %r", self, ex)
+                    return None
+                if child_image is None:
                     return None
             else:
                 return parent_image
