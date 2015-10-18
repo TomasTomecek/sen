@@ -24,7 +24,7 @@ PALLETE = [
     ('status_text_green', 'default', 'default', "default", "#0f0", STATUS_BG),
     ('status_text_yellow', 'default', 'default', "default", "#ff0", STATUS_BG),
     ('status_text_orange', 'default', 'default', "default", "#f80", STATUS_BG),
-    ('status_text_red', 'default', 'default', "default", "#f00", STATUS_BG),
+    ('status_text_red', 'default', 'default', "default", "#f66", STATUS_BG),
     ('notif_error', "white", 'dark red', "default", "white", "#f00",),
     ('notif_info', 'white', 'default', "default", "white", "default"),
     #("image_names", "light red", "default"),
