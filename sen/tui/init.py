@@ -202,26 +202,23 @@ class UI(urwid.MainLoop):
         except IndexError:
             command_name, command_took = None, None
         if command_name and command_took:
-            add_subwidget(", {}() -> ".format(command_name))
-            command_took_str = "{:.2f}".format(command_took)
-            if command_took < 3:
-                add_subwidget(command_took_str)
-            elif command_took < 10:
-                add_subwidget(command_took_str, "status_text_green")
-            elif command_took < 100:
-                add_subwidget(command_took_str, "status_text_yellow")
-            elif command_took < 1000:
-                add_subwidget(command_took_str, "status_text_orange")
-            else:
-                command_took_str = "{:.2f}".format(command_took / 1000.0)
-                add_subwidget(command_took_str, "status_text_red")
-                add_subwidget(" s")
-            if command_took < 1000:
-                add_subwidget(" ms")
+            if command_took > 100:
+                add_subwidget(", {}() -> ".format(command_name))
+                command_took_str = "{:.2f}".format(command_took)
+                if command_took < 500:
+                    add_subwidget(command_took_str, "status_text_yellow")
+                elif command_took < 1000:
+                    add_subwidget(command_took_str, "status_text_orange")
+                else:
+                    command_took_str = "{:.2f}".format(command_took / 1000.0)
+                    add_subwidget(command_took_str, "status_text_red")
+                    add_subwidget(" s")
+                if command_took < 1000:
+                    add_subwidget(" ms")
 
-            def reload_footer(*args):
-                self.reload_footer()
-            self.append_status_alarm(10, reload_footer)
+                def reload_footer(*args):
+                    self.reload_footer()
+                self.append_status_alarm(10, reload_footer)
 
         text_list = []
         for idx, buffer in enumerate(self.buffers):
