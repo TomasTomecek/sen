@@ -2,6 +2,9 @@
 
 MAIN_LIST_FOCUS = "main_list_focus"
 
+STATUS_BG = "#06a"
+STATUS_BG_FOCUS = "#08d"
+
 # name, fg, bg, mono, fg_h, bg_h
 PALLETE = [
     (MAIN_LIST_FOCUS, 'default', 'brown', "default", "white", "#060"),  # a60
@@ -14,14 +17,14 @@ PALLETE = [
     ('main_list_orange', 'light red', 'default', "default", "#fa0", "default"),
     ('main_list_red', 'dark red', 'default', "default", "#f00", "default"),
     ('image_names', 'light magenta', 'default', "default", "#F0F", "default"),
-    ('status_box', 'default', 'black', "default", "default", "default"),
-    ('status_box_focus', 'default', 'black', "default", "g100", "default"),
-    ('status', 'default', 'default', "default", "default", "black"),
-    ('status_text', 'default', 'default', "default", "g56", "black"),
-    ('status_text_green', 'default', 'default', "default", "#6d6", "black"),
-    ('status_text_yellow', 'default', 'default', "default", "#dd6", "black"),
-    ('status_text_orange', 'default', 'default', "default", "#fa0", "black"),
-    ('status_text_red', 'default', 'default', "default", "#d66", "black"),
+    ('status_box', 'default', 'black', "default", "g100", STATUS_BG),
+    ('status_box_focus', 'default', 'black', "default", "white", STATUS_BG_FOCUS),
+    ('status', 'default', 'default', "default", "default", STATUS_BG),
+    ('status_text', 'default', 'default', "default", "g100", STATUS_BG),
+    ('status_text_green', 'default', 'default', "default", "#0f0", STATUS_BG),
+    ('status_text_yellow', 'default', 'default', "default", "#ff0", STATUS_BG),
+    ('status_text_orange', 'default', 'default', "default", "#f80", STATUS_BG),
+    ('status_text_red', 'default', 'default', "default", "#f00", STATUS_BG),
     ('notif_error', "white", 'dark red', "default", "white", "#f00",),
     ('notif_info', 'white', 'default', "default", "white", "default"),
     #("image_names", "light red", "default"),

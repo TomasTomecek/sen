@@ -135,7 +135,9 @@ class MainLineWidget(urwid.AttrMap):
             columns.append(name)
 
         self.columns = urwid.Columns(columns, dividechars=1)
-        super().__init__(self.columns, "normal", focus_map=MAIN_LIST_FOCUS)
+        super().__init__(self.columns,
+                         "main_list_dg",
+                         focus_map=MAIN_LIST_FOCUS)
 
     def selectable(self):
         return True
