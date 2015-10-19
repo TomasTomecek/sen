@@ -8,9 +8,16 @@ So I realized that if I want make my dream come true, I need to do it myself. Th
 
 # Installation
 
-`sen` is a python 3 only project. I recommend using at least python 3.4.
+I strongly advise to run `sen` from a docker container. This repository has set up automated builds on docker hub. In case you run into some issue, try pulling latest version before opening issue. At some point, I'll start with releasing and versioning.
+
+```
+$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek/sen
+```
+
 
 ## git
+
+`sen` is a python 3 only project. I recommend using at least python 3.4.
 
 ```
 $ git clone https://github.com/TomasTomecek/sen
@@ -20,10 +27,8 @@ $ ./setup.py install
 
 ## docker
 
-You can run `sen` from docker container!
-
 ```
-$ docker build --tag=sen git://github.com/TomasTomecek/sen
+$ docker build --tag=sen git://github.com/tomastomecek/sen
 $ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM sen
 ```
 
