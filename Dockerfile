@@ -1,5 +1,5 @@
 FROM fedora:22
-MAINTAINER Tomasko
+MAINTAINER Tomas Tomecek <ttomecek@redhat.com> @TomasTomec
 
 RUN dnf install -y python3-pip git python3-urwid python3-docker-py python3-humanize
 
