@@ -125,7 +125,7 @@ class UI(urwid.MainLoop):
         self.display_buffer(self.buffers[0], True)
 
     def unhandled_input(self, key):
-        logger.debug("got %r", key)
+        logger.debug("unhandled input: %r", key)
         if key in ('q', 'Q'):
             raise urwid.ExitMainLoop()
         elif key == "N":
@@ -134,6 +134,8 @@ class UI(urwid.MainLoop):
             self.pick_and_display_buffer(self.current_buffer_index + 1)
         elif key == "x":
             self.remove_current_buffer()
+        elif key == "@":
+            self.refresh_main_buffer()
         elif key in ["h", "?"]:
             self.display_help()
 

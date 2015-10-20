@@ -50,6 +50,7 @@ Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
 N      previous buffer
 n      next buffer
 x      remove buffer
+@      refresh listing
 h, ?   show help
 ```
 
