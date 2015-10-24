@@ -158,11 +158,66 @@ class MainLineWidget(urwid.AttrMap):
         return "{}".format(self.docker_object)
 
 
-class ScrollableListBox(urwid.ListBox):
+class VimMovementListBox(urwid.ListBox):
+    """
+    ListBox with vim-like movement which can be inherited in other widgets
+    """
+    def __init__(self, *args, **kwargs):
+        # we want "gg"!
+        self.cached_key = None
+        super().__init__(*args, **kwargs)
+
+    def keypress(self, size, key):
+        logger.debug("VimListBox keypress %r", key)
+
+        # FIXME: workaround so we allow "gg" only, and not "g*"
+        if self.cached_key == "g" and key != "g":
+            self.cached_key = None
+
+        if key == "j":
+            return super().keypress(size, "down")
+        elif key == "k":
+            return super().keypress(size, "up")
+        elif key == "ctrl d":
+            try:
+                self.set_focus(self.get_focus()[1] + 10)
+            except IndexError:
+                self.set_focus(len(self.body) - 1)
+            # this is the easiest way to refresh body
+            self.body[:] = self.body
+            return
+        elif key == "ctrl u":
+            try:
+                self.set_focus(self.get_focus()[1] - 10)
+            except IndexError:
+                self.set_focus(0)
+            # this is the easiest way to refresh walker
+            self.body[:] = self.body
+            return
+        elif key == "G":
+            self.set_focus(len(self.body) - 1)
+            self.body[:] = self.body
+            return
+        elif key == "g":
+            if self.cached_key is None:
+                self.cached_key = "g"
+            elif self.cached_key == "g":
+                self.set_focus(0)
+                self.body[:] = self.body
+                self.cached_key = None
+            return
+        key = super().keypress(size, key)
+        return key
+
+
+class ScrollableListBox(VimMovementListBox):
     def __init__(self, text):
-        text = urwid.Text(("main_list_dg", text), align="left", wrap="any")
-        body = urwid.SimpleFocusListWalker([text])
-        super(ScrollableListBox, self).__init__(body)
+        list_of_texts = text.split("\n")
+        self.walker = urwid.SimpleFocusListWalker([
+            urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
+            for t in list_of_texts
+        ])
+        super().__init__(self.walker)
 
 
 class AsyncScrollableListBox(urwid.ListBox):
@@ -193,13 +248,11 @@ class AsyncScrollableListBox(urwid.ListBox):
         self.stop.set()
 
 
-class MainListBox(urwid.ListBox):
+class MainListBox(VimMovementListBox):
     def __init__(self, docker_backend, ui):
         self.d = docker_backend
         self.ui = ui
         self.walker = urwid.SimpleFocusListWalker([])
-        # we want "gg"!
-        self.cached_key = None
         super(MainListBox, self).__init__(self.walker)
 
     def populate(self, focus_on_top=False):
@@ -297,37 +350,6 @@ class MainListBox(urwid.ListBox):
                                    "Container {} killed.".format(
                                        self.focused_docker_object.short_name))
             return
-        elif key == "j":
-            return super().keypress(size, "down")
-        elif key == "k":
-            return super().keypress(size, "up")
-        elif key == "ctrl d":
-            try:
-                self.set_focus(self.get_focus()[1] + 10)
-            except IndexError:
-                self.set_focus(len(self.walker) - 1)
-            # this is the easiest way to refresh walker
-            self.walker[:] = self.walker
-            return
-        elif key == "ctrl u":
-            try:
-                self.set_focus(self.get_focus()[1] - 10)
-            except IndexError:
-                self.set_focus(0)
-            # this is the easiest way to refresh walker
-            self.walker[:] = self.walker
-            return
-        elif key == "G":
-            self.set_focus(len(self.walker) - 1)
-            self.walker[:] = self.walker
-            return
-        elif key == "g":
-            if self.cached_key is None:
-                self.cached_key = "g"
-            elif self.cached_key == "g":
-                self.set_focus(0)
-                self.walker[:] = self.walker
-                self.cached_key = None
-            return
+
         key = super(MainListBox, self).keypress(size, key)
         return key
