@@ -52,12 +52,16 @@ class LogsBuffer(Buffer):
         self.tag = "F" if follow else "L"
         self.display_name = docker_object.short_name
         if isinstance(docker_object, DockerContainer):
-            if follow:
-                logs_generator = docker_object.logs(follow=follow)
-                self.widget = AsyncScrollableListBox(logs_generator, ui)
-            else:
-                logs_data = docker_object.logs(follow=follow)
-                self.widget = ScrollableListBox(logs_data)
+            try:
+                logs = docker_object.logs(follow=follow)
+                if follow:
+                    self.widget = AsyncScrollableListBox(logs, ui)
+                else:
+                    self.widget = ScrollableListBox(logs)
+            except Exception as ex:
+                # FIXME: let's catch 404 and print that container doesn't exist
+                #        instead of printing ugly HTTP error
+                raise NotifyError("Error getting logs for container %s: %r" % (docker_object, ex))
         else:
             raise NotifyError("Only containers have logs.")
         super().__init__()
