@@ -27,6 +27,14 @@ class Buffer:
         if destroy_method:
             destroy_method()
 
+    def find_previous(self, s=None):
+        logger.error("buffer %r doesn't support searching", self.__class__.__name__)
+        raise NotifyError("Searching is not available in this buffer.")
+
+    def find_next(self, s=None):
+        logger.error("buffer %r doesn't support searching", self.__class__.__name__)
+        raise NotifyError("Searching is not available in this buffer.")
+
 
 class MainListBuffer(Buffer):
     display_name = "Listing"
@@ -39,6 +47,14 @@ class MainListBuffer(Buffer):
 
     def refresh(self, focus_on_top=False):
         self.widget.populate(focus_on_top=focus_on_top)
+
+    def find_previous(self, s=None):
+        logger.debug("searching next %r in %r", s, self.__class__.__name__)
+        self.widget.find_previous(s)
+
+    def find_next(self, s=None):
+        logger.debug("searching next %r in %r", s, self.__class__.__name__)
+        self.widget.find_next(s)
 
 
 class LogsBuffer(Buffer):
@@ -66,6 +82,14 @@ class LogsBuffer(Buffer):
             raise NotifyError("Only containers have logs.")
         super().__init__()
 
+    def find_previous(self, s=None):
+        logger.debug("searching next %r in %r", s, self.__class__.__name__)
+        self.widget.find_previous(s)
+
+    def find_next(self, s=None):
+        logger.debug("searching next %r in %r", s, self.__class__.__name__)
+        self.widget.find_next(s)
+
 
 class InspectBuffer(Buffer):
     tag = "I"
@@ -80,6 +104,14 @@ class InspectBuffer(Buffer):
         self.widget = ScrollableListBox(inspect_data)
         self.display_name = docker_object.short_name
         super().__init__()
+
+    def find_previous(self, s=None):
+        logger.debug("searching next %r in %r", s, self.__class__.__name__)
+        self.widget.find_previous(s)
+
+    def find_next(self, s=None):
+        logger.debug("searching next %r in %r", s, self.__class__.__name__)
+        self.widget.find_next(s)
 
 
 class HelpBuffer(Buffer):

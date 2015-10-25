@@ -2,6 +2,7 @@ from collections import deque
 from functools import partial
 import logging
 import threading
+from sen.exceptions import NotifyError
 
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
 from sen.tui.constants import PALLETE, MAIN_LIST_FOCUS
@@ -24,6 +25,7 @@ class UI(urwid.MainLoop):
         self.status_alarms = deque()
         self.status_alarm_lock = threading.Lock()
         self.status_alarm_is_active = False
+        self.prompt_active = False
 
         root_widget = urwid.AttrMap(self.mainframe, "root")
         self.main_list_buffer = None  # singleton
@@ -126,18 +128,31 @@ class UI(urwid.MainLoop):
 
     def unhandled_input(self, key):
         logger.debug("unhandled input: %r", key)
-        if key in ('q', 'Q'):
-            raise urwid.ExitMainLoop()
-        elif key == "N":
-            self.pick_and_display_buffer(self.current_buffer_index - 1)
-        elif key == "n":
-            self.pick_and_display_buffer(self.current_buffer_index + 1)
-        elif key == "x":
-            self.remove_current_buffer()
-        elif key == "@":
-            self.refresh_main_buffer()
-        elif key in ["h", "?"]:
-            self.display_help()
+        try:
+            if self.prompt_active:
+                return
+            if key in ('q', 'Q'):
+                raise urwid.ExitMainLoop()
+            elif key == "ctrl o":
+                self.pick_and_display_buffer(self.current_buffer_index - 1)
+            elif key == "ctrl i":
+                self.pick_and_display_buffer(self.current_buffer_index + 1)
+            elif key == "x":
+                self.remove_current_buffer()
+            elif key == "@":
+                self.refresh_main_buffer()
+            elif key == "/":
+                self.prompt("/")
+            elif key == "n":
+                self.current_buffer.find_next()
+                self.refresh()
+            elif key == "N":
+                self.current_buffer.find_previous()
+            elif key in ["h", "?"]:
+                self.display_help()
+        except NotifyError as ex:
+            self.notify(str(ex), level="error")
+            logger.error(repr(ex))
 
     def run(self):
         self.main_list_buffer = MainListBuffer(self.d, self)
@@ -239,6 +254,48 @@ class UI(urwid.MainLoop):
         columns = urwid.Columns(columns_list)
         return urwid.AttrMap(columns, "status")
 
+    def prompt(self, prompt_text):
+        """
+        prompt for text input.
+        """
+        oldroot = self.widget
+        oldfooter = self.mainframe.get_footer()
+
+        # set up widgets
+        leftpart = urwid.Text(prompt_text, align='left')
+        editpart = urwid.Edit(multiline=True)
+
+        # build promptwidget
+        both = urwid.Columns(
+            [
+                ('fixed', len(prompt_text), leftpart),
+                ('weight', 1, editpart),
+            ])
+        both = urwid.AttrMap(both, "main_list_dg")
+
+        self.mainframe.set_footer(both)
+
+        self.prompt_active = True
+
+        self.mainframe.set_focus("footer")
+
+        def edited(edit_widget, text_input):
+            # FIXME: this function should be somewhere else
+            logger.debug("%r %r", edit_widget, text_input)
+            if text_input.endswith("\n"):
+                # TODO: implement incsearch
+                #   - match needs to be highlighted somehow, not with focus though
+                self.prompt_active = False
+                self.mainframe.set_footer(oldfooter)
+                try:
+                    self.current_buffer.find_next(text_input[:-1])
+                except NotifyError as ex:
+                    self.notify(str(ex), level="error")
+                    logger.error(repr(ex))
+                self.mainframe.set_focus("body")
+
+        urwid.connect_signal(editpart, "change", edited)
+
     def append_status_alarm(self, in_s, f):
         def chain_f(this_function, callback, loop, *args):
             callback()
@@ -272,7 +329,7 @@ class UI(urwid.MainLoop):
             newpile = self.notif_bar.widget_list + msgs
             self.notif_bar = urwid.Pile(newpile)
 
-        self.refresh_main_buffer()
+        self.reload_notif_bar()
 
         def clear(*args):
             newpile = self.notif_bar.widget_list

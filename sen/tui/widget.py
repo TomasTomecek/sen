@@ -139,6 +139,9 @@ class MainLineWidget(urwid.AttrMap):
                          "main_list_dg",
                          focus_map=MAIN_LIST_FOCUS)
 
+    def matches_search(self, s):
+        return self.docker_object.matches_search(s)
+
     def selectable(self):
         return True
 
@@ -165,7 +168,38 @@ class VimMovementListBox(urwid.ListBox):
     def __init__(self, *args, **kwargs):
         # we want "gg"!
         self.cached_key = None
+        self.search_string = None
         super().__init__(*args, **kwargs)
+
+    def reload_widget(self):
+        # this is the easiest way to refresh body
+        self.body[:] = self.body
+
+    def _search(self, reverse_search=False):
+        if self.search_string is None:
+            raise NotifyError("No search pattern specified.")
+        pos = self.focus_position
+        while True:
+            if reverse_search:
+                obj, pos = self.body.get_prev(pos)
+            else:
+                obj, pos = self.body.get_next(pos)
+            if obj is None:
+                raise NotifyError("Pattern not found: %r." % self.search_string)
+            if self.search_string in obj.original_widget.text:
+                self.set_focus(pos)
+                self.reload_widget()
+                break
+
+    def find_previous(self, search_pattern=None):
+        if search_pattern is not None:
+            self.search_string = search_pattern
+        self._search(reverse_search=True)
+
+    def find_next(self, search_pattern=None):
+        if search_pattern is not None:
+            self.search_string = search_pattern
+        self._search()
 
     def keypress(self, size, key):
         logger.debug("VimListBox keypress %r", key)
@@ -183,16 +217,14 @@ class VimMovementListBox(urwid.ListBox):
                 self.set_focus(self.get_focus()[1] + 10)
             except IndexError:
                 self.set_focus(len(self.body) - 1)
-            # this is the easiest way to refresh body
-            self.body[:] = self.body
+            self.reload_widget()
             return
         elif key == "ctrl u":
             try:
                 self.set_focus(self.get_focus()[1] - 10)
             except IndexError:
                 self.set_focus(0)
-            # this is the easiest way to refresh walker
-            self.body[:] = self.body
+            self.reload_widget()
             return
         elif key == "G":
             self.set_focus(len(self.body) - 1)
@@ -203,7 +235,7 @@ class VimMovementListBox(urwid.ListBox):
                 self.cached_key = "g"
             elif self.cached_key == "g":
                 self.set_focus(0)
-                self.body[:] = self.body
+                self.reload_widget()
                 self.cached_key = None
             return
         key = super().keypress(size, key)
@@ -212,6 +244,11 @@ class VimMovementListBox(urwid.ListBox):
 
 class ScrollableListBox(VimMovementListBox):
     def __init__(self, text):
+        # FIXME: put to utils, ensure it's unicode
+        try:
+            text = text.decode("utf-8")
+        except AttributeError:
+            pass
         list_of_texts = text.split("\n")
         self.walker = urwid.SimpleFocusListWalker([
             urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
@@ -272,11 +309,33 @@ class MainListBox(VimMovementListBox):
     def focused_docker_object(self):
         return self.get_focus()[0].docker_object
 
-    def keypress(self, size, key):
-        # FIXME: workaround so we allow "gg" only, and not "g*"
-        if self.cached_key == "g" and key != "g":
-            self.cached_key = None
+    def _search(self, reverse_search=False):
+        if self.search_string is None:
+            raise NotifyError("No search pattern specified.")
+        pos = self.focus_position
+        while True:
+            if reverse_search:
+                obj, pos = self.walker.get_prev(pos)
+            else:
+                obj, pos = self.walker.get_next(pos)
+            if obj is None:
+                raise NotifyError("Pattern not found: %r." % self.search_string)
+            if obj.matches_search(self.search_string):
+                self.set_focus(pos)
+                self.reload_widget()
+                break
 
+    def find_previous(self, search_pattern=None):
+        if search_pattern is not None:
+            self.search_string = search_pattern
+        self._search(reverse_search=True)
+
+    def find_next(self, search_pattern=None):
+        if search_pattern is not None:
+            self.search_string = search_pattern
+        self._search()
+
+    def keypress(self, size, key):
         def run_and_report_on_fail(fn_name, message, notif_level="info"):
             logger.debug("running command %r for key %r", fn_name, key)
             try:

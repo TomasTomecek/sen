@@ -271,6 +271,10 @@ class DockerImage(DockerObject):
     def remove(self):
         self.d.remove_image(self.image_id)
 
+    def matches_search(self, s):
+        return s in self.image_id or \
+            s in self.short_name
+
     def __str__(self):
         return "{} ({})".format(self.image_id, self.names)
 
@@ -334,6 +338,9 @@ class DockerContainer(DockerObject):
         else:
             return image_id[:12]
 
+    def matches_search(self, s):
+        return s in self.container_id or \
+               s in self.short_name
     # api calls
 
     @response_time("inspect container")
