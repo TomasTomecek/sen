@@ -257,7 +257,7 @@ class ScrollableListBox(VimMovementListBox):
         super().__init__(self.walker)
 
 
-class AsyncScrollableListBox(urwid.ListBox):
+class AsyncScrollableListBox(VimMovementListBox):
     def __init__(self, generator, ui, static_data=None):
         self.log_texts = []
         if static_data:
@@ -271,9 +271,14 @@ class AsyncScrollableListBox(urwid.ListBox):
 
         def fetch_logs():
             for line in generator:
+                line = line.decode("utf-8")
                 if self.stop.is_set():
                     break
-                walker.append(urwid.Text(("main_list_dg", line.strip()), align="left", wrap="any"))
+                walker.append(
+                    urwid.AttrMap(
+                        urwid.Text(line.strip(), align="left", wrap="any"), "main_list_dg", "main_list_white"
+                    )
+                )
                 walker.set_focus(len(walker) - 1)
                 ui.refresh()
 
@@ -315,9 +320,9 @@ class MainListBox(VimMovementListBox):
         pos = self.focus_position
         while True:
             if reverse_search:
-                obj, pos = self.walker.get_prev(pos)
+                obj, pos = self.body.get_prev(pos)
             else:
-                obj, pos = self.walker.get_next(pos)
+                obj, pos = self.body.get_next(pos)
             if obj is None:
                 raise NotifyError("Pattern not found: %r." % self.search_string)
             if obj.matches_search(self.search_string):
