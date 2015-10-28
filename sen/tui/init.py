@@ -156,6 +156,7 @@ class UI(urwid.MainLoop):
 
     def run(self):
         self.main_list_buffer = MainListBuffer(self.d, self)
+        self.run_in_background(self.main_list_buffer.refresh, focus_on_top=True)
         self.add_and_display_buffer(self.main_list_buffer, redraw=False)
         super().run()
 

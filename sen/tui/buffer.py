@@ -41,12 +41,13 @@ class MainListBuffer(Buffer):
     tag = "M"
 
     def __init__(self, docker_backend, ui):
+        self.ui = ui
         self.widget = MainListBox(docker_backend, ui)
         super().__init__()
-        self.refresh(focus_on_top=True)
 
     def refresh(self, focus_on_top=False):
         self.widget.populate(focus_on_top=focus_on_top)
+        self.ui.refresh()
 
     def find_previous(self, s=None):
         logger.debug("searching next %r in %r", s, self.__class__.__name__)
