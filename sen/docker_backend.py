@@ -95,6 +95,18 @@ class ImageNameStruct(object):
             tag=self.tag)
 
 
+def operation(fmt_str):
+    def wrap(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            pretty_message = fmt_str.format(object_type=self.pretty_object_type,
+                                            object_short_name=self.short_name)
+            return Operation(pretty_message=pretty_message)
+        return wrapper
+    return wrap
+
+
 def response_time(call_name):
     def wrap(func):
         @functools.wraps(func)
@@ -116,11 +128,19 @@ def response_time(call_name):
             command_took = (after - before).total_seconds() * 1000
             s = (command_name, command_took)
             b.last_command.append(s)
-            logger.debug("%s(%s, %s) -> [%f ms]", command_name, args, kwargs, command_took)
-            logger.debug(b.last_command)
+            logger.debug("%s(%s, %s) %s -> [%f ms]", command_name, args, kwargs, self, command_took)
             return response
         return wrapper
     return wrap
+
+
+class Operation:
+    """
+    class for describing performed operation
+    """
+
+    def __init__(self, pretty_message=""):
+        self.pretty_message = pretty_message
 
 
 class DockerObject:
@@ -356,30 +376,37 @@ class DockerContainer(DockerObject):
         return logs_data
 
     @response_time("remove container")
+    @operation("{object_type} {object_short_name} removed!")
     def remove(self):
         self.d.remove_container(self.container_id)
 
     @response_time("start container")
+    @operation("{object_type} {object_short_name} started.")
     def start(self):
         self.d.start(self.container_id)
 
     @response_time("stop container")
+    @operation("{object_type} {object_short_name} stopped.")
     def stop(self):
         self.d.stop(self.container_id)
 
     @response_time("restart container")
+    @operation("{object_type} {object_short_name} restarted.")
     def restart(self):
         self.d.restart(self.container_id)
 
     @response_time("kill container")
+    @operation("{object_type} {object_short_name} killed.")
     def kill(self):
         self.d.kill(self.container_id)
 
     @response_time("pause container")
+    @operation("{object_type} {object_short_name} paused.")
     def pause(self):
         self.d.pause(self.container_id)
 
     @response_time("unpause container")
+    @operation("{object_type} {object_short_name} unpaused.")
     def unpause(self):
         self.d.unpause(self.container_id)
 

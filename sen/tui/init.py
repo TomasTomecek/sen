@@ -1,15 +1,15 @@
 from collections import deque
+from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
 import logging
 import threading
 from sen.exceptions import NotifyError
 
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
-from sen.tui.constants import PALLETE, MAIN_LIST_FOCUS
+from sen.tui.constants import PALLETE
 from sen.docker_backend import DockerBackend
 
 import urwid
-from sen.tui.widget import AdHocAttrMap
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,8 @@ class UI(urwid.MainLoop):
         self.status_alarm_is_active = False
         self.prompt_active = False
 
+        self.executor = ThreadPoolExecutor(max_workers=4)
+
         root_widget = urwid.AttrMap(self.mainframe, "root")
         self.main_list_buffer = None  # singleton
 
@@ -38,6 +40,10 @@ class UI(urwid.MainLoop):
         self.handle_mouse = False
         self.current_buffer = None
         self.buffers = []
+
+    def run_in_background(self, task, *args, **kwargs):
+        logger.info("running task %r(%s, %s) in background", task, args, kwargs)
+        self.executor.submit(task, *args, **kwargs)
 
     def refresh(self):
         self.draw_screen()
@@ -62,6 +68,7 @@ class UI(urwid.MainLoop):
             bottom.append(self.notif_bar)
         bottom.append(self.status_bar)
         self.mainframe.set_footer(urwid.Pile(bottom))
+        self.refresh()
 
     def reload_footer(self):
         logger.debug("reload footer")
@@ -71,6 +78,7 @@ class UI(urwid.MainLoop):
         self.status_bar = self.build_statusbar()
         bottom.append(self.status_bar)
         self.mainframe.set_footer(urwid.Pile(bottom))
+        # do not refresh here b/c mainloop might not started
 
     def display_buffer(self, buffer, redraw=True):
         """
@@ -140,12 +148,11 @@ class UI(urwid.MainLoop):
             elif key == "x":
                 self.remove_current_buffer()
             elif key == "@":
-                self.refresh_main_buffer()
+                self.run_in_background(self.refresh_main_buffer)
             elif key == "/":
                 self.prompt("/")
             elif key == "n":
                 self.current_buffer.find_next()
-                self.refresh()
             elif key == "N":
                 self.current_buffer.find_previous()
             elif key in ["h", "?"]:
@@ -333,6 +340,7 @@ class UI(urwid.MainLoop):
         self.reload_notif_bar()
 
         def clear(*args):
+            logger.debug("clear last message in notif bar")
             newpile = self.notif_bar.widget_list
             for l in msgs:
                 if l in newpile:
@@ -343,4 +351,5 @@ class UI(urwid.MainLoop):
                 self.notif_bar = None
             self.reload_notif_bar()
 
+        logger.debug("clearing message %r in 10", message)
         self.set_alarm_in(10, clear)
