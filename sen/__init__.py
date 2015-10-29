@@ -11,10 +11,11 @@ def set_logging(name="sen", level=logging.DEBUG):
 
     if level == logging.DEBUG:
         handler = logging.FileHandler("debug.log")
-    else:
-        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(logging.DEBUG)
+    # else:
+    #     handler = logging.StreamHandler(sys.stderr)
 
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s %(name)-18s %(levelname)-6s %(message)s', '%H:%M:%S')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+        formatter = logging.Formatter('%(asctime)s %(name)-18s %(levelname)-6s %(message)s',
+                                      '%H:%M:%S')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
