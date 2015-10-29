@@ -1,6 +1,7 @@
 # sen
 
 [![Code Issues](https://www.quantifiedcode.com/api/v1/project/5282fc57c1094698b39071d98c76cdb6/badge.svg)](https://www.quantifiedcode.com/app/project/5282fc57c1094698b39071d98c76cdb6)
+[![Circle CI](https://circleci.com/gh/TomasTomecek/sen.svg?style=svg)](https://circleci.com/gh/TomasTomecek/sen)
 
 Since I started using docker, I always dreamed of having a docker TUI. Something like [tig](https://github.com/jonas/tig), [htop](http://hisham.hm/htop/) or [alot](https://github.com/pazz/alot). Some appeared over time. Such as [docker-mon](https://github.com/icecrime/docker-mon) or [ctop](https://github.com/yadutaf/ctop). Unfortunately, those are not proper docker TUIs. They are meant for monitoring and diagnostics.
 

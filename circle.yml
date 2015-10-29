@@ -1,0 +1,9 @@
+machine:
+  python:
+    version: 3.4.3
+
+test:
+  pre:
+    - "py.test -vv ./tests/":
+       environment:
+         PYTHONPATH: $PWD
