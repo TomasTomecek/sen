@@ -482,10 +482,32 @@ class DockerBackend:
             v.sort(key=lambda x: x.time_created, reverse=True)
         return v
 
+    def realtime_updates(self):
+        for event in self.client.events(decode=True):
+            logger.debug("RT event: %s", event)
+
+            # event["from'] means it's a container
+            if "from" in event:
+                # inspect doesn't contain info about status and you can't query just one
+                # container with containers()
+                # let's do full-blown containers() query; it's not that expensive
+                self.get_containers(return_list=False)
+            else:
+                # similar as ^
+                # images() doesn't support query by ID
+                # inspect doesn't contain info about repositories
+                self.get_images(return_list=False)
+            content = list(self.containers.values()) + list(self.images.values())
+            content.sort(key=lambda x: x.created, reverse=True)
+            yield content
+
     # service methods
 
     def get_image_by_id(self, image_id):
-        return self._images.get(image_id, None)
+        return self._images.get(image_id)
+
+    def get_container_by_id(self, container_id):
+        return self._containers.get(container_id)
 
     def initial_content(self):
         content = self.get_containers() + self.get_images()

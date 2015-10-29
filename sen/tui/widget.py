@@ -297,11 +297,28 @@ class MainListBox(VimMovementListBox):
         self.walker = urwid.SimpleFocusListWalker([])
         super(MainListBox, self).__init__(self.walker)
 
+        self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
+        self.thread.start()
+
     def populate(self, focus_on_top=False):
         widgets = self._assemble_initial_content()
         self.walker[:] = widgets
         if focus_on_top:
             self.set_focus(0)
+
+    def realtime_updates(self):
+        """
+        update listing realtime as events come from docker
+
+        :return:
+        """
+        for content in self.d.realtime_updates():
+            widgets = []
+            for o in content:
+                line = MainLineWidget(o)
+                widgets.append(line)
+            self.walker[:] = widgets
+            self.ui.refresh()
 
     def _assemble_initial_content(self):
         widgets = []
@@ -360,7 +377,9 @@ class MainListBox(VimMovementListBox):
                 self.ui.notify(str(ex), level="error")
             else:
                 self.ui.notify(operation.pretty_message, level=notif_level)
-                self.ui.refresh_main_buffer()
+                # we don't need to refresh whole buffer here, since we are getting realtime
+                # updates using events call
+                # self.ui.refresh_main_buffer()
 
         def do_and_report_on_fail(f, docker_object):
             try:
