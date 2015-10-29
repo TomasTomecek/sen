@@ -17,4 +17,5 @@ setup(
     },
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=("urwid", "humanize", "docker-py"),
+    test_requires=("pytest", "flexmock")
 )
