@@ -315,7 +315,11 @@ class MainListBox(VimMovementListBox):
         for content in self.d.realtime_updates():
             widgets = []
             for o in content:
-                line = MainLineWidget(o)
+                try:
+                    line = MainLineWidget(o)
+                except Exception as ex:
+                    logger.error("%r", ex)
+                    continue
                 widgets.append(line)
             self.walker[:] = widgets
             self.ui.refresh()
