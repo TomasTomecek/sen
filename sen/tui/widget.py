@@ -7,7 +7,7 @@ from sen.exceptions import NotifyError
 
 from sen.tui.constants import MAIN_LIST_FOCUS
 from sen.docker_backend import DockerImage, DockerContainer
-
+from sen.util import _ensure_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -244,11 +244,7 @@ class VimMovementListBox(urwid.ListBox):
 
 class ScrollableListBox(VimMovementListBox):
     def __init__(self, text):
-        # FIXME: put to utils, ensure it's unicode
-        try:
-            text = text.decode("utf-8")
-        except AttributeError:
-            pass
+        text = _ensure_unicode(text)
         list_of_texts = text.split("\n")
         self.walker = urwid.SimpleFocusListWalker([
             urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
@@ -261,7 +257,8 @@ class AsyncScrollableListBox(VimMovementListBox):
     def __init__(self, generator, ui, static_data=None):
         self.log_texts = []
         if static_data:
-            for d in static_data.decode("utf-8").split("\n"):
+            static_data = _ensure_unicode(static_data).split("\n")
+            for d in static_data:
                 log_entry = d.strip()
                 if log_entry:
                     self.log_texts.append(urwid.Text(("main_list_dg", log_entry),
@@ -271,7 +268,7 @@ class AsyncScrollableListBox(VimMovementListBox):
 
         def fetch_logs():
             for line in generator:
-                line = line.decode("utf-8")
+                line = _ensure_unicode(line)
                 if self.stop.is_set():
                     break
                 walker.append(
