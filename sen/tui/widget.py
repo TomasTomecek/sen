@@ -7,9 +7,38 @@ from sen.exceptions import NotifyError
 
 from sen.tui.constants import MAIN_LIST_FOCUS
 from sen.docker_backend import DockerImage, DockerContainer
-from sen.util import _ensure_unicode
+from sen.util import _ensure_unicode, log_traceback
 
 logger = logging.getLogger(__name__)
+
+
+def get_color_text(markup, color_attr="status_text"):
+    w = urwid.AttrMap(urwid.Text(markup), color_attr)
+    return len(markup), w
+
+
+def get_operation_notify_widget(operation, notif_level="notif_info", display_always=True):
+    took = operation.took
+    text_list = []
+    if took > 300:
+        fmt_str = "{} Query took "
+        text_list.append((notif_level, fmt_str.format(operation.pretty_message)))
+        command_took_str = "{:.2f}".format(took)
+        if took < 500:
+            text_list.append(("notif_yellow", command_took_str))
+        elif took < 1000:
+            text_list.append(("notif_orange", command_took_str))
+        else:
+            command_took_str = "{:.2f}".format(took / 1000.0)
+            text_list.append(("notif_red", command_took_str))
+            text_list.append((notif_level, " s"))
+        if took < 1000:
+            text_list.append((notif_level, " ms"))
+    elif display_always:
+        text_list.append(operation.pretty_message)
+    else:
+        return
+    return urwid.AttrMap(urwid.Text(text_list), notif_level)
 
 
 class AdHocAttrMap(urwid.AttrMap):
@@ -322,10 +351,18 @@ class MainListBox(VimMovementListBox):
             self.ui.refresh()
 
     def _assemble_initial_content(self):
+        def query_notify(operation):
+            w = get_operation_notify_widget(operation)
+            if w:
+                self.ui.notify_widget(w)
+
         widgets = []
-        for o in self.d.initial_content():
+        query, c_op, i_op = self.d.initial_content()
+        for o in query:
             line = MainLineWidget(o)
             widgets.append(line)
+        query_notify(i_op)
+        query_notify(c_op)
         return widgets
 
     @property
@@ -359,10 +396,14 @@ class MainListBox(VimMovementListBox):
         self._search()
 
     def keypress(self, size, key):
+        # FIXME: put this into own file
         # these functions will be executed in threads
         # provide arguments, don't access self.<attrib> b/c those will be
         # evaluated when the code is running, not when calling it
-        def run_and_report_on_fail(fn_name, docker_object, notif_level="info"):
+        @log_traceback
+        def run_and_report_on_fail(fn_name, docker_object, pre_message,
+                                   notif_level="info"):
+            self.ui.notify_message(pre_message)
             try:
                 operation = getattr(docker_object, fn_name)()
             except AttributeError:
@@ -372,21 +413,24 @@ class MainListBox(VimMovementListBox):
                     docker_object.short_name)
                 log_txt = "you can't {} {}".format(fn_name, docker_object)
                 logger.error(log_txt)
-                self.ui.notify(notif_txt, level="error")
+                self.ui.notify_message(notif_txt, level="error")
             except Exception as ex:
                 logger.error(repr(ex))
-                self.ui.notify(str(ex), level="error")
+                self.ui.notify_message(str(ex), level="error")
             else:
-                self.ui.notify(operation.pretty_message, level=notif_level)
+                self.ui.notify_widget(
+                    get_operation_notify_widget(operation, notif_level=notif_level)
+                )
                 # we don't need to refresh whole buffer here, since we are getting realtime
                 # updates using events call
                 # self.ui.refresh_main_buffer()
 
+        @log_traceback
         def do_and_report_on_fail(f, docker_object):
             try:
                 f(docker_object)
             except NotifyError as ex:
-                self.ui.notify(str(ex), level="error")
+                self.ui.notify_message(str(ex), level="error")
                 logger.error(repr(ex))
 
         logger.debug("size %r, key %r", size, key)
@@ -400,28 +444,102 @@ class MainListBox(VimMovementListBox):
             self.ui.run_in_background(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
             return
         elif key == "d":
-            self.ui.run_in_background(run_and_report_on_fail, "remove", self.focused_docker_object,
-                                      "error")
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "remove",
+                self.focused_docker_object,
+                "Removing {} {}...".format(self.focused_docker_object.pretty_object_type.lower(),
+                                           self.focused_docker_object.short_name),
+                notif_level="error"
+            )
             return
         elif key == "s":
-            self.ui.run_in_background(run_and_report_on_fail, "start", self.focused_docker_object)
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "start",
+                self.focused_docker_object,
+                "Starting container {}...".format(self.focused_docker_object.short_name)
+            )
             return
         elif key == "r":
-            self.ui.run_in_background(run_and_report_on_fail, "restart", self.focused_docker_object)
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "restart",
+                self.focused_docker_object,
+                "Restarting container {}...".format(self.focused_docker_object.short_name)
+            )
             return
         elif key == "t":
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "stop",
+                self.focused_docker_object,
+                "Stopping container {}...".format(self.focused_docker_object.short_name)
+            )
             self.ui.run_in_background(run_and_report_on_fail, "stop", self.focused_docker_object)
             return
         elif key == "p":
-            self.ui.run_in_background(run_and_report_on_fail, "pause", self.focused_docker_object)
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "pause",
+                self.focused_docker_object,
+                "Pausing container {}...".format(self.focused_docker_object.short_name)
+            )
             return
         elif key == "u":
-            self.ui.run_in_background(run_and_report_on_fail, "unpause", self.focused_docker_object)
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "unpause",
+                self.focused_docker_object,
+                "Unpausing container {}...".format(self.focused_docker_object.short_name)
+            )
             return
         elif key == "X":
-            self.ui.run_in_background(run_and_report_on_fail, "kill", self.focused_docker_object,
-                                      "error")
+            self.ui.run_in_background(
+                run_and_report_on_fail,
+                "kill",
+                self.focused_docker_object,
+                "Killing container {}...".format(self.focused_docker_object.short_name)
+            )
             return
 
         key = super(MainListBox, self).keypress(size, key)
         return key
+
+    def status_bar(self):
+        columns_list = []
+
+        def add_subwidget(markup, color_attr=None):
+            if color_attr is None:
+                w = urwid.AttrMap(urwid.Text(markup), "status_text")
+            else:
+                w = urwid.AttrMap(urwid.Text(markup), color_attr)
+            columns_list.append((len(markup), w))
+
+        add_subwidget("Images: ")
+        images_count = len(self.d.images)
+        if images_count < 10:
+            add_subwidget(str(images_count), "status_text_green")
+        elif images_count < 50:
+            add_subwidget(str(images_count), "status_text_yellow")
+        else:
+            add_subwidget(str(images_count), "status_text_orange")
+
+        add_subwidget(", Containers: ")
+        containers_count = len(self.d.containers)
+        if containers_count < 5:
+            add_subwidget(str(containers_count), "status_text_green")
+        elif containers_count < 30:
+            add_subwidget(str(containers_count), "status_text_yellow")
+        elif containers_count < 100:
+            add_subwidget(str(containers_count), "status_text_orange")
+        else:
+            add_subwidget(str(containers_count), "status_text_red")
+
+        add_subwidget(", Running: ")
+        running_containers = self.d.sorted_containers(sort_by_time=False, stopped=False)
+        running_containers_n = len(running_containers)
+        add_subwidget(str(running_containers_n),
+                      "status_text_green" if running_containers_n > 0 else "status_text")
+
+        return columns_list

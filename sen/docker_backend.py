@@ -3,7 +3,7 @@ import functools
 import json
 import logging
 import datetime
-from collections import deque
+import traceback
 
 import docker
 import humanize
@@ -99,37 +99,24 @@ def operation(fmt_str):
     def wrap(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            func(self, *args, **kwargs)
-            pretty_message = fmt_str.format(object_type=self.pretty_object_type,
-                                            object_short_name=self.short_name)
-            return Operation(pretty_message=pretty_message)
-        return wrapper
-    return wrap
-
-
-def response_time(call_name):
-    def wrap(func):
-        @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+            command_took = None
+            pretty_message = ""
             # cached queries do not access backend -- we don't care about that
             if kwargs.get("cached", False) is True:
-                return func(self, *args, **kwargs)
-            before = datetime.datetime.now()
-            response = func(self, *args, **kwargs)
-            after = datetime.datetime.now()
-            if isinstance(self, DockerBackend):
-                b = self
-            elif isinstance(self, DockerObject):
-                b = self.docker_backend
+                response = func(self, *args, **kwargs)
             else:
-                raise RuntimeError("wrong instance")
-            command_name = call_name or func.__name__
-            # we want milliseconds, not seconds
-            command_took = (after - before).total_seconds() * 1000
-            s = (command_name, command_took)
-            b.last_command.append(s)
-            logger.debug("%s(%s, %s) %s -> [%f ms]", command_name, args, kwargs, self, command_took)
-            return response
+                before = datetime.datetime.now()
+                response = func(self, *args, **kwargs)
+                after = datetime.datetime.now()
+
+                # we want milliseconds, not seconds
+                command_took = (after - before).total_seconds() * 1000
+                logger.debug("%s(%s, %s) %s -> [%f ms]", func.__name__, args, kwargs, self,
+                             command_took)
+            if fmt_str:
+                pretty_message = fmt_str.format(object_type=getattr(self, "pretty_object_type", ""),
+                                                object_short_name=getattr(self, "short_name", ""))
+            return Operation(response, pretty_message=pretty_message, took=command_took)
         return wrapper
     return wrap
 
@@ -139,8 +126,10 @@ class Operation:
     class for describing performed operation
     """
 
-    def __init__(self, pretty_message=""):
+    def __init__(self, response, pretty_message="", took=None):
+        self.response = response
         self.pretty_message = pretty_message
+        self.took = took
 
 
 class DockerObject:
@@ -217,7 +206,8 @@ class DockerImage(DockerObject):
         if self.data:
             return self.data.get("ParentId", None)
         else:
-            return self.inspect(cached=True).get("Parent", None)
+            inspect_operation = self.inspect(cached=True)
+            return inspect_operation.response.get("Parent", None)
 
     @property
     def pretty_object_type(self):
@@ -229,6 +219,7 @@ class DockerImage(DockerObject):
             parent_id = self.parent_id
         except Exception as ex:
             logger.error("error while getting parent ID of image %s: %r", self, ex)
+            logger.info(traceback.format_exc())
             raise
         if parent_id:
             return DockerImage(None, self.docker_backend, object_id=parent_id)
@@ -281,15 +272,15 @@ class DockerImage(DockerObject):
             else:
                 return parent_image
 
-    @response_time("inspect image")
+    @operation("")
     def inspect(self, cached=False):
         if self._inspect is None or cached is False:
             self._inspect = self.d.inspect_image(self.image_id)
         return self._inspect
 
-    @response_time("remove image")
+    @operation("")
     def remove(self):
-        self.d.remove_image(self.image_id)
+        return self.d.remove_image(self.image_id)
 
     def matches_search(self, s):
         return s in self.image_id or \
@@ -363,49 +354,42 @@ class DockerContainer(DockerObject):
                s in self.short_name
     # api calls
 
-    @response_time("inspect container")
+    @operation("")
     def inspect(self, cached=False):
         if cached is False or self._inspect is None:
             self._inspect = self.d.inspect_container(self.container_id)
         return self._inspect
 
-    @response_time("logs")
+    @operation("Get logs of container {object_short_name}.")
     def logs(self, follow=False):
         # when tail is set to all, it takes ages to populate widget
         logs_data = self.d.logs(self.container_id, stream=follow, tail=16)
         return logs_data
 
-    @response_time("remove container")
     @operation("{object_type} {object_short_name} removed!")
     def remove(self):
         self.d.remove_container(self.container_id)
 
-    @response_time("start container")
     @operation("{object_type} {object_short_name} started.")
     def start(self):
         self.d.start(self.container_id)
 
-    @response_time("stop container")
     @operation("{object_type} {object_short_name} stopped.")
     def stop(self):
         self.d.stop(self.container_id)
 
-    @response_time("restart container")
     @operation("{object_type} {object_short_name} restarted.")
     def restart(self):
         self.d.restart(self.container_id)
 
-    @response_time("kill container")
     @operation("{object_type} {object_short_name} killed.")
     def kill(self):
         self.d.kill(self.container_id)
 
-    @response_time("pause container")
     @operation("{object_type} {object_short_name} paused.")
     def pause(self):
         self.d.pause(self.container_id)
 
-    @response_time("unpause container")
     @operation("{object_type} {object_short_name} unpaused.")
     def unpause(self):
         self.d.unpause(self.container_id)
@@ -420,7 +404,6 @@ class DockerBackend:
         self._client = None
         self._containers = None
         self._images = None
-        self.last_command = deque()
 
     # lazy properties
 
@@ -444,7 +427,7 @@ class DockerBackend:
 
     # backend queries
 
-    @response_time("images")
+    @operation("Get list of images.")
     def get_images(self, return_list=True):
         logger.debug("doing images() query")
         self._images = {}
@@ -462,7 +445,7 @@ class DockerBackend:
             v.sort(key=lambda x: x.time_created, reverse=True)
         return v
 
-    @response_time("containers")
+    @operation("Get list of containers.")
     def get_containers(self, return_list=True):
         logger.debug("doing containers() query")
         self._containers = {}
@@ -510,6 +493,8 @@ class DockerBackend:
         return self._containers.get(container_id)
 
     def initial_content(self):
-        content = self.get_containers() + self.get_images()
+        containers_o = self.get_containers()
+        images_o = self.get_images()
+        content = containers_o.response + images_o.response
         content.sort(key=lambda x: x.created, reverse=True)
-        return content
+        return content, containers_o, images_o

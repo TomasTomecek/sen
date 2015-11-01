@@ -41,6 +41,11 @@ class Buffer:
         except AttributeError:
             raise NotifyError("Can't search in this buffer.")
 
+    def build_status_bar(self):
+        status_bar = getattr(self.widget, "status_bar", None)
+        if status_bar:
+            return status_bar()
+
 
 class MainListBuffer(Buffer):
     display_name = "Listing"
