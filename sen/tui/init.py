@@ -170,6 +170,9 @@ class UI(urwid.MainLoop):
     def reload_footer(self):
         self.footer.reload_footer()
 
+    def remove_notification_message(self, message):
+        self.footer.remove_notification_message(message)
+
     def notify_widget(self, *args, **kwargs):
         self.footer.notify_widget(*args, **kwargs)
 

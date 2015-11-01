@@ -179,7 +179,7 @@ class DockerObject:
         raise NotImplementedError()
 
     def display_inspect(self):
-        return json.dumps(self.inspect(), indent=2)
+        return json.dumps(self.inspect().response, indent=2)
 
 
 def graceful_chain_get(d, *args):
@@ -360,7 +360,7 @@ class DockerContainer(DockerObject):
             self._inspect = self.d.inspect_container(self.container_id)
         return self._inspect
 
-    @operation("Get logs of container {object_short_name}.")
+    @operation("Logs of container {object_short_name} received.")
     def logs(self, follow=False):
         # when tail is set to all, it takes ages to populate widget
         logs_data = self.d.logs(self.container_id, stream=follow, tail=16)

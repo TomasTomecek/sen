@@ -352,7 +352,7 @@ class MainListBox(VimMovementListBox):
 
     def _assemble_initial_content(self):
         def query_notify(operation):
-            w = get_operation_notify_widget(operation)
+            w = get_operation_notify_widget(operation, display_always=False)
             if w:
                 self.ui.notify_widget(w)
 
@@ -418,6 +418,7 @@ class MainListBox(VimMovementListBox):
                 logger.error(repr(ex))
                 self.ui.notify_message(str(ex), level="error")
             else:
+                self.ui.remove_notification_message(pre_message)
                 self.ui.notify_widget(
                     get_operation_notify_widget(operation, notif_level=notif_level)
                 )
@@ -476,7 +477,6 @@ class MainListBox(VimMovementListBox):
                 self.focused_docker_object,
                 "Stopping container {}...".format(self.focused_docker_object.short_name)
             )
-            self.ui.run_in_background(run_and_report_on_fail, "stop", self.focused_docker_object)
             return
         elif key == "p":
             self.ui.run_in_background(

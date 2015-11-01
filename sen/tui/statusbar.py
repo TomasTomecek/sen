@@ -7,6 +7,7 @@ import time
 
 import urwid
 from sen.tui.constants import STATUS_BAR_REFRESH_SECONDS, CLEAR_NOTIF_BAR_MESSAGE_IN
+from sen.util import log_traceback
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class Footer:
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
-        left_widgets = self.ui.current_buffer.build_status_bar()
+        left_widgets = self.ui.current_buffer.build_status_bar() or []
         text_list = []
         for idx, buffer in enumerate(self.ui.buffers):
             #  #1 [I] fedora #2 [L]
@@ -109,6 +110,26 @@ class Footer:
 
         urwid.connect_signal(editpart, "change", edited)
 
+    def remove_notification_message(self, message):
+        logger.debug("requested remove of message %r from notif bar", message)
+        with self.notifications_lock:
+            if message in self.notifications:
+                self.notifications.remove(message)
+            if self.notif_bar:
+                newpile = self.notif_bar.widget_list
+                for w in newpile:
+                    if w.original_widget.get_text()[0] == message:
+                        logger.debug("remove widget $r from new pile", w)
+                        newpile.remove(w)
+                        break
+                if newpile:
+                    self.notif_bar = urwid.Pile(newpile)
+                else:
+                    self.notif_bar = None
+            else:
+                self.notif_bar = None
+        self.reload_notif_bar()
+
     def notify_message(self, message=None, level="info", clear_if_dupl=True,
                         clear_in=CLEAR_NOTIF_BAR_MESSAGE_IN):
         """
@@ -132,11 +153,12 @@ class Footer:
 
         opens notification popup.
         """
+        @log_traceback
         def clear_notification():
             time.sleep(clear_in)
             logger.debug("remove widget %r from notif bar", widget)
             with self.notifications_lock:
-                if message:
+                if message in self.notifications:
                     self.notifications.remove(message)
                 newpile = self.notif_bar.widget_list
                 if widget in newpile:
@@ -158,6 +180,7 @@ class Footer:
             if not self.notif_bar:
                 self.notif_bar = urwid.Pile(widget_list)
             else:
+                logger.debug(self.notif_bar.widget_list)
                 newpile = self.notif_bar.widget_list + widget_list
                 self.notif_bar = urwid.Pile(newpile)
 

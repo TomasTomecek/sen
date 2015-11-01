@@ -2,7 +2,7 @@ import logging
 from sen.docker_backend import DockerContainer
 from sen.exceptions import NotifyError
 from sen.tui.constants import HELP_TEXT
-from sen.tui.widget import AsyncScrollableListBox, MainListBox, ScrollableListBox
+from sen.tui.widget import AsyncScrollableListBox, MainListBox, ScrollableListBox, get_operation_notify_widget
 
 logger = logging.getLogger(__name__)
 
@@ -73,11 +73,15 @@ class LogsBuffer(Buffer):
         self.display_name = docker_object.short_name
         if isinstance(docker_object, DockerContainer):
             try:
-                logs = docker_object.logs(follow=follow)
+                pre_message = "Getting logs for container {}...".format(docker_object.short_name)
+                ui.notify_message(pre_message)
+                operation = docker_object.logs(follow=follow)
+                ui.remove_notification_message(pre_message)
+                ui.notify_widget(get_operation_notify_widget(operation, display_always=False))
                 if follow:
-                    self.widget = AsyncScrollableListBox(logs, ui)
+                    self.widget = AsyncScrollableListBox(operation.response, ui)
                 else:
-                    self.widget = ScrollableListBox(logs)
+                    self.widget = ScrollableListBox(operation.response)
             except Exception as ex:
                 # FIXME: let's catch 404 and print that container doesn't exist
                 #        instead of printing ugly HTTP error
@@ -85,7 +89,6 @@ class LogsBuffer(Buffer):
         else:
             raise NotifyError("Only containers have logs.")
         super().__init__()
-
 
 
 class InspectBuffer(Buffer):
