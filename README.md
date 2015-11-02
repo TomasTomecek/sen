@@ -53,6 +53,8 @@ Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
 /      search
 n      next search occurrence
 N      previous search occurrence
+f4     filter items in list (space-separated list of query strings, currently supported:
+         c[ontainer[s]], i[mage[s]], r[unning])
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer

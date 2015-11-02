@@ -2,7 +2,7 @@ import logging
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from sen.exceptions import NotifyError
-from sen.tui.commands import search
+from sen.tui.commands import search, filter
 from sen.tui.statusbar import Footer
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
 from sen.tui.constants import PALLETE
@@ -129,6 +129,8 @@ class UI(urwid.MainLoop):
                 self.run_in_background(self.refresh_main_buffer)
             elif key == "/":
                 self.prompt("/", search)
+            elif key == "f4":
+                self.footer.prompt("filter ", filter)
             elif key == "n":
                 self.current_buffer.find_next()
             elif key == "N":

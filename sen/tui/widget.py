@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 import threading
 
 import urwid
@@ -375,7 +376,7 @@ class MainListBox(VimMovementListBox):
                 self.ui.notify_widget(w)
 
         widgets = []
-        query, c_op, i_op = self.d.initial_content()
+        query, c_op, i_op = self.d.filter()
         for o in query:
             line = MainLineWidget(o)
             widgets.append(line)
@@ -385,7 +386,10 @@ class MainListBox(VimMovementListBox):
 
     @property
     def focused_docker_object(self):
-        return self.get_focus()[0].docker_object
+        try:
+            return self.get_focus()[0].docker_object
+        except AttributeError as ex:
+            raise NotifyError("Nothing selected!")
 
     def find_previous(self, search_pattern=None):
         if search_pattern is not None:
@@ -396,6 +400,54 @@ class MainListBox(VimMovementListBox):
         if search_pattern is not None:
             self.search_string = search_pattern
         self._search()
+
+    def filter(self, s):
+        s = s.strip()
+        if not s:
+            self.populate(focus_on_top=True)
+            return
+
+        backend_query = {
+            "cached": True,
+            "containers": False,
+            "images": False,
+        }
+
+        def containers():
+            backend_query["containers"] = True
+
+        def images():
+            backend_query["images"] = True
+
+        def running():
+            backend_query["stopped"] = False
+
+        query_conf = [
+            {
+                "query_values": ["c", "container", "containers"],
+                "callback": containers
+            }, {
+                "query_values": ["i", "images", "images"],
+                "callback": images
+            }, {
+                "query_values": ["r", "running"],
+                "callback": running
+            },
+        ]
+        query_list = re.split(r"[\s,]", s)
+        for query_str in query_list:
+            for c in query_conf:
+                if query_str in c["query_values"]:
+                    c["callback"]()
+                    break
+            else:
+                raise NotifyError("Invalid query string: %r", query_str)
+        widgets = []
+        query, c_op, i_op = self.d.filter(**backend_query)
+        for o in query:
+            line = MainLineWidget(o)
+            widgets.append(line)
+        self.walker[:] = widgets
 
     def keypress(self, size, key):
         # FIXME: put this into own file
@@ -437,73 +489,78 @@ class MainListBox(VimMovementListBox):
                 logger.error(repr(ex))
 
         logger.debug("size %r, key %r", size, key)
-        if key == "i":
-            self.ui.run_in_background(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
-            return
-        elif key == "l":
-            self.ui.run_in_background(do_and_report_on_fail, self.ui.display_logs, self.focused_docker_object)
-            return
-        elif key == "f":
-            self.ui.run_in_background(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
-            return
-        elif key == "d":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "remove",
-                self.focused_docker_object,
-                "Removing {} {}...".format(self.focused_docker_object.pretty_object_type.lower(),
-                                           self.focused_docker_object.short_name),
-                notif_level="important"
-            )
-            return
-        elif key == "s":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "start",
-                self.focused_docker_object,
-                "Starting container {}...".format(self.focused_docker_object.short_name)
-            )
-            return
-        elif key == "r":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "restart",
-                self.focused_docker_object,
-                "Restarting container {}...".format(self.focused_docker_object.short_name)
-            )
-            return
-        elif key == "t":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "stop",
-                self.focused_docker_object,
-                "Stopping container {}...".format(self.focused_docker_object.short_name)
-            )
-            return
-        elif key == "p":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "pause",
-                self.focused_docker_object,
-                "Pausing container {}...".format(self.focused_docker_object.short_name)
-            )
-            return
-        elif key == "u":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "unpause",
-                self.focused_docker_object,
-                "Unpausing container {}...".format(self.focused_docker_object.short_name)
-            )
-            return
-        elif key == "X":
-            self.ui.run_in_background(
-                run_and_report_on_fail,
-                "kill",
-                self.focused_docker_object,
-                "Killing container {}...".format(self.focused_docker_object.short_name)
-            )
-            return
+
+        try:
+            if key == "i":
+                self.ui.run_in_background(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
+                return
+            elif key == "l":
+                self.ui.run_in_background(do_and_report_on_fail, self.ui.display_logs, self.focused_docker_object)
+                return
+            elif key == "f":
+                self.ui.run_in_background(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
+                return
+            elif key == "d":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "remove",
+                    self.focused_docker_object,
+                    "Removing {} {}...".format(self.focused_docker_object.pretty_object_type.lower(),
+                                               self.focused_docker_object.short_name),
+                    notif_level="important"
+                )
+                return
+            elif key == "s":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "start",
+                    self.focused_docker_object,
+                    "Starting container {}...".format(self.focused_docker_object.short_name)
+                )
+                return
+            elif key == "r":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "restart",
+                    self.focused_docker_object,
+                    "Restarting container {}...".format(self.focused_docker_object.short_name)
+                )
+                return
+            elif key == "t":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "stop",
+                    self.focused_docker_object,
+                    "Stopping container {}...".format(self.focused_docker_object.short_name)
+                )
+                return
+            elif key == "p":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "pause",
+                    self.focused_docker_object,
+                    "Pausing container {}...".format(self.focused_docker_object.short_name)
+                )
+                return
+            elif key == "u":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "unpause",
+                    self.focused_docker_object,
+                    "Unpausing container {}...".format(self.focused_docker_object.short_name)
+                )
+                return
+            elif key == "X":
+                self.ui.run_in_background(
+                    run_and_report_on_fail,
+                    "kill",
+                    self.focused_docker_object,
+                    "Killing container {}...".format(self.focused_docker_object.short_name)
+                )
+                return
+        except NotifyError as ex:
+            self.ui.notify_message(str(ex), level="error")
+            logger.error(repr(ex))
 
         key = super(MainListBox, self).keypress(size, key)
         return key
@@ -519,7 +576,7 @@ class MainListBox(VimMovementListBox):
             columns_list.append((len(markup), w))
 
         add_subwidget("Images: ")
-        images_count = len(self.d.images)
+        images_count = len(self.d.get_images(cached=True).response)
         if images_count < 10:
             add_subwidget(str(images_count), "status_text_green")
         elif images_count < 50:
@@ -528,7 +585,7 @@ class MainListBox(VimMovementListBox):
             add_subwidget(str(images_count), "status_text_orange")
 
         add_subwidget(", Containers: ")
-        containers_count = len(self.d.containers)
+        containers_count = len(self.d.get_containers(cached=True, stopped=True).response)
         if containers_count < 5:
             add_subwidget(str(containers_count), "status_text_green")
         elif containers_count < 30:
@@ -539,7 +596,7 @@ class MainListBox(VimMovementListBox):
             add_subwidget(str(containers_count), "status_text_red")
 
         add_subwidget(", Running: ")
-        running_containers = self.d.sorted_containers(sort_by_time=False, stopped=False)
+        running_containers = self.d.get_containers(cached=True, stopped=False).response
         running_containers_n = len(running_containers)
         add_subwidget(str(running_containers_n),
                       "status_text_green" if running_containers_n > 0 else "status_text")

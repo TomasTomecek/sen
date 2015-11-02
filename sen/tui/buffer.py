@@ -48,6 +48,10 @@ class Buffer:
         if status_bar:
             return status_bar()
 
+    def filter(self, s):
+        logger.debug("filter widget %r with query %r", self.widget, s)
+        self.widget.filter(s)
+
 
 class MainListBuffer(Buffer):
     display_name = "Listing"

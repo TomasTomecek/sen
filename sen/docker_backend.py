@@ -413,57 +413,30 @@ class DockerBackend:
             self._client = docker.AutoVersionClient()
         return self._client
 
-    @property
-    def images(self):
-        if self._images is None:
-            self.get_images()
-        return self._images
-
-    @property
-    def containers(self):
-        if self._containers is None:
-            self.get_containers()
-        return self._containers
-
     # backend queries
 
     @operation("Get list of images.")
-    def get_images(self, return_list=True):
-        logger.debug("doing images() query")
-        self._images = {}
-        for i in self.client.images():
-            img = DockerImage(i, self)
-            self._images[img.image_id] = img
-        if return_list:
-            return list(self._images.values())
-        else:
-            return self._images
-
-    def sorted_images(self, sort_by_time=False):
-        v = list(self.images.values())
-        if sort_by_time:
-            v.sort(key=lambda x: x.time_created, reverse=True)
-        return v
+    def get_images(self, cached=True):
+        if cached is False or self._images is None:
+            logger.debug("doing images() query")
+            self._images = {}
+            for i in self.client.images():
+                img = DockerImage(i, self)
+                self._images[img.image_id] = img
+        return list(self._images.values())
 
     @operation("Get list of containers.")
-    def get_containers(self, return_list=True):
-        logger.debug("doing containers() query")
-        self._containers = {}
-        for c in self.client.containers(all=True):
-            container = DockerContainer(c, self)
-            self._containers[container.container_id] = container
-        if return_list:
-            return list(self._containers.values())
-        else:
-            return self._containers
-
-    def sorted_containers(self, sort_by_time=False, stopped=True):
-        v = list(self.containers.values())
-        if stopped is False:
-            v = [x for x in v if x.running]
-        if sort_by_time:
-            v.sort(key=lambda x: x.time_created, reverse=True)
-        return v
+    def get_containers(self, cached=True, stopped=True):
+        if cached is False:
+            if self._images is None:
+                logger.debug("doing containers() query")
+                self._containers = {}
+                for c in self.client.containers(all=stopped):
+                    container = DockerContainer(c, self)
+                    self._containers[container.container_id] = container
+        elif not stopped:
+            return [x for x in list(self._containers.values()) if x.running]
+        return list(self._containers.values())
 
     def realtime_updates(self):
         for event in self.client.events(decode=True):
@@ -474,14 +447,14 @@ class DockerBackend:
                 # inspect doesn't contain info about status and you can't query just one
                 # container with containers()
                 # let's do full-blown containers() query; it's not that expensive
-                self.get_containers(return_list=False)
+                self.get_containers(cached=False)
             else:
                 # similar as ^
                 # images() doesn't support query by ID
                 # inspect doesn't contain info about repositories
-                self.get_images(return_list=False)
-            content = list(self.containers.values()) + list(self.images.values())
-            content.sort(key=lambda x: x.created, reverse=True)
+                self.get_images(cached=False)
+            content, _, _ = self.filter(containers=True, images=True, stopped=True,
+                                        cached=True, sort_by_created=True)
             yield content
 
     # service methods
@@ -492,9 +465,21 @@ class DockerBackend:
     def get_container_by_id(self, container_id):
         return self._containers.get(container_id)
 
-    def initial_content(self):
-        containers_o = self.get_containers()
-        images_o = self.get_images()
-        content = containers_o.response + images_o.response
-        content.sort(key=lambda x: x.created, reverse=True)
+    def filter(self, containers=True, images=True, stopped=True, cached=False, sort_by_created=True):
+        """
+        since django is so awesome, let's use their ORM API
+
+        :return:
+        """
+        content = []
+        containers_o = None
+        images_o = None
+        if containers:
+            containers_o = self.get_containers(cached=cached, stopped=stopped)
+            content += containers_o.response
+        if images:
+            images_o = self.get_images(cached=cached)
+            content += images_o.response
+        if sort_by_created:
+            content.sort(key=lambda x: x.created, reverse=True)
         return content, containers_o, images_o
