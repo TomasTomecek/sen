@@ -26,9 +26,12 @@ PALLETE = [
     ('status_text_orange', 'default', 'default', "default", "#f80", STATUS_BG),
     ('status_text_red', 'default', 'default', "default", "#f66", STATUS_BG),
     ('notif_error', "white", 'dark red', "default", "white", "#f00",),
-    ('notif_info', 'white', 'default', "default", "white", "default"),
-    #("image_names", "light red", "default"),
-    #('root', "light gray", "default"),
+    ('notif_info', 'white', 'default', "default", "g100", "default"),
+    ('notif_important', 'white', 'default', "default", "white", "default"),
+    ('notif_text_green', 'white', 'default', "white", "#0f0", "default"),
+    ('notif_text_yellow', 'white', 'default', "white", "#ff0", "default"),
+    ('notif_text_orange', 'white', 'default', "white", "#f80", "default"),
+    ('notif_text_red', 'white', 'default', "white", "#f66", "default"),
 ]
 
 STATUS_BAR_REFRESH_SECONDS = 5

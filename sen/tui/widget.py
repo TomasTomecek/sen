@@ -17,28 +17,29 @@ def get_color_text(markup, color_attr="status_text"):
     return len(markup), w
 
 
-def get_operation_notify_widget(operation, notif_level="notif_info", display_always=True):
+def get_operation_notify_widget(operation, notif_level="info", display_always=True):
+    attr = "notif_{}".format(notif_level)
     took = operation.took
     text_list = []
     if took > 300:
         fmt_str = "{} Query took "
-        text_list.append((notif_level, fmt_str.format(operation.pretty_message)))
+        text_list.append((attr, fmt_str.format(operation.pretty_message)))
         command_took_str = "{:.2f}".format(took)
         if took < 500:
-            text_list.append(("notif_yellow", command_took_str))
+            text_list.append(("notif_text_yellow", command_took_str))
         elif took < 1000:
-            text_list.append(("notif_orange", command_took_str))
+            text_list.append(("notif_text_orange", command_took_str))
         else:
             command_took_str = "{:.2f}".format(took / 1000.0)
-            text_list.append(("notif_red", command_took_str))
-            text_list.append((notif_level, " s"))
+            text_list.append(("notif_text_red", command_took_str))
+            text_list.append((attr, " s"))
         if took < 1000:
-            text_list.append((notif_level, " ms"))
+            text_list.append((attr, " ms"))
     elif display_always:
         text_list.append(operation.pretty_message)
     else:
         return
-    return urwid.AttrMap(urwid.Text(text_list), notif_level)
+    return urwid.AttrMap(urwid.Text(text_list), attr)
 
 
 class AdHocAttrMap(urwid.AttrMap):
@@ -407,16 +408,16 @@ class MainListBox(VimMovementListBox):
             try:
                 operation = getattr(docker_object, fn_name)()
             except AttributeError:
+                log_txt = "you can't {} {}".format(fn_name, docker_object)
+                logger.error(log_txt)
                 notif_txt = "You can't {} {} {!r}.".format(
                     fn_name,
                     docker_object.pretty_object_type.lower(),
                     docker_object.short_name)
-                log_txt = "you can't {} {}".format(fn_name, docker_object)
-                logger.error(log_txt)
                 self.ui.notify_message(notif_txt, level="error")
             except Exception as ex:
-                logger.error(repr(ex))
                 self.ui.notify_message(str(ex), level="error")
+                raise
             else:
                 self.ui.remove_notification_message(pre_message)
                 self.ui.notify_widget(
@@ -451,7 +452,7 @@ class MainListBox(VimMovementListBox):
                 self.focused_docker_object,
                 "Removing {} {}...".format(self.focused_docker_object.pretty_object_type.lower(),
                                            self.focused_docker_object.short_name),
-                notif_level="error"
+                notif_level="important"
             )
             return
         elif key == "s":
