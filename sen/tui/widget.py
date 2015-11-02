@@ -209,14 +209,31 @@ class VimMovementListBox(urwid.ListBox):
         if self.search_string is None:
             raise NotifyError("No search pattern specified.")
         pos = self.focus_position
+        original_position = pos
+        wrapped = False
         while True:
             if reverse_search:
                 obj, pos = self.body.get_prev(pos)
             else:
                 obj, pos = self.body.get_next(pos)
             if obj is None:
+                # wrap
+                wrapped = True
+                if reverse_search:
+                    obj, pos = self.body[-1], len(self.body)
+                else:
+                    obj, pos = self.body[0], 0
+            if wrapped and (
+                (pos > original_position and not reverse_search) or
+                (pos < original_position and reverse_search)
+            ):
                 raise NotifyError("Pattern not found: %r." % self.search_string)
-            if self.search_string in obj.original_widget.text:
+            # FIXME: figure out nicer search api
+            if hasattr(obj, "matches_search"):
+                condition = obj.matches_search(self.search_string)
+            else:
+                condition = self.search_string in obj.original_widget.text
+            if condition:
                 self.set_focus(pos)
                 self.reload_widget()
                 break
@@ -369,22 +386,6 @@ class MainListBox(VimMovementListBox):
     @property
     def focused_docker_object(self):
         return self.get_focus()[0].docker_object
-
-    def _search(self, reverse_search=False):
-        if self.search_string is None:
-            raise NotifyError("No search pattern specified.")
-        pos = self.focus_position
-        while True:
-            if reverse_search:
-                obj, pos = self.body.get_prev(pos)
-            else:
-                obj, pos = self.body.get_next(pos)
-            if obj is None:
-                raise NotifyError("Pattern not found: %r." % self.search_string)
-            if obj.matches_search(self.search_string):
-                self.set_focus(pos)
-                self.reload_widget()
-                break
 
     def find_previous(self, search_pattern=None):
         if search_pattern is not None:

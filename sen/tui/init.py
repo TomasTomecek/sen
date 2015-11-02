@@ -2,6 +2,7 @@ import logging
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from sen.exceptions import NotifyError
+from sen.tui.commands import search
 from sen.tui.statusbar import Footer
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
 from sen.tui.constants import PALLETE
@@ -127,7 +128,7 @@ class UI(urwid.MainLoop):
             elif key == "@":
                 self.run_in_background(self.refresh_main_buffer)
             elif key == "/":
-                self.prompt("/")
+                self.prompt("/", search)
             elif key == "n":
                 self.current_buffer.find_next()
             elif key == "N":
@@ -135,7 +136,7 @@ class UI(urwid.MainLoop):
             elif key in ["h", "?"]:
                 self.display_help()
         except NotifyError as ex:
-            self.notify(str(ex), level="error")
+            self.notify_message(str(ex), level="error")
             logger.error(repr(ex))
 
     def run(self):

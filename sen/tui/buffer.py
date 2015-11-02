@@ -31,14 +31,16 @@ class Buffer:
         logger.debug("searching next %r in %r", s, self.__class__.__name__)
         try:
             self.widget.find_previous(s)
-        except AttributeError:
+        except AttributeError as ex:
+            logger.debug(repr(ex))
             raise NotifyError("Can't search in this buffer.")
 
     def find_next(self, s=None):
         logger.debug("searching next %r in %r", s, self.__class__.__name__)
         try:
             self.widget.find_next(s)
-        except AttributeError:
+        except AttributeError as ex:
+            logger.debug(repr(ex))
             raise NotifyError("Can't search in this buffer.")
 
     def build_status_bar(self):

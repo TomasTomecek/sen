@@ -68,12 +68,11 @@ class Footer:
         columns = urwid.Columns(left_widgets + [buffer_text])
         return urwid.AttrMap(columns, "status")
 
-    def prompt(self, prompt_text):
+    def prompt(self, prompt_text, callback):
         """
         prompt for text input.
         """
-        oldroot = self.widget
-        oldfooter = self.mainframe.get_footer()
+        oldfooter = self.ui.mainframe.get_footer()
 
         # set up widgets
         leftpart = urwid.Text(prompt_text, align='left')
@@ -87,28 +86,13 @@ class Footer:
             ])
         both = urwid.AttrMap(both, "main_list_dg")
 
-        self.mainframe.set_footer(both)
+        self.ui.mainframe.set_footer(both)
 
         self.prompt_active = True
 
-        self.mainframe.set_focus("footer")
+        self.ui.mainframe.set_focus("footer")
 
-        def edited(edit_widget, text_input):
-            # FIXME: this function should be somewhere else
-            logger.debug("%r %r", edit_widget, text_input)
-            if text_input.endswith("\n"):
-                # TODO: implement incsearch
-                #   - match needs to be highlighted somehow, not with focus though
-                self.prompt_active = False
-                self.mainframe.set_footer(oldfooter)
-                try:
-                    self.current_buffer.find_next(text_input[:-1])
-                except NotifyError as ex:
-                    self.notify(str(ex), level="error")
-                    logger.error(repr(ex))
-                self.mainframe.set_focus("body")
-
-        urwid.connect_signal(editpart, "change", edited)
+        urwid.connect_signal(editpart, "change", callback, user_args=[self.ui, oldfooter])
 
     def remove_notification_message(self, message):
         logger.debug("requested remove of message %r from notif bar", message)
@@ -119,7 +103,7 @@ class Footer:
                 newpile = self.notif_bar.widget_list
                 for w in newpile:
                     if w.original_widget.get_text()[0] == message:
-                        logger.debug("remove widget $r from new pile", w)
+                        logger.debug("remove widget %r from new pile", w)
                         newpile.remove(w)
                         break
                 if newpile:
