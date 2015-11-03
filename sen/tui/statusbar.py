@@ -20,7 +20,7 @@ class Footer:
     def __init__(self, ui):
         self.ui = ui
         self.notif_bar = None
-        self.status_bar = None
+        self.status_bar = self.build_statusbar()
         self.prompt_active = False
         self.executor = ThreadPoolExecutor(max_workers=8)
         self.notifications = []
@@ -51,7 +51,10 @@ class Footer:
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
-        left_widgets = self.ui.current_buffer.build_status_bar() or []
+        try:
+            left_widgets = self.ui.current_buffer.build_status_bar() or []
+        except AttributeError:
+            left_widgets = []
         text_list = []
         for idx, buffer in enumerate(self.ui.buffers):
             #  #1 [I] fedora #2 [L]
@@ -64,7 +67,10 @@ class Footer:
             text_list.append(" ")
         text_list = text_list[:-1]
 
-        buffer_text = urwid.Text(text_list, align="right")
+        if text_list:
+            buffer_text = urwid.Text(text_list, align="right")
+        else:
+            buffer_text = urwid.Text("", align="right")
         columns = urwid.Columns(left_widgets + [buffer_text])
         return urwid.AttrMap(columns, "status")
 

@@ -9,7 +9,7 @@ from sen.tui.constants import PALLETE
 from sen.docker_backend import DockerBackend
 
 import urwid
-
+from sen.util import log_traceback
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ class UI(urwid.MainLoop):
 
         # root widget
         self.mainframe = urwid.Frame(urwid.SolidFill())
+        self.buffers = []
         self.footer = Footer(self)
 
         self.prompt_active = False
@@ -36,7 +37,6 @@ class UI(urwid.MainLoop):
         super().__init__(root_widget, screen=screen)
         self.handle_mouse = False
         self.current_buffer = None
-        self.buffers = []
 
     def run_in_background(self, task, *args, **kwargs):
         logger.info("running task %r(%s, %s) in background", task, args, kwargs)
@@ -143,8 +143,12 @@ class UI(urwid.MainLoop):
 
     def run(self):
         self.main_list_buffer = MainListBuffer(self.d, self)
-        self.run_in_background(self.main_list_buffer.refresh, focus_on_top=True)
-        self.add_and_display_buffer(self.main_list_buffer, redraw=False)
+
+        @log_traceback
+        def chain_fcs():
+            self.main_list_buffer.refresh(focus_on_top=True)
+            self.add_and_display_buffer(self.main_list_buffer, redraw=True)
+        self.run_in_background(chain_fcs)
         super().run()
 
     def display_logs(self, docker_container):
