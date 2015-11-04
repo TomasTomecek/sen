@@ -208,6 +208,9 @@ class WidgetBase(urwid.ListBox):
     def _search(self, reverse_search=False):
         if self.search_string is None:
             raise NotifyError("No search pattern specified.")
+        if not self.search_string:
+            self.search_string = None
+            return
         pos = self.focus_position
         original_position = pos
         wrapped = False
@@ -227,6 +230,7 @@ class WidgetBase(urwid.ListBox):
                         (pos > original_position and not reverse_search) or
                         (pos < original_position and reverse_search)
             ):
+                self.search_string = None
                 raise NotifyError("Pattern not found: %r." % self.search_string)
             # FIXME: figure out nicer search api
             if hasattr(obj, "matches_search"):
@@ -259,7 +263,7 @@ class WidgetBase(urwid.ListBox):
             columns_list.append((len(markup), w))
 
         if self.search_string:
-            add_subwidget(", Search: ")
+            add_subwidget("Search: ")
             add_subwidget(repr(self.search_string))
 
         return columns_list
@@ -416,18 +420,6 @@ class MainListBox(VimMovementListBox):
             return self.get_focus()[0].docker_object
         except AttributeError as ex:
             raise NotifyError("Nothing selected!")
-
-    def find_previous(self, search_pattern=None):
-        if search_pattern is not None:
-            self.search_string = search_pattern
-        self._search(reverse_search=True)
-        self.ui.reload_footer()
-
-    def find_next(self, search_pattern=None):
-        if search_pattern is not None:
-            self.search_string = search_pattern
-        self._search()
-        self.ui.reload_footer()
 
     def filter(self, s):
         s = s.strip()
@@ -635,4 +627,7 @@ class MainListBox(VimMovementListBox):
         if self.filter_query:
             add_subwidget(", Filter: ")
             add_subwidget(repr(self.filter_query))
-        return columns_list + super().status_bar()
+        parent_cols = super().status_bar()
+        if parent_cols:
+            add_subwidget(", ")
+        return columns_list + parent_cols
