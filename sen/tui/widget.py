@@ -248,8 +248,9 @@ class WidgetBase(urwid.ListBox):
         s = s.strip()
         if not s:
             self.filter_query = None
-            self.body[:] = self.original_content
-            self.original_content = None
+            if self.original_content:
+                self.body[:] = self.original_content
+                self.original_content = None
             return
 
         widgets = []
