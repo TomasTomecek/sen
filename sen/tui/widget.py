@@ -381,6 +381,9 @@ class AsyncScrollableListBox(VimMovementListBox):
                 line = _ensure_unicode(line)
                 if self.stop.is_set():
                     break
+                if self.filter_query:
+                    if self.filter_query not in line:
+                        continue
                 walker.append(
                     urwid.AttrMap(
                         urwid.Text(line.strip(), align="left", wrap="any"), "main_list_dg", "main_list_white"

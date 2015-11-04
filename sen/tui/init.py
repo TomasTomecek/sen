@@ -23,8 +23,6 @@ class UI(urwid.MainLoop):
         self.buffers = []
         self.footer = Footer(self)
 
-        self.prompt_active = False
-
         self.executor = ThreadPoolExecutor(max_workers=4)
 
         root_widget = urwid.AttrMap(self.mainframe, "root")
@@ -43,7 +41,11 @@ class UI(urwid.MainLoop):
         self.executor.submit(task, *args, **kwargs)
 
     def refresh(self):
-        self.draw_screen()
+        try:
+            self.draw_screen()
+        except AssertionError:
+            logger.warning("application is not running")
+            pass
 
     def _set_main_widget(self, widget, redraw):
         """
@@ -115,9 +117,9 @@ class UI(urwid.MainLoop):
     def unhandled_input(self, key):
         logger.debug("unhandled input: %r", key)
         try:
-            if self.prompt_active:
-                return
-            elif key in ('q', 'Q'):
+            if key in ('q', 'Q'):
+                self.executor.shutdown(wait=False)
+                self.footer.executor.shutdown(wait=False)
                 raise urwid.ExitMainLoop()
             elif key == "ctrl o":
                 self.pick_and_display_buffer(self.current_buffer_index - 1)

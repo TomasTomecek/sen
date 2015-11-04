@@ -21,7 +21,7 @@ class Footer:
         self.ui = ui
         self.notif_bar = None
         self.status_bar = self.build_statusbar()
-        self.prompt_active = False
+        self.prompt_bar = None
         self.executor = ThreadPoolExecutor(max_workers=8)
         self.notifications = []
         # lock when managing notifications:
@@ -35,7 +35,10 @@ class Footer:
         bottom = []
         if self.notif_bar:
             bottom.append(self.notif_bar)
-        bottom.append(self.status_bar)
+        if self.prompt_bar:
+            bottom.append(self.prompt_bar)
+        else:
+            bottom.append(self.status_bar)
         self.ui.set_footer(urwid.Pile(bottom))
         self.ui.refresh()
 
@@ -44,8 +47,11 @@ class Footer:
         bottom = []
         if self.notif_bar:
             bottom.append(self.notif_bar)
-        self.status_bar = self.build_statusbar()
-        bottom.append(self.status_bar)
+        if self.prompt_bar:
+            bottom.append(self.prompt_bar)
+        else:
+            self.status_bar = self.build_statusbar()
+            bottom.append(self.status_bar)
         self.ui.set_footer(urwid.Pile(bottom))
         # do not refresh here b/c mainloop might not started
 
@@ -85,16 +91,18 @@ class Footer:
         editpart = urwid.Edit(multiline=True)
 
         # build promptwidget
-        both = urwid.Columns(
+        edit = urwid.Columns(
             [
                 ('fixed', len(prompt_text), leftpart),
                 ('weight', 1, editpart),
             ])
-        both = urwid.AttrMap(both, "main_list_dg")
+        self.prompt_bar = urwid.AttrMap(edit, "main_list_dg")
 
-        self.ui.mainframe.set_footer(both)
-
-        self.prompt_active = True
+        widgets = []
+        if self.notif_bar:
+            widgets.append(self.notif_bar)
+        widgets.append(self.prompt_bar)
+        self.ui.mainframe.set_footer(urwid.Pile(widgets))
 
         self.ui.mainframe.set_focus("footer")
 
@@ -150,11 +158,14 @@ class Footer:
             with self.notifications_lock:
                 if message in self.notifications:
                     self.notifications.remove(message)
-                newpile = self.notif_bar.widget_list
-                if widget in newpile:
-                    newpile.remove(widget)
-                if newpile:
-                    self.notif_bar = urwid.Pile(newpile)
+                if self.notif_bar:
+                    newpile = self.notif_bar.widget_list
+                    if widget in newpile:
+                        newpile.remove(widget)
+                    if newpile:
+                        self.notif_bar = urwid.Pile(newpile)
+                    else:
+                        self.notif_bar = None
                 else:
                     self.notif_bar = None
             self.reload_notif_bar()

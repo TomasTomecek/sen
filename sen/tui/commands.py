@@ -13,7 +13,7 @@ def search(ui, oldfooter, edit_widget, text_input):
     if text_input.endswith("\n"):
         # TODO: implement incsearch
         #   - match needs to be highlighted somehow, not with focus though
-        ui.prompt_active = False
+        ui.footer.prompt_bar = None
         ui.mainframe.set_footer(oldfooter)
         try:
             ui.current_buffer.find_next(text_input[:-1])
@@ -28,7 +28,7 @@ def search(ui, oldfooter, edit_widget, text_input):
 def filter(ui, oldfooter, edit_widget, text_input):
     logger.debug("%r %r", edit_widget, text_input)
     if text_input.endswith("\n"):
-        ui.prompt_active = False
+        ui.footer.prompt_bar = None
         ui.mainframe.set_footer(oldfooter)
         try:
             ui.current_buffer.filter(text_input[:-1])

@@ -16,8 +16,12 @@ def _ensure_unicode(s):
 def log_traceback(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        logger.info("starting thread for function %s", func)
         try:
-            return func(*args, **kwargs)
+            response = func(*args, **kwargs)
         except Exception:
             logger.error(traceback.format_exc())
+        else:
+            logger.info("closing thread for function %s", func)
+            return response
     return wrapper
