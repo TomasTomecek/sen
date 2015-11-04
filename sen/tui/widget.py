@@ -366,6 +366,7 @@ class MainListBox(VimMovementListBox):
         self.ui = ui
         self.walker = urwid.SimpleFocusListWalker([])
         super(MainListBox, self).__init__(self.walker)
+        self.filter_query = None
 
         self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
         self.thread.start()
@@ -431,6 +432,7 @@ class MainListBox(VimMovementListBox):
     def filter(self, s):
         s = s.strip()
         if not s:
+            self.filter_query = None
             self.populate(focus_on_top=True)
             return
 
@@ -474,7 +476,9 @@ class MainListBox(VimMovementListBox):
         for o in query:
             line = MainLineWidget(o)
             widgets.append(line)
+        self.filter_query = s
         self.walker[:] = widgets
+        self.ui.reload_footer()
 
     def keypress(self, size, key):
         # FIXME: put this into own file
@@ -628,4 +632,7 @@ class MainListBox(VimMovementListBox):
         add_subwidget(str(running_containers_n),
                       "status_text_green" if running_containers_n > 0 else "status_text")
 
+        if self.filter_query:
+            add_subwidget(", Filter: ")
+            add_subwidget(repr(self.filter_query))
         return columns_list + super().status_bar()
