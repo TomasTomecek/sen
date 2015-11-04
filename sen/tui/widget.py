@@ -199,6 +199,8 @@ class WidgetBase(urwid.ListBox):
 
     def __init__(self, *args, **kwargs):
         self.search_string = None
+        self.filter_query = None
+        self.original_content = None
         super().__init__(*args, **kwargs)
 
     def reload_widget(self):
@@ -242,6 +244,29 @@ class WidgetBase(urwid.ListBox):
                 self.reload_widget()
                 break
 
+    def filter(self, s):
+        s = s.strip()
+        if not s:
+            self.filter_query = None
+            self.body[:] = self.original_content
+            self.original_content = None
+            return
+
+        widgets = []
+        for obj in self.body:
+
+            # FIXME: figure out nicer search api
+            if hasattr(obj, "matches_search"):
+                condition = obj.matches_search(s)
+            else:
+                condition = s in obj.original_widget.text
+
+            if condition:
+                widgets.append(obj)
+        self.filter_query = s
+        self.original_content = self.body[:]
+        self.body[:] = widgets
+
     def find_previous(self, search_pattern=None):
         if search_pattern is not None:
             self.search_string = search_pattern
@@ -266,7 +291,15 @@ class WidgetBase(urwid.ListBox):
             add_subwidget("Search: ")
             add_subwidget(repr(self.search_string))
 
+        if self.search_string and self.filter_query:
+            add_subwidget(", ")
+
+        if self.filter_query:
+            add_subwidget("Filter: ")
+            add_subwidget(repr(self.filter_query))
+
         return columns_list
+
 
 class VimMovementListBox(WidgetBase):
     """
@@ -370,7 +403,6 @@ class MainListBox(VimMovementListBox):
         self.ui = ui
         self.walker = urwid.SimpleFocusListWalker([])
         super(MainListBox, self).__init__(self.walker)
-        self.filter_query = None
 
         self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
         self.thread.start()
@@ -470,7 +502,6 @@ class MainListBox(VimMovementListBox):
             widgets.append(line)
         self.filter_query = s
         self.walker[:] = widgets
-        self.ui.reload_footer()
 
     def keypress(self, size, key):
         # FIXME: put this into own file
@@ -624,9 +655,6 @@ class MainListBox(VimMovementListBox):
         add_subwidget(str(running_containers_n),
                       "status_text_green" if running_containers_n > 0 else "status_text")
 
-        if self.filter_query:
-            add_subwidget(", Filter: ")
-            add_subwidget(repr(self.filter_query))
         parent_cols = super().status_bar()
         if parent_cols:
             add_subwidget(", ")

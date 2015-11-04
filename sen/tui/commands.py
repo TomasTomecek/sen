@@ -36,3 +36,4 @@ def filter(ui, oldfooter, edit_widget, text_input):
             logger.error(repr(ex))
             ui.notify_message(str(ex), level="error")
         ui.mainframe.set_focus("body")
+        ui.reload_footer()
