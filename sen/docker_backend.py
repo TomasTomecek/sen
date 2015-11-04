@@ -427,14 +427,13 @@ class DockerBackend:
 
     @operation("Get list of containers.")
     def get_containers(self, cached=True, stopped=True):
-        if cached is False:
-            if self._images is None:
-                logger.debug("doing containers() query")
-                self._containers = {}
-                for c in self.client.containers(all=stopped):
-                    container = DockerContainer(c, self)
-                    self._containers[container.container_id] = container
-        elif not stopped:
+        if cached is False or self._containers is None:
+            logger.debug("doing containers() query")
+            self._containers = {}
+            for c in self.client.containers(all=stopped):
+                container = DockerContainer(c, self)
+                self._containers[container.container_id] = container
+        if not stopped:
             return [x for x in list(self._containers.values()) if x.running]
         return list(self._containers.values())
 
