@@ -1,12 +1,9 @@
-from concurrent.futures.thread import ThreadPoolExecutor
+# from concurrent.futures.thread import ThreadPoolExecutor
 import logging
 import threading
-from collections import deque
-from functools import partial
-import time
 
 import urwid
-from sen.tui.constants import STATUS_BAR_REFRESH_SECONDS, CLEAR_NOTIF_BAR_MESSAGE_IN
+from sen.tui.constants import CLEAR_NOTIF_BAR_MESSAGE_IN
 from sen.util import log_traceback
 
 logger = logging.getLogger(__name__)
@@ -22,7 +19,7 @@ class Footer:
         self.notif_bar = None
         self.status_bar = self.build_statusbar()
         self.prompt_bar = None
-        self.executor = ThreadPoolExecutor(max_workers=8)
+        # self.executor = ThreadPoolExecutor(max_workers=8)
         self.notifications = []
         # lock when managing notifications:
         #  * when accessing self.notifications
@@ -147,13 +144,16 @@ class Footer:
 
     def notify_widget(self, widget, message=None, clear_in=CLEAR_NOTIF_BAR_MESSAGE_IN):
         """
-        :param level: str, {info, error}
-
         opens notification popup.
+
+        :param widget: instance of Widget, widget to display
+        :param message: str, message to remove from list of notifications
+        :param clear_in: int, time seconds when notification should be removed
         """
+
         @log_traceback
-        def clear_notification():
-            time.sleep(clear_in)
+        def clear_notification(*args, **kwargs):
+            # time.sleep(clear_in)
             logger.debug("remove widget %r from notif bar", widget)
             with self.notifications_lock:
                 if message in self.notifications:
@@ -186,4 +186,5 @@ class Footer:
                 self.notif_bar = urwid.Pile(newpile)
 
         self.reload_notif_bar()
-        self.executor.submit(clear_notification)
+        # self.executor.submit(clear_notification)
+        self.ui.set_alarm_in(clear_in, clear_notification)

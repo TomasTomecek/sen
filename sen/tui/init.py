@@ -119,7 +119,6 @@ class UI(urwid.MainLoop):
         try:
             if key in ('q', 'Q'):
                 self.executor.shutdown(wait=False)
-                self.footer.executor.shutdown(wait=False)
                 raise urwid.ExitMainLoop()
             elif key == "ctrl o":
                 self.pick_and_display_buffer(self.current_buffer_index - 1)
