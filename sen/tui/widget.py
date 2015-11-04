@@ -192,13 +192,12 @@ class MainLineWidget(urwid.AttrMap):
         return "{}".format(self.docker_object)
 
 
-class VimMovementListBox(urwid.ListBox):
+class WidgetBase(urwid.ListBox):
     """
-    ListBox with vim-like movement which can be inherited in other widgets
+    common class fot widgets
     """
+
     def __init__(self, *args, **kwargs):
-        # we want "gg"!
-        self.cached_key = None
         self.search_string = None
         super().__init__(*args, **kwargs)
 
@@ -225,8 +224,8 @@ class VimMovementListBox(urwid.ListBox):
                 else:
                     obj, pos = self.body[0], 0
             if wrapped and (
-                (pos > original_position and not reverse_search) or
-                (pos < original_position and reverse_search)
+                        (pos > original_position and not reverse_search) or
+                        (pos < original_position and reverse_search)
             ):
                 raise NotifyError("Pattern not found: %r." % self.search_string)
             # FIXME: figure out nicer search api
@@ -248,6 +247,32 @@ class VimMovementListBox(urwid.ListBox):
         if search_pattern is not None:
             self.search_string = search_pattern
         self._search()
+
+    def status_bar(self):
+        columns_list = []
+
+        def add_subwidget(markup, color_attr=None):
+            if color_attr is None:
+                w = urwid.AttrMap(urwid.Text(markup), "status_text")
+            else:
+                w = urwid.AttrMap(urwid.Text(markup), color_attr)
+            columns_list.append((len(markup), w))
+
+        if self.search_string:
+            add_subwidget(", Search: ")
+            add_subwidget(repr(self.search_string))
+
+        return columns_list
+
+class VimMovementListBox(WidgetBase):
+    """
+    ListBox with vim-like movement which can be inherited in other widgets
+    """
+
+    def __init__(self, *args, **kwargs):
+        # we want "gg"!
+        self.cached_key = None
+        super().__init__(*args, **kwargs)
 
     def keypress(self, size, key):
         logger.debug("VimListBox keypress %r", key)
@@ -395,11 +420,13 @@ class MainListBox(VimMovementListBox):
         if search_pattern is not None:
             self.search_string = search_pattern
         self._search(reverse_search=True)
+        self.ui.reload_footer()
 
     def find_next(self, search_pattern=None):
         if search_pattern is not None:
             self.search_string = search_pattern
         self._search()
+        self.ui.reload_footer()
 
     def filter(self, s):
         s = s.strip()
@@ -601,4 +628,4 @@ class MainListBox(VimMovementListBox):
         add_subwidget(str(running_containers_n),
                       "status_text_green" if running_containers_n > 0 else "status_text")
 
-        return columns_list
+        return columns_list + super().status_bar()
