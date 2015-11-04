@@ -416,6 +416,7 @@ class MainListBox(VimMovementListBox):
         self.walker[:] = widgets
         if focus_on_top:
             self.set_focus(0)
+        self.ui.refresh()
 
     def realtime_updates(self):
         """
@@ -542,7 +543,10 @@ class MainListBox(VimMovementListBox):
         @log_traceback
         def do_and_report_on_fail(f, docker_object):
             try:
-                f(docker_object)
+                if docker_object:
+                    f(docker_object)
+                else:
+                    f()
             except NotifyError as ex:
                 self.ui.notify_message(str(ex), level="error")
                 logger.error(repr(ex))
@@ -550,7 +554,9 @@ class MainListBox(VimMovementListBox):
         logger.debug("size %r, key %r", size, key)
 
         try:
-            if key == "i":
+            if key == "@":
+                self.ui.run_in_background(self.populate, None)
+            elif key == "i":
                 self.ui.run_in_background(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
                 return
             elif key == "l":

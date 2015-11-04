@@ -126,8 +126,6 @@ class UI(urwid.MainLoop):
                 self.pick_and_display_buffer(self.current_buffer_index + 1)
             elif key == "x":
                 self.remove_current_buffer()
-            elif key == "@":
-                self.run_in_background(self.refresh_main_buffer)
             elif key == "/":
                 self.prompt("/", search)
             elif key == "f4":
