@@ -40,19 +40,24 @@ CLEAR_NOTIF_BAR_MESSAGE_IN = 5
 HELP_TEXT = """\
 # Keybindings
 
-Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
+Since I am a heavy `vim` user, these keybindings are trying to stay close to vim.
 
 ## Global
 
-/      search
+/      search (provide empty query to disable searching)
 n      next search occurrence
 N      previous search occurrence
-f4     filter items in list (space-separated list of query strings, currently supported:
-         c[ontainer[s]], i[mage[s]], r[unning])
+f4     filter items in list (provide empty query to clear filtering)
+        * in main listing, this is a space-separated list of query strings,
+          currently supported filters are:
+           * c[ontainer[s]]
+           * i[mage[s]]
+           * r[unning])
+          example query may be: "c" -- show only containers
+        * in other buffers, this will only display lines with provided string
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer
-@      refresh listing
 h, ?   show help
 
 ## Movement
@@ -65,6 +70,10 @@ pg up
 ctrl u go 10 lines up
 pg down
 ctrl d go 10 lines down
+
+## Listing
+
+@      refresh listing
 
 ## Image commands in listing
 
