@@ -433,6 +433,7 @@ class MainListBox(VimMovementListBox):
                     continue
                 widgets.append(line)
             self.walker[:] = widgets
+            self.ui.reload_footer()
             self.ui.refresh()
 
     def _assemble_initial_content(self):
