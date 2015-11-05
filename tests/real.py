@@ -1,6 +1,6 @@
 from flexmock import flexmock
 import docker
-from sen.docker_backend import DockerImage, DockerBackend
+
 
 image_data = {
     'Created': 1414577076,
