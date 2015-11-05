@@ -16,5 +16,5 @@ setup(
         'console_scripts': ['sen=sen.cli:main'],
     },
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    install_requires=("urwid", "humanize", "docker-py", "pytest", "flexmock", "pytest-caplog")
+    install_requires=("urwid", "humanize", "docker-py", "pytest", "flexmock", "pytest-capturelog")
 )
