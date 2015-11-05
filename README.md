@@ -3,63 +3,96 @@
 [![Code Issues](https://www.quantifiedcode.com/api/v1/project/5282fc57c1094698b39071d98c76cdb6/badge.svg)](https://www.quantifiedcode.com/app/project/5282fc57c1094698b39071d98c76cdb6)
 [![Circle CI](https://circleci.com/gh/TomasTomecek/sen.svg?style=svg)](https://circleci.com/gh/TomasTomecek/sen)
 
-Since I started using docker, I always dreamed of having a docker TUI. Something like [tig](https://github.com/jonas/tig), [htop](http://hisham.hm/htop/) or [alot](https://github.com/pazz/alot). Some appeared over time. Such as [docker-mon](https://github.com/icecrime/docker-mon) or [ctop](https://github.com/yadutaf/ctop). Unfortunately, those are not proper docker TUIs. They are meant for monitoring and diagnostics.
-
-So I realized that if I want make my dream come true, I need to do it myself. That's where I started working on *sen* (*dream* in Slovak).
+`sen` is a terminal user interface for docker engine:
+ * it can interactively manage your containers and images:
+  * manage? start, stop, restart, kill, delete,...
+ * you are able to inspect containers and images
+ * sen can fetch logs of containers and even stream logs real-time
+ * all buffers support searching and filtering
+ * sen receives real-time updates from docker when anything changes
+  * e.g. if you create a container in another terminal, sen will pick it up
+ * sen notifies you whenever something happens (and reports slow queries)
+ * supports a lot of vim-like keybindings (`j`, `k`, `gg`, `/`, ...)
 
 ![sen preview](/data/sen-preview.gif)
 
-# Installation
+# Installation and running `sen`
 
-I strongly advise to run `sen` from a docker container. This repository has set up automated builds on docker hub. In case you run into some issue, try pulling latest version before opening issue. At some point, I'll start with releasing and versioning.
+I strongly advise to run `sen` from a docker container provided on docker hub:
+
+```
+$ docker pull tomastomecek/sen
+```
+
+This repository has set up automated builds on docker hub. In case you run into some issue, try pulling latest version before opening issue. You should run `sen` in containers like this:
 
 ```
 $ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek/sen
 ```
 
 
+## docker
+
+You can easily build a docker image with sen inside:
+
+```
+$ docker build --tag=$USER/sen git://github.com/tomastomecek/sen
+$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
+```
+
+
+## PyPI
+
+`sen` releases are available on PyPI:
+
+```
+$ pip install sen
+$ sen
+```
+
+
 ## git
 
-`sen` is a python 3 only project. I recommend using at least python 3.4.
+`sen` is a python 3 only project. I recommend using at least python 3.4. This is how you can install `sen` from git:
 
 ```
 $ git clone https://github.com/TomasTomecek/sen
 $ cd sen
 $ ./setup.py install
+$ sen
 ```
 
-## docker
+Or even run `sen` straight from git:
 
 ```
-$ docker build --tag=sen git://github.com/tomastomecek/sen
-$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM sen
+$ git clone https://github.com/TomasTomecek/sen
+$ cd sen
+$ PYTHONPATH="$PWD:$PYTHONPATH" ./sen/cli.py
 ```
 
-# Usage
+
+# Prerequisite
 
 Bear in mind that unix socket for docker engine needs to be accessible. By default it's located at `/run/docker.sock`.
 
-```
-$ sen
-```
 
 # Keybindings
 
 Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
 
+
 ## Global
 
 ```
-/      search
+/      search (provide empty query to disable searching)
 n      next search occurrence
 N      previous search occurrence
 f4     display only lines matching provided query (provide empty query to clear filtering)
         * main listing provides additional filtering (for more info, check Listing Section)
-        * example query: "IP" - display lines containing string "IP"
+        * example query: "fed" - display lines containing string "fed"
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer
-@      refresh listing
 h, ?   show help
 ```
 
@@ -86,7 +119,7 @@ f4     display only lines matching provided query (provide empty query to clear 
            * t[ype]=i[mage[s]]
            * s[tate]=r[unning])
           example query may be:
-           * "type=container" - show only containers (short equivalent is "t=c"
+           * "type=container" - show only containers (short equivalent is "t=c")
            * "type=image fedora" - show images with string "fedora" in name (equivalent "t=i fedora")
 ```
 
@@ -111,3 +144,9 @@ p      pause container
 u      unpause container
 X      kill container
 ```
+
+# Why I started sen?
+
+Since I started using docker, I always dreamed of having a docker TUI. Something like [tig](https://github.com/jonas/tig), [htop](http://hisham.hm/htop/) or [alot](https://github.com/pazz/alot). Some appeared over time. Such as [docker-mon](https://github.com/icecrime/docker-mon) or [ctop](https://github.com/yadutaf/ctop). Unfortunately, those are not proper docker TUIs. They are meant for monitoring and diagnostics.
+
+So I realized that if I want make my dream come true, I need to do it myself. That's where I started working on *sen* (*dream* in Slovak).

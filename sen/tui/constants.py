@@ -49,7 +49,7 @@ n      next search occurrence
 N      previous search occurrence
 f4     display only lines matching provided query (provide empty query to clear filtering)
         * main listing provides additional filtering (for more info, check Listing Section)
-        * example query: "IP" - display lines containing string "IP"
+        * example query: "fed" - display lines containing string "fed"
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer
@@ -75,7 +75,7 @@ f4     display only lines matching provided query (provide empty query to clear 
            * t[ype]=i[mage[s]]
            * s[tate]=r[unning])
           example query may be:
-           * "type=container" - show only containers (short equivalent is "t=c"
+           * "type=container" - show only containers (short equivalent is "t=c")
            * "type=image fedora" - show images with string "fedora" in name (equivalent "t=i fedora")
 
 ## Image commands in listing
