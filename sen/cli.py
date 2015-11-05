@@ -7,7 +7,7 @@ import logging
 
 from sen.tui.init import UI
 from sen import set_logging
-
+from sen.util import setup_dirs, get_log_file_path
 
 logger = logging.getLogger("sen")
 
@@ -21,10 +21,10 @@ def main():
 
     args = parser.parse_args()
 
-    if args.debug:
-        set_logging(level=logging.DEBUG)
-    else:
-        set_logging(level=logging.INFO)
+    # if args.debug:
+    set_logging(level=logging.DEBUG, path=get_log_file_path())
+    # else:
+    #     set_logging(level=logging.INFO, path=setup_dirs())
 
     logger.info("application started")
 
