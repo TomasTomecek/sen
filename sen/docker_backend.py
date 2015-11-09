@@ -473,7 +473,8 @@ class DockerBackend:
         content = []
         containers_o = None
         images_o = None
-        if containers:
+        # return containers when containers=False and running=True
+        if containers or not stopped:
             containers_o = self.get_containers(cached=cached, stopped=stopped)
             content += containers_o.response
         if images:

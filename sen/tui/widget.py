@@ -200,8 +200,11 @@ class WidgetBase(urwid.ListBox):
     def __init__(self, *args, **kwargs):
         self.search_string = None
         self.filter_query = None
-        self.original_content = None
         super().__init__(*args, **kwargs)
+        self.ro_content = self.body  # unfiltered content of a widget
+
+    def set_body(self, widgets):
+        self.body[:] = widgets
 
     def reload_widget(self):
         # this is the easiest way to refresh body
@@ -244,17 +247,16 @@ class WidgetBase(urwid.ListBox):
                 self.reload_widget()
                 break
 
-    def filter(self, s):
+    def filter(self, s, widgets_to_filter=None):
         s = s.strip()
+
         if not s:
             self.filter_query = None
-            if self.original_content:
-                self.body[:] = self.original_content
-                self.original_content = None
+            self.body[:] = self.ro_content
             return
 
         widgets = []
-        for obj in self.body:
+        for obj in widgets_to_filter or self.ro_content:
 
             # FIXME: figure out nicer search api
             if hasattr(obj, "matches_search"):
@@ -264,9 +266,9 @@ class WidgetBase(urwid.ListBox):
 
             if condition:
                 widgets.append(obj)
-        self.filter_query = s
-        self.original_content = self.body[:]
-        self.body[:] = widgets
+        if not widgets_to_filter:
+            self.filter_query = s
+        return widgets
 
     def find_previous(self, search_pattern=None):
         if search_pattern is not None:
@@ -414,6 +416,7 @@ class MainListBox(VimMovementListBox):
     def populate(self, focus_on_top=False):
         widgets = self._assemble_initial_content()
         self.walker[:] = widgets
+        self.ro_content = widgets
         if focus_on_top:
             self.set_focus(0)
         self.ui.refresh()
@@ -459,7 +462,7 @@ class MainListBox(VimMovementListBox):
         except AttributeError as ex:
             raise NotifyError("Nothing selected!")
 
-    def filter(self, s):
+    def filter(self, s, widgets_to_filter=None):
         s = s.strip()
         if not s:
             self.filter_query = None
@@ -483,31 +486,53 @@ class MainListBox(VimMovementListBox):
 
         query_conf = [
             {
+                "query_keys": ["t", "type"],
                 "query_values": ["c", "container", "containers"],
                 "callback": containers
             }, {
+                "query_keys": ["t", "type"],
                 "query_values": ["i", "images", "images"],
                 "callback": images
             }, {
+                "query_keys": ["s", "state"],
                 "query_values": ["r", "running"],
                 "callback": running
             },
         ]
         query_list = re.split(r"[\s,]", s)
+        unprocessed = []
+        do_query = False
         for query_str in query_list:
-            for c in query_conf:
-                if query_str in c["query_values"]:
-                    c["callback"]()
-                    break
+            # process here x=y queries and pass rest to parent filter()
+            try:
+                query_key, query_value = query_str.split("=", 1)
+            except ValueError:
+                unprocessed.append(query_str)
             else:
-                raise NotifyError("Invalid query string: %r", query_str)
-        widgets = []
-        query, c_op, i_op = self.d.filter(**backend_query)
-        for o in query:
-            line = MainLineWidget(o)
-            widgets.append(line)
+                do_query = True
+                logger.debug("looking up query key %r and query value %r", query_key, query_value)
+                for c in query_conf:
+                    if query_key in c["query_keys"] and query_value in c["query_values"]:
+                        c["callback"]()
+                        break
+                else:
+                    raise NotifyError("Invalid query string: %r", query_str)
+        if do_query:
+            widgets = []
+            logger.debug("doing query %s", backend_query)
+            query, c_op, i_op = self.d.filter(**backend_query)
+            for o in query:
+                line = MainLineWidget(o)
+                widgets.append(line)
+            if unprocessed:
+                new_query = " ".join(unprocessed)
+                logger.debug("doing parent query for unprocessed string: %r", new_query)
+                widgets = super().filter(new_query, widgets_to_filter=widgets)
+        else:
+            logger.debug("doing parent query: %r", s)
+            widgets = super().filter(s)
         self.filter_query = s
-        self.walker[:] = widgets
+        return widgets
 
     def keypress(self, size, key):
         # FIXME: put this into own file

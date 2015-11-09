@@ -50,7 +50,9 @@ class Buffer:
 
     def filter(self, s):
         logger.debug("filter widget %r with query %r", self.widget, s)
-        self.widget.filter(s)
+        widgets = self.widget.filter(s)
+        if widgets is not None:
+            self.widget.set_body(widgets)
 
 
 class MainListBuffer(Buffer):

@@ -53,8 +53,9 @@ Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
 /      search
 n      next search occurrence
 N      previous search occurrence
-f4     filter items in list (space-separated list of query strings, currently supported:
-         c[ontainer[s]], i[mage[s]], r[unning])
+f4     display only lines matching provided query (provide empty query to clear filtering)
+        * main listing provides additional filtering (for more info, check Listing Section)
+        * example query: "IP" - display lines containing string "IP"
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer
@@ -73,6 +74,20 @@ pg up
 ctrl u go 10 lines up
 pg down
 ctrl d go 10 lines down
+```
+
+## Listing
+
+```
+@      refresh listing
+f4     display only lines matching provided query (provide empty query to clear filtering)
+        * space-separated list of query strings, currently supported filters are:
+           * t[ype]=c[ontainer[s]]
+           * t[ype]=i[mage[s]]
+           * s[tate]=r[unning])
+          example query may be:
+           * "type=container" - show only containers (short equivalent is "t=c"
+           * "type=image fedora" - show images with string "fedora" in name (equivalent "t=i fedora")
 ```
 
 ## Image commands in listing
