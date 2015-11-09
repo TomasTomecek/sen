@@ -201,7 +201,7 @@ class WidgetBase(urwid.ListBox):
         self.search_string = None
         self.filter_query = None
         super().__init__(*args, **kwargs)
-        self.ro_content = self.body  # unfiltered content of a widget
+        self.ro_content = self.body[:]  # unfiltered content of a widget
 
     def set_body(self, widgets):
         self.body[:] = widgets
