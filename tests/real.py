@@ -18,4 +18,4 @@ def images_response(*args, **kwargs):
 
 
 def mock():
-    flexmock(docker.AutoVersionClient, images=images_response)
+    flexmock(docker.Client, images=images_response)
