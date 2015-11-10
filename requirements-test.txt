@@ -1,0 +1,3 @@
+pytest
+flexmock
+pytest-capturelog

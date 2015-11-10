@@ -2,8 +2,12 @@ machine:
   python:
     version: 3.4.3
 
+dependencies:
+  pre:
+    - "pip3 install -r requirements-test.txt"
+
 test:
   pre:
-    - "py.test -vv ./tests/":
+    - "py.test-3.4 -vv ./tests/":
        environment:
          PYTHONPATH: $PWD

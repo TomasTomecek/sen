@@ -4,6 +4,16 @@
 from setuptools import setup, find_packages
 
 
+def get_requirements():
+    path = 'requirements.txt'
+    try:
+        with open(path) as f:
+            packages = f.read().splitlines()
+    except (IOError, OSError) as ex:
+        raise RuntimeError("Can't open file with requirements: %r", ex)
+    return packages
+
+
 setup(
     name='sen',
     version='0.1',
@@ -16,5 +26,5 @@ setup(
         'console_scripts': ['sen=sen.cli:main'],
     },
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    install_requires=("urwid", "humanize", "docker-py", "pytest", "flexmock", "pytest-capturelog")
+    install_requires=get_requirements()
 )
