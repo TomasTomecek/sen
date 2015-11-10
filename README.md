@@ -7,7 +7,7 @@ Since I started using docker, I always dreamed of having a docker TUI. Something
 
 So I realized that if I want make my dream come true, I need to do it myself. That's where I started working on *sen* (*dream* in Slovak).
 
-![sen preview](/data/sen-preview.png)
+![sen preview](/data/sen-preview.gif)
 
 # Installation
 
