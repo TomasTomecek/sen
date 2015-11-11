@@ -272,13 +272,13 @@ class DockerImage(DockerObject):
             else:
                 return parent_image
 
-    @operation("")
+    @operation("Inspect image {object_short_name}.")
     def inspect(self, cached=False):
         if self._inspect is None or cached is False:
             self._inspect = self.d.inspect_image(self.image_id)
         return self._inspect
 
-    @operation("")
+    @operation("{object_type} {object_short_name} removed!")
     def remove(self):
         return self.d.remove_image(self.image_id)
 
@@ -354,7 +354,7 @@ class DockerContainer(DockerObject):
                s in self.short_name
     # api calls
 
-    @operation("")
+    @operation("Inspect container {object_short_name}.")
     def inspect(self, cached=False):
         if cached is False or self._inspect is None:
             self._inspect = self.d.inspect_container(self.container_id)
