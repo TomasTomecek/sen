@@ -37,7 +37,7 @@ def get_operation_notify_widget(operation, notif_level="info", display_always=Tr
         if took < 1000:
             text_list.append((attr, " ms"))
     elif display_always:
-        text_list.append(operation.pretty_message)
+        text_list.append((attr, operation.pretty_message))
     else:
         return
     return urwid.AttrMap(urwid.Text(text_list), attr)
