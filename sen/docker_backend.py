@@ -410,7 +410,8 @@ class DockerBackend:
     @property
     def client(self):
         if self._client is None:
-            self._client = docker.AutoVersionClient()
+            kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
+            self._client = docker.AutoVersionClient(**kwargs)
         return self._client
 
     # backend queries
