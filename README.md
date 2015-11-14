@@ -46,7 +46,18 @@ $ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
 `sen` releases are available on PyPI:
 
 ```
-$ pip install sen
+$ pip3 install sen
+```
+
+If `pip3` executable is not available on your system, you can run pip like this:
+
+```
+$ python3 -m pip install sen
+```
+
+And then start sen like this:
+
+```
 $ sen
 ```
 
