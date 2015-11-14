@@ -5,6 +5,8 @@ import logging
 import datetime
 import traceback
 
+from sen.exceptions import TerminateApplication
+
 import docker
 import humanize
 
@@ -401,18 +403,13 @@ class DockerBackend:
     """
 
     def __init__(self):
-        self._client = None
         self._containers = None
         self._images = None
-
-    # lazy properties
-
-    @property
-    def client(self):
-        if self._client is None:
-            kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
-            self._client = docker.AutoVersionClient(**kwargs)
-        return self._client
+        kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
+        try:
+            self.client = docker.AutoVersionClient(**kwargs)
+        except docker.errors.DockerException as ex:
+            raise TerminateApplication("can't establish connection to docker daemon: {0}".format(str(ex)))
 
     # backend queries
 

@@ -2,11 +2,13 @@
 """
 yes, this is python 3 ONLY project
 """
+import sys
 import argparse
 import logging
 
-from sen.tui.init import UI
 from sen import set_logging
+from sen.exceptions import TerminateApplication
+from sen.tui.init import UI
 from sen.util import setup_dirs, get_log_file_path
 
 logger = logging.getLogger("sen")
@@ -28,7 +30,11 @@ def main():
 
     logger.info("application started")
 
-    ui = UI()
+    try:
+        ui = UI()
+    except TerminateApplication as ex:
+        print("Error: {0}".format(str(ex)), file=sys.stderr)
+        return 1
 
     try:
         ui.run()
