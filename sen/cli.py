@@ -40,13 +40,15 @@ def main():
         ui.run()
     except KeyboardInterrupt:
         print("Quitting on user request.")
-        return -1
+        return 1
     except Exception as ex:  # pylint: disable=broad-except
         if args.debug:
             raise
         else:
             logger.error("Exception caught: %r", ex)
-            return -1
+            return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
