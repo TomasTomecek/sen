@@ -12,6 +12,17 @@ image_data = {
 }
 
 
+version_data = {'ApiVersion': '1.21',
+    'Arch': 'amd64',
+    'BuildTime': 'Thu Sep 10 17:53:19 UTC 2015',
+    'GitCommit': 'af9b534-dirty',
+    'GoVersion': 'go1.5.1',
+    'KernelVersion': '4.2.5-300.fc23.x86_64',
+    'Os': 'linux',
+    'Version': '1.9.0-dev-fc24'
+}
+
+
 def images_response(*args, **kwargs):
     global image_data
     return [image_data]
@@ -19,3 +30,4 @@ def images_response(*args, **kwargs):
 
 def mock():
     flexmock(docker.Client, images=images_response)
+    flexmock(docker.Client, version=lambda *args, **kwargs: version_data)
