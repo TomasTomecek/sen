@@ -73,7 +73,13 @@ $ PYTHONPATH="$PWD:$PYTHONPATH" ./sen/cli.py
 
 # Prerequisite
 
-Bear in mind that unix socket for docker engine needs to be accessible. By default it's located at `/run/docker.sock`.
+Either:
+
+* The unix socket for docker engine needs to be accessible. By default it's located at `/run/docker.sock`.
+
+OR
+
+* Have the `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, and `DOCKER_CERT_PATH` set properly.  If you're using `docker-machine` or `boot2docker` you're all set!
 
 
 # Keybindings
