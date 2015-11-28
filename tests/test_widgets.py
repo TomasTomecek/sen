@@ -1,6 +1,6 @@
 import pytest
 from flexmock import flexmock
-from sen.tui.widget import ScrollableListBox, AsyncScrollableListBox
+from sen.tui.widgets.list.common import ScrollableListBox, AsyncScrollableListBox
 from .constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
