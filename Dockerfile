@@ -1,12 +1,14 @@
-FROM fedora:22
+FROM alpine:3.2
 MAINTAINER Tomas Tomecek <ttomecek@redhat.com> @TomasTomec
 
-RUN dnf install -y python3-pip git python3-urwid python3-docker-py python3-humanize
-
-RUN mkdir /home/sen
-WORKDIR /home/sen
 COPY . /home/sen
 
-RUN pip3 install .
+RUN apk -U add python3 \
+	&& apk add -t build python3-dev libc-dev gcc \
+	&& pip3 install /home/sen \
+	&& apk del --purge build \
+	&& rm /var/cache/apk/*
+
+ENV DOCKER_HOST http+unix://run/docker.sock
 
 ENTRYPOINT ["sen"]
