@@ -53,6 +53,7 @@ f4     display only lines matching provided query (provide empty query to clear 
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer
+ctrl l redraw user interface
 h, ?   show help
 
 ## Movement
