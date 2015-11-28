@@ -31,3 +31,16 @@ class AdHocAttrMap(urwid.AttrMap):
                 for a in self.attrs:
                     attr_map[a] = self.maps["focus"]
         self.set_attr_map(attr_map)
+
+
+def get_basic_image_markup(docker_image):
+    text_markup = [docker_image.short_id]
+
+    if docker_image.names:
+        text_markup.append(" ")
+        text_markup.append(("main_list_lg", docker_image.names[0].to_str()))
+
+    text_markup.append(" ")
+    text_markup.append(("main_list_ddg", docker_image.container_command))
+
+    return text_markup

@@ -318,6 +318,9 @@ class MainListBox(VimMovementListBox):
             elif key == "f":
                 self.ui.run_in_background(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
                 return
+            elif key == "enter":
+                self.ui.run_in_background(do_and_report_on_fail, self.ui.display_image_info, self.focused_docker_object)
+                return
             elif key == "d":
                 self.ui.run_in_background(
                     run_and_report_on_fail,

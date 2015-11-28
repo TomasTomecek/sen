@@ -4,11 +4,12 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from sen.exceptions import NotifyError
 from sen.tui.commands import search, filter
 from sen.tui.statusbar import Footer
-from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer
+from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer, ImageInfoBuffer
 from sen.tui.constants import PALLETE
 from sen.docker_backend import DockerBackend
 
 import urwid
+
 from sen.util import log_traceback
 
 logger = logging.getLogger(__name__)
@@ -158,6 +159,9 @@ class UI(urwid.MainLoop):
 
     def inspect(self, docker_object):
         self.add_and_display_buffer(InspectBuffer(docker_object))
+
+    def display_image_info(self, docker_image):
+        self.add_and_display_buffer(ImageInfoBuffer(docker_image, self))
 
     def refresh_main_buffer(self, refresh_buffer=True):
         assert self.main_list_buffer is not None
