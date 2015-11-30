@@ -8,6 +8,6 @@ dependencies:
 
 test:
   pre:
-    - "py.test-3 -vv ./tests/":
+    - "py.test -vv ./tests/":
        environment:
          PYTHONPATH: $PWD
