@@ -90,8 +90,8 @@ i      inspect container
 l      display logs of container
 f      follow logs of container
 d      remove container (irreversible!)
-s      stop container
-t      start container
+t      stop container
+s      start container
 r      restart container
 p      pause container
 u      unpause container
