@@ -224,7 +224,7 @@ class DockerImage(DockerObject):
             logger.info(traceback.format_exc())
             raise
         if parent_id:
-            return DockerImage(None, self.docker_backend, object_id=parent_id)
+            return self.docker_backend.get_image_by_id(parent_id)
 
     @property
     def command(self):
@@ -415,7 +415,8 @@ class DockerBackend:
 
     def __init__(self):
         self._containers = None
-        self._images = None
+        self._images = None  # displayed images
+        self._all_images = None  # docker images -a
         kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
         try:
             self.client = docker.AutoVersionClient(**kwargs)
@@ -432,6 +433,10 @@ class DockerBackend:
             for i in self.client.images():
                 img = DockerImage(i, self)
                 self._images[img.image_id] = img
+            self._all_images = {}
+            for i in self.client.images(all=True):
+                img = DockerImage(i, self)
+                self._all_images[img.image_id] = img
         return list(self._images.values())
 
     @operation("Get list of containers.")
@@ -468,7 +473,7 @@ class DockerBackend:
     # service methods
 
     def get_image_by_id(self, image_id):
-        return self._images.get(image_id)
+        return self._all_images.get(image_id)
 
     def get_container_by_id(self, container_id):
         return self._containers.get(container_id)
