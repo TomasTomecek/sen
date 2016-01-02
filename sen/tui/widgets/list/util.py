@@ -58,3 +58,16 @@ def get_time_attr_map(t):
     else:
         return get_map("main_list_dg")
 
+
+class RowWidget(urwid.AttrMap):
+    def __init__(self, columns, attr="main_list_dg", focus_map=MAIN_LIST_FOCUS):
+        self.columns = urwid.Columns(columns, dividechars=1)
+        super().__init__(self.columns, attr, focus_map=focus_map)
+
+    def selectable(self):
+        return True
+
+    def render(self, size, focus=False):
+        for w in self.columns.widget_list:
+            w.set_map('focus' if focus else 'normal')
+        return urwid.AttrMap.render(self, size, focus)
