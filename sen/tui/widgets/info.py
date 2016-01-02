@@ -52,19 +52,13 @@ class LayerWidget(SelectableText):
 
 
 class TagWidget(SelectableText):
-    def __init__(self, ui, docker_image, tag):
-        self.ui = ui
+    """
+    so we can easily access image and tag
+    """
+    def __init__(self, docker_image, tag):
         self.docker_image = docker_image
         self.tag = tag
         super().__init__(str(self.tag))
-
-    def keypress(self, size, key):
-        logger.debug("%s %s %s", self.__class__, key, size)
-        if key == "d":
-            self.docker_image.remove_tag(self.tag)  # FIXME: do this async
-            # TODO: refresh
-            return
-        return key
 
 
 class ImageInfoWidget(VimMovementListBox):
@@ -109,7 +103,7 @@ class ImageInfoWidget(VimMovementListBox):
         self.walker.append(RowWidget([SelectableText("")]))
         self.walker.append(RowWidget([SelectableText("Image Names", maps=get_map("main_list_white"))]))
         for n in self.docker_image.names:
-            self.walker.append(RowWidget([TagWidget(self.ui, self.docker_image, n)]))
+            self.walker.append(RowWidget([TagWidget(self.docker_image, n)]))
 
     def _layers(self):
         self.walker.append(RowWidget([SelectableText("")]))
@@ -147,5 +141,13 @@ class ImageInfoWidget(VimMovementListBox):
 
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
+
+        if key == "d":
+            img = self.focus.columns.widget_list[0].docker_image
+            tag = self.focus.columns.widget_list[0].tag
+            img.remove_tag(tag)  # FIXME: do this async
+            self.walker.remove(self.focus)
+            return
+
         key = super().keypress(size, key)
         return key
