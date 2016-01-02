@@ -289,7 +289,10 @@ class DockerImage(DockerObject):
             s in self.short_name
 
     def __str__(self):
-        return "{} ({})".format(self.image_id, self.names)
+        if self.names:
+            return "{} ({}) {}".format(self.image_id, ", ".join([x.to_str() for x in self.names]), self.container_command)
+        else:
+            return "{} {}".format(self.image_id, self.container_command)
 
     def containers(self):
         return self.docker_backend.get_containers_for_image(self.image_id)
@@ -344,15 +347,20 @@ class DockerContainer(DockerObject):
     def pretty_object_type(self):
         return "Container"
 
+    @property
+    def image_id(self):
+        """ this container is created from image with id..."""
+        image_id = self.data["ImageID"]
+        return image_id
+
     # methods
 
     def image_name(self):
-        image_id = self.data["Image"]
-        image = self.docker_backend.get_image_by_id(image_id)
+        image = self.docker_backend.get_image_by_id(self.image_id)
         if image is not None:
             return image.short_name
         else:
-            return image_id[:12]
+            return self.image_id[:12]
 
     def matches_search(self, s):
         return s in self.container_id or \
