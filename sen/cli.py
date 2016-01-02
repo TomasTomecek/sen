@@ -2,14 +2,30 @@
 """
 yes, this is python 3 ONLY project
 """
+
+from __future__ import print_function
+
 import sys
+
+# let's be so gentle and print the error message even on python 2
+# running on py 2, halt
+if sys.version_info.major <= 2:
+    error_message = """\
+It looks like you are running sen with python 2. I'm sorry but sen is a python 3 only project.
+Please see installation steps at official project page:
+
+https://github.com/TomasTomecek/sen"""
+    print(error_message, file=sys.stderr)
+    sys.exit(2)
+
 import argparse
 import logging
 
 from sen import set_logging
 from sen.exceptions import TerminateApplication
 from sen.tui.init import UI
-from sen.util import setup_dirs, get_log_file_path
+from sen.util import get_log_file_path
+
 
 logger = logging.getLogger("sen")
 
