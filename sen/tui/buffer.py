@@ -7,6 +7,7 @@ from sen.tui.widgets.info import ImageInfoWidget
 from sen.tui.widgets.list.main import MainListBox
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
+from sen.tui.widgets.tree import ImageTree
 
 
 logger = logging.getLogger(__name__)
@@ -70,6 +71,17 @@ class ImageInfoBuffer(Buffer):
         """
         self.display_name = docker_image.short_name
         self.widget = ImageInfoWidget(ui, docker_image)
+        super().__init__()
+
+
+class TreeBuffer(Buffer):
+    display_name = "Tree"
+    tag = "T"
+
+    def __init__(self, docker_backend, ui):
+        """
+        """
+        self.widget = ImageTree(docker_backend, ui)
         super().__init__()
 
 

@@ -4,7 +4,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from sen.exceptions import NotifyError
 from sen.tui.commands import search, filter
 from sen.tui.statusbar import Footer
-from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer, ImageInfoBuffer
+from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer, ImageInfoBuffer, TreeBuffer
 from sen.tui.constants import PALLETE
 from sen.docker_backend import DockerBackend
 
@@ -137,6 +137,8 @@ class UI(urwid.MainLoop):
                 self.current_buffer.find_previous()
             elif key in ["h", "?"]:
                 self.display_help()
+            elif key == "f5":
+                self.display_tree()
         except NotifyError as ex:
             self.notify_message(str(ex), level="error")
             logger.error(repr(ex))
@@ -171,6 +173,9 @@ class UI(urwid.MainLoop):
 
     def display_help(self):
         self.add_and_display_buffer(HelpBuffer())
+
+    def display_tree(self):
+        self.add_and_display_buffer(TreeBuffer(self.d, self))
 
     # FOOTER
 
