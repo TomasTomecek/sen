@@ -57,13 +57,15 @@ class ImageNameStruct(object):
         if self.repo is None:
             raise RuntimeError('No image repository specified')
 
-        result = self.repo
+        result = self.repo if self.repo != "<none>" else ""
 
-        if tag and self.tag:
+        # don't display <none> junk
+        if tag and self.tag and self.tag != "<none>":
             result = '{0}:{1}'.format(result, self.tag)
-        elif tag and explicit_tag:
+        elif tag and explicit_tag and self.tag != "<none>":
             result = '{0}:{1}'.format(result, 'latest')
 
+        # don't display <none> junk
         if self.namespace:
             result = '{0}/{1}'.format(self.namespace, result)
         elif explicit_namespace:
@@ -177,6 +179,10 @@ class DockerObject:
     def display_time_created(self):
         return humanize.naturaltime(self.created)
 
+    def display_formal_time_created(self):
+        # http://tools.ietf.org/html/rfc2822.html#section-3.3
+        return self.created.strftime("%d %b %Y, %H:%M:%S")
+
     def inspect(self):
         raise NotImplementedError()
 
@@ -224,14 +230,36 @@ class DockerImage(DockerObject):
             logger.info(traceback.format_exc())
             raise
         if parent_id:
-            return DockerImage(None, self.docker_backend, object_id=parent_id)
+            return self.docker_backend.get_image_by_id(parent_id)
 
     @property
     def command(self):
-        cmd = graceful_chain_get(self.inspect(cached=True), "Config", "Cmd")
+        cmd = graceful_chain_get(self.inspect(cached=True).response, "Config", "Cmd")
         if cmd:
             return " ".join(cmd)
         return ""
+
+    @property
+    def container_command(self):
+        inspect = self.inspect(cached=True).response
+        cmd = graceful_chain_get(inspect, "ContainerConfig", "Cmd")
+        if cmd:
+            return " ".join(cmd)
+        return ""
+
+    @property
+    def size(self):
+        """
+        Size of all layers in bytes
+
+        :return: int
+        """
+        return self.data["VirtualSize"]
+
+    @property
+    def labels(self):
+        labels = self.data["Labels"]
+        return labels
 
     @property
     def names(self):
@@ -240,7 +268,9 @@ class DockerImage(DockerObject):
             if self.data is None:
                 return self._names
             for t in self.data["RepoTags"]:
-                self._names.append(ImageNameStruct.parse(t))
+                image_name = ImageNameStruct.parse(t)
+                if image_name.to_str():
+                    self._names.append(image_name)
             # sort by name length
             self._names.sort(key=lambda x: len(x.to_str()))
         return self._names
@@ -284,12 +314,23 @@ class DockerImage(DockerObject):
     def remove(self):
         return self.d.remove_image(self.image_id)
 
+    @operation("tag of {object_type} {object_short_name} removed!")
+    def remove_tag(self, tag):
+        assert tag in self.names
+        return self.d.remove_image(str(tag))
+
     def matches_search(self, s):
         return s in self.image_id or \
             s in self.short_name
 
     def __str__(self):
-        return "{} ({})".format(self.image_id, self.names)
+        if self.names:
+            return "{} ({}) {}".format(self.image_id, ", ".join([x.to_str() for x in self.names]), self.container_command)
+        else:
+            return "{} {}".format(self.image_id, self.container_command)
+
+    def containers(self):
+        return self.docker_backend.get_containers_for_image(self.image_id)
 
 
 class DockerContainer(DockerObject):
@@ -341,15 +382,20 @@ class DockerContainer(DockerObject):
     def pretty_object_type(self):
         return "Container"
 
+    @property
+    def image_id(self):
+        """ this container is created from image with id..."""
+        image_id = self.data["ImageID"]
+        return image_id
+
     # methods
 
     def image_name(self):
-        image_id = self.data["Image"]
-        image = self.docker_backend.get_image_by_id(image_id)
+        image = self.docker_backend.get_image_by_id(self.image_id)
         if image is not None:
             return image.short_name
         else:
-            return image_id[:12]
+            return self.image_id[:12]
 
     def matches_search(self, s):
         return s in self.container_id or \
@@ -404,7 +450,8 @@ class DockerBackend:
 
     def __init__(self):
         self._containers = None
-        self._images = None
+        self._images = None  # displayed images
+        self._all_images = None  # docker images -a
         kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
         try:
             self.client = docker.AutoVersionClient(**kwargs)
@@ -421,6 +468,10 @@ class DockerBackend:
             for i in self.client.images():
                 img = DockerImage(i, self)
                 self._images[img.image_id] = img
+            self._all_images = {}
+            for i in self.client.images(all=True):
+                img = DockerImage(i, self)
+                self._all_images[img.image_id] = img
         return list(self._images.values())
 
     @operation("Get list of containers.")
@@ -457,10 +508,13 @@ class DockerBackend:
     # service methods
 
     def get_image_by_id(self, image_id):
-        return self._images.get(image_id)
+        return self._all_images.get(image_id)
 
     def get_container_by_id(self, container_id):
         return self._containers.get(container_id)
+
+    def get_containers_for_image(self, image_id):
+        return [container for container in self._containers.values() if container.image_id == image_id]
 
     def filter(self, containers=True, images=True, stopped=True, cached=False, sort_by_created=True):
         """

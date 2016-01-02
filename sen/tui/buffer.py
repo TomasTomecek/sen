@@ -1,8 +1,13 @@
 import logging
+
 from sen.docker_backend import DockerContainer
 from sen.exceptions import NotifyError
 from sen.tui.constants import HELP_TEXT
-from sen.tui.widget import AsyncScrollableListBox, MainListBox, ScrollableListBox, get_operation_notify_widget
+from sen.tui.widgets.info import ImageInfoWidget
+from sen.tui.widgets.list.main import MainListBox
+from sen.tui.widgets.list.util import get_operation_notify_widget
+from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
+
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +58,19 @@ class Buffer:
         widgets = self.widget.filter(s)
         if widgets is not None:
             self.widget.set_body(widgets)
+
+
+class ImageInfoBuffer(Buffer):
+    tag = "I"
+
+    def __init__(self, docker_image, ui):
+        """
+        :param docker_image:
+        :param ui: ui object so we refresh
+        """
+        self.display_name = docker_image.short_name
+        self.widget = ImageInfoWidget(ui, docker_image)
+        super().__init__()
 
 
 class MainListBuffer(Buffer):
