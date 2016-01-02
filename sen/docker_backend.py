@@ -57,13 +57,15 @@ class ImageNameStruct(object):
         if self.repo is None:
             raise RuntimeError('No image repository specified')
 
-        result = self.repo
+        result = self.repo if self.repo != "<none>" else ""
 
-        if tag and self.tag:
+        # don't display <none> junk
+        if tag and self.tag and self.tag != "<none>":
             result = '{0}:{1}'.format(result, self.tag)
-        elif tag and explicit_tag:
+        elif tag and explicit_tag and self.tag != "<none>":
             result = '{0}:{1}'.format(result, 'latest')
 
+        # don't display <none> junk
         if self.namespace:
             result = '{0}/{1}'.format(self.namespace, result)
         elif explicit_namespace:
@@ -248,7 +250,9 @@ class DockerImage(DockerObject):
             if self.data is None:
                 return self._names
             for t in self.data["RepoTags"]:
-                self._names.append(ImageNameStruct.parse(t))
+                image_name = ImageNameStruct.parse(t)
+                if image_name.to_str():
+                    self._names.append(image_name)
             # sort by name length
             self._names.sort(key=lambda x: len(x.to_str()))
         return self._names
