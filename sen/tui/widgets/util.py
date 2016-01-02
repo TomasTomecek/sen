@@ -2,6 +2,7 @@ import logging
 
 import urwid
 
+from sen.docker_backend import RootImage
 from sen.tui.constants import MAIN_LIST_FOCUS
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,9 @@ class AdHocAttrMap(urwid.AttrMap):
 
 
 def get_basic_image_markup(docker_image):
+    if isinstance(docker_image, RootImage):
+        return [str(docker_image)]
+
     text_markup = [docker_image.short_id]
 
     if docker_image.names:

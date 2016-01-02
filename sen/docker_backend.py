@@ -157,6 +157,10 @@ class DockerObject:
         return self.docker_backend.client
 
     @property
+    def created_int(self):
+        return self.data["Created"]
+
+    @property
     def created(self):
         if self._created is None:
             self._created = datetime.datetime.fromtimestamp(self.data["Created"])
@@ -188,6 +192,15 @@ class DockerObject:
 
     def display_inspect(self):
         return json.dumps(self.inspect().response, indent=2)
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self._id == other._id
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash(self._id)
 
 
 def graceful_chain_get(d, *args):
@@ -231,6 +244,33 @@ class DockerImage(DockerObject):
             raise
         if parent_id:
             return self.docker_backend.get_image_by_id(parent_id)
+        else:
+            return self.docker_backend.scratch_image
+
+    @property
+    def children(self):
+        return self.docker_backend.get_images_for_parent(self)
+
+    def get_next_sibling(self):
+        imgs = self.parent_image.children
+        if len(imgs) == 1:
+            return None
+        try:
+            return imgs[imgs.index(self) + 1]
+        except IndexError:
+            return None
+
+    def get_prev_sibling(self):
+        imgs = self.parent_image.children
+        if len(imgs) == 1:
+            return None
+        # 0 - 1 turns into -1 which turns into last element which creates cycle
+        # which totally messes up whole tree
+        prev_index = imgs.index(self) - 1
+        if prev_index < 0:
+            return None
+        else:
+            return imgs[prev_index]
 
     @property
     def command(self):
@@ -325,12 +365,41 @@ class DockerImage(DockerObject):
 
     def __str__(self):
         if self.names:
-            return "{} ({}) {}".format(self.image_id, ", ".join([x.to_str() for x in self.names]), self.container_command)
+            return "{} ({}) {}".format(self.short_id, ", ".join([x.to_str() for x in self.names]), self.container_command)
         else:
-            return "{} {}".format(self.image_id, self.container_command)
+            return "{} {}".format(self.short_id, self.container_command)
+
+    def __repr__(self):
+        return self.__str__()
 
     def containers(self):
         return self.docker_backend.get_containers_for_image(self.image_id)
+
+
+class RootImage(DockerImage):
+    """
+    this is essentially "scratch" but you cannot inspect it anymore
+    """
+    def __init__(self, docker_backend):
+        self.image_name = "scratch"
+        super().__init__(None, docker_backend, object_id="")
+
+    @property
+    def parent_image(self):
+        return None
+
+    def get_next_sibling(self):
+        return None
+
+    def get_prev_sibling(self):
+        return None
+
+    @property
+    def names(self):
+        return [ImageNameStruct.parse(self.image_name)]
+
+    def __str__(self):
+        return self.image_name
 
 
 class DockerContainer(DockerObject):
@@ -457,6 +526,7 @@ class DockerBackend:
             self.client = docker.AutoVersionClient(**kwargs)
         except docker.errors.DockerException as ex:
             raise TerminateApplication("can't establish connection to docker daemon: {0}".format(str(ex)))
+        self.scratch_image = RootImage(self)
 
     # backend queries
 
@@ -509,6 +579,12 @@ class DockerBackend:
 
     def get_image_by_id(self, image_id):
         return self._all_images.get(image_id)
+
+    def get_images_for_parent(self, image):
+        if not image:
+            return []
+        l = sorted([x for x in self._all_images.values() if x.parent_image == image], key=lambda x: x.created_int)
+        return l
 
     def get_container_by_id(self, container_id):
         return self._containers.get(container_id)
