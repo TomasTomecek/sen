@@ -228,7 +228,15 @@ class DockerImage(DockerObject):
 
     @property
     def command(self):
-        cmd = graceful_chain_get(self.inspect(cached=True), "Config", "Cmd")
+        cmd = graceful_chain_get(self.inspect(cached=True).response, "Config", "Cmd")
+        if cmd:
+            return " ".join(cmd)
+        return ""
+
+    @property
+    def container_command(self):
+        inspect = self.inspect(cached=True).response
+        cmd = graceful_chain_get(inspect, "ContainerConfig", "Cmd")
         if cmd:
             return " ".join(cmd)
         return ""
