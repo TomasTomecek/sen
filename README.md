@@ -16,6 +16,8 @@
  * there is a special buffer which display detailed info about images
  * you can get interactive tree view of all images (equivalent of `docker images --tree`)
 
+You can [see the features yourself](/docs/features.md).
+
 ![sen preview](/data/sen-preview.gif)
 
 # Installation and running `sen`
