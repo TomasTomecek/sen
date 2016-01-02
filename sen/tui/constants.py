@@ -32,6 +32,7 @@ PALLETE = [
     ('notif_text_yellow', 'white', 'default', "white", "#ff0", "default"),
     ('notif_text_orange', 'white', 'default', "white", "#f80", "default"),
     ('notif_text_red', 'white', 'default', "white", "#f66", "default"),
+    ('tree', 'dark green', 'default', "default", "dark green", "default"),
 ]
 
 STATUS_BAR_REFRESH_SECONDS = 5

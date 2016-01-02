@@ -64,5 +64,9 @@ class ImageTree(urwidtrees.TreeBox):
         # We hide the usual arrow tip and use a customized collapse-icon.
         t = urwidtrees.CollapsibleArrowTree(
             tree,
+            arrow_att="tree",  # lines, tip
+            icon_collapsed_att="tree",  # +
+            icon_expanded_att="tree",  # -
+            icon_frame_att="tree",  # [ ]
         )
         super().__init__(t)
