@@ -1,6 +1,6 @@
 import logging
 
-from sen.docker_backend import DockerContainer
+from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
 from sen.tui.constants import HELP_TEXT
 from sen.tui.widgets.info import ImageInfoWidget
@@ -69,6 +69,8 @@ class ImageInfoBuffer(Buffer):
         :param docker_image:
         :param ui: ui object so we refresh
         """
+        if isinstance(docker_image, RootImage):
+            raise NotifyError("Image \"scratch\" doesn't provide any more information.")
         self.display_name = docker_image.short_name
         self.widget = ImageInfoWidget(ui, docker_image)
         super().__init__()

@@ -163,7 +163,11 @@ class UI(urwid.MainLoop):
         self.add_and_display_buffer(InspectBuffer(docker_object))
 
     def display_image_info(self, docker_image):
-        self.add_and_display_buffer(ImageInfoBuffer(docker_image, self))
+        try:
+            self.add_and_display_buffer(ImageInfoBuffer(docker_image, self))
+        except NotifyError as ex:
+            self.notify_message(str(ex), level="error")
+            logger.error(repr(ex))
 
     def refresh_main_buffer(self, refresh_buffer=True):
         assert self.main_list_buffer is not None
