@@ -291,6 +291,9 @@ class DockerImage(DockerObject):
     def __str__(self):
         return "{} ({})".format(self.image_id, self.names)
 
+    def containers(self):
+        return self.docker_backend.get_containers_for_image(self.image_id)
+
 
 class DockerContainer(DockerObject):
     """
@@ -461,6 +464,9 @@ class DockerBackend:
 
     def get_container_by_id(self, container_id):
         return self._containers.get(container_id)
+
+    def get_containers_for_image(self, image_id):
+        return [container for container in self._containers.values() if container.image_id == image_id]
 
     def filter(self, containers=True, images=True, stopped=True, cached=False, sort_by_created=True):
         """
