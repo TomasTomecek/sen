@@ -292,6 +292,11 @@ class DockerImage(DockerObject):
     def remove(self):
         return self.d.remove_image(self.image_id)
 
+    @operation("tag of {object_type} {object_short_name} removed!")
+    def remove_tag(self, tag):
+        assert tag in self.names
+        return self.d.remove_image(str(tag))
+
     def matches_search(self, s):
         return s in self.image_id or \
             s in self.short_name
