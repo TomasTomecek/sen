@@ -13,6 +13,8 @@
   * e.g. if you create a container in another terminal, sen will pick it up
  * sen notifies you whenever something happens (and reports slow queries)
  * supports a lot of vim-like keybindings (`j`, `k`, `gg`, `/`, ...)
+ * there is a special buffer which display detailed info about images
+ * you can get interactive tree view of all images (equivalent of `docker images --tree`)
 
 ![sen preview](/data/sen-preview.gif)
 

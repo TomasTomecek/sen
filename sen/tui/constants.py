@@ -51,6 +51,7 @@ N      previous search occurrence
 f4     display only lines matching provided query (provide empty query to clear filtering)
         * main listing provides additional filtering (for more info, check Listing Section)
         * example query: "fed" - display lines containing string "fed"
+f5     open a tree view of all images (`docker images --tree` equivalent)
 ctrl o next buffer
 ctrl i previous buffer
 x      remove buffer
@@ -84,6 +85,7 @@ f4     display only lines matching provided query (provide empty query to clear 
 
 i      inspect image
 d      remove image (irreversible!)
+enter  display detailed info about image (when layer is focused)
 
 ## Container commands in listing
 
@@ -97,4 +99,14 @@ r      restart container
 p      pause container
 u      unpause container
 X      kill container
+
+## Tree buffer
+
+enter  display detailed info about image (opens image info buffer)
+
+## Image info buffer
+
+d      remove image tag (when image name is focused)
+enter  display detailed info about image (when layer is focused)
+i      inspect image (when layer is focused)
 """
