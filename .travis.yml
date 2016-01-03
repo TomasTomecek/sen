@@ -1,0 +1,22 @@
+language: python
+python:
+- '3.3'
+- '3.4'
+- '3.5'
+install:
+- pip install urwid  # because urwidtrees is using urwid in setup.py
+- pip install -r requirements.txt
+- pip install -r requirements-test.txt
+script: py.test -vv tests
+sudo: false
+notifications:
+  email: false
+deploy:
+  provider: pypi
+  user: tomastomecek
+  password:
+    secure: as3K455ZgMVkUjgrFSzuVZiozfF9eLgtE9Aez7uErEUdKc0VyshT652kJswfJje/fQeGAeR1zt6nIyn6/QhOEn4yZDLAPDho52ObrRO4iT8zk5JIImiYHunPosk8fXDuTeThjDa6kzygGicxb3wHzsL+ROMYf/l0MtjUaRvLo1xa9omLCRTuyfFFOrWHEenq0asGsxi/YFz3+wOF8hx0q2qMkmWYZ/kKSh+jDWzD2au3hyuQORuCQAYuC3KSigasesCY6jjEeBZqLpz1wuHN8rae6Mg3H/oxvk/Yl/09pxmq5mdVkk9OlzIqAjtUrswoC9m03NUvvGUgYJDQM5k6E8rBW2zu5eRvH5+Rk4r3hWIqOAyRFrY1zp7nurHoouVvPaZvIGnHNiisUVmTeAs2+ETnUHOVwFQObpYV1onh60Cxxbf36X4UaZwtqm770IcDsvo80XJHINaHdwLRiEGQ2eUU5K+Srqw9Kwr90wops1FA8PwX8SFEzlTj+ViV18S56QcwvmujeDpcLW2t/Y4k7TRJfFjWPKby8hAVwHbJhIOpnieK0OOigUY+aIqGHyBjLvaYSzNPAplXqNINgwORVfTuhzuKx9VTfAYrtuj2LjcGkeS9/CvI0sh9OocXTscPE14W9tUBlGYEW8qBJCiBz1HFATmZDFUuN515Emmud+s=
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    repo: TomasTomecek/sen
