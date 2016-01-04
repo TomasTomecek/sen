@@ -18,7 +18,7 @@ def get_requirements():
 
 setup(
     name='sen',
-    version='0.2.1',
+    version='0.2.2',
     description="Terminal User Interface for Docker Engine",
     author='Tomas Tomecek',
     author_email='tomas@tomecek.net',
