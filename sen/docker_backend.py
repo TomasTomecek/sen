@@ -385,6 +385,10 @@ class RootImage(DockerImage):
         super().__init__(None, docker_backend, object_id="")
 
     @property
+    def parent_id(self):
+        return None
+
+    @property
     def parent_image(self):
         return None
 
