@@ -454,7 +454,12 @@ class DockerContainer(DockerObject):
     @property
     def image_id(self):
         """ this container is created from image with id..."""
-        image_id = self.data["ImageID"]
+        try:
+            # docker >= 1.9
+            image_id = self.data["ImageID"]
+        except KeyError:
+            # docker <= 1.8
+            image_id = self.inspect(cached=True).response["Image"]
         return image_id
 
     # methods
