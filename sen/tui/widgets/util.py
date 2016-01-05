@@ -3,7 +3,8 @@ import logging
 import urwid
 
 from sen.docker_backend import RootImage
-from sen.tui.constants import MAIN_LIST_FOCUS
+from sen.tui.widgets.list.util import get_map
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,3 +49,17 @@ def get_basic_image_markup(docker_image):
     text_markup.append(("main_list_ddg", docker_image.container_command))
 
     return text_markup
+
+
+class SelectableText(AdHocAttrMap):
+    def __init__(self, text, maps=None):
+        maps = maps or get_map()
+        super().__init__(urwid.Text(text, align="left", wrap="clip"), maps)
+
+    @property
+    def text(self):
+        return self.original_widget.text
+
+    def keypress(self, size, key):
+        """ get rid of tback: `AttributeError: 'Text' object has no attribute 'keypress'` """
+        return key

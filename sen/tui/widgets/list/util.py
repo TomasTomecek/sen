@@ -4,7 +4,7 @@ import logging
 import urwid
 
 from sen.tui.constants import MAIN_LIST_FOCUS
-
+from sen.tui.widgets.responsive_column import ResponsiveColumns
 
 logger = logging.getLogger(__name__)
 
@@ -60,14 +60,27 @@ def get_time_attr_map(t):
 
 
 class RowWidget(urwid.AttrMap):
-    def __init__(self, columns, attr="main_list_dg", focus_map=MAIN_LIST_FOCUS):
-        self.columns = urwid.Columns(columns, dividechars=1)
+    def __init__(self, columns, attr="main_list_dg", focus_map=MAIN_LIST_FOCUS, dividechars=1):
+        self.widgets = columns
+        self.columns = urwid.Columns(columns, dividechars=dividechars)
         super().__init__(self.columns, attr, focus_map=focus_map)
+
+    @property
+    def contents(self):
+        return self.columns.contents
 
     def selectable(self):
         return True
 
     def render(self, size, focus=False):
         for w in self.columns.widget_list:
-            w.set_map('focus' if focus else 'normal')
+            if hasattr(w, "set_map"):
+                w.set_map('focus' if focus else 'normal')
         return urwid.AttrMap.render(self, size, focus)
+
+
+class ResponsiveRowWidget(RowWidget):
+    def __init__(self, columns, attr="main_list_dg", focus_map=MAIN_LIST_FOCUS, dividechars=1):
+        self.widgets = columns
+        self.columns = ResponsiveColumns(columns, dividechars=dividechars)
+        urwid.AttrMap.__init__(self, self.columns, attr, focus_map=focus_map)

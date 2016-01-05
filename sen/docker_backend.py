@@ -449,6 +449,14 @@ class DockerContainer(DockerObject):
         return self.status.startswith("Up")
 
     @property
+    def status_created(self):
+        return self.status.startswith("Created")
+
+    @property
+    def exited_well(self):
+        return self.status.startswith("Exited (0)")
+
+    @property
     def short_name(self):
         try:
             return self.names[0]

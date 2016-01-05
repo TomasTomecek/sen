@@ -3,127 +3,117 @@ import re
 import threading
 
 import urwid
-from sen.exceptions import NotifyError
 
-from sen.tui.constants import MAIN_LIST_FOCUS
+from sen.exceptions import NotifyError
 from sen.docker_backend import DockerImage, DockerContainer
-from sen.tui.widgets.list.base import VimMovementListBox
-from sen.tui.widgets.list.util import get_map, get_time_attr_map, get_operation_notify_widget
-from sen.tui.widgets.util import AdHocAttrMap
+from sen.tui.widgets.list.util import (
+    get_map, get_time_attr_map, get_operation_notify_widget, ResponsiveRowWidget
+)
+from sen.tui.widgets.table import ResponsiveTable
+from sen.tui.widgets.util import SelectableText
 from sen.util import log_traceback
 
 
 logger = logging.getLogger(__name__)
 
 
-class MainLineWidget(urwid.AttrMap):
-    FIRST_COL = 12
-    THIRD_COL = 16
-    FOURTH_COL = 30
+def get_detailed_image_row(docker_image):
+    row = []
+    image_id = SelectableText(docker_image.short_id, maps=get_map())
+    row.append(image_id)
 
-    def __init__(self, o):
-        self.docker_object = o
-        self.widgets = []
-        columns = []
+    command = SelectableText(docker_image.command, maps=get_map(defult="main_list_ddg"))
+    row.append(command)
 
-        if isinstance(o, DockerImage):
-            image_id = AdHocAttrMap(urwid.Text(o.image_id[:12]), get_map())
-            self.widgets.append(image_id)
-            columns.append((self.FIRST_COL, image_id))
+    base_image = docker_image.base_image()
+    base_image_text = ""
+    if base_image:
+        base_image_text = base_image.short_name
+    base_image_w = SelectableText(base_image_text, maps=get_map())
+    row.append(base_image_w)
 
-            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"),
-                                   get_map(defult="main_list_ddg"))
-            self.widgets.append(command)
-            columns.append(command)
+    time = SelectableText(docker_image.display_time_created(),
+                          maps=get_time_attr_map(docker_image.created))
+    row.append(time)
 
-            base_image = o.base_image()
-            base_image_text = ""
-            if base_image:
-                base_image_text = base_image.short_name
-            base_image_w = AdHocAttrMap(urwid.Text(base_image_text, wrap="clip"), get_map())
-            self.widgets.append(base_image_w)
-            columns.append((self.THIRD_COL, base_image_w))
+    image_names_markup = get_image_names_markup(docker_image)
+    # urwid.Text([]) tracebacks
+    if image_names_markup:
+        image_names = SelectableText(image_names_markup)
+    else:
+        image_names = SelectableText("")
+    row.append(image_names)
 
-            time = AdHocAttrMap(urwid.Text(o.display_time_created()), get_time_attr_map(o.created))
-            self.widgets.append(time)
-            columns.append((self.FOURTH_COL, time))
+    return row
 
-            names_widgets = []
 
-            def add_subwidget(markup, color_attr):
-                w = AdHocAttrMap(urwid.Text(markup), get_map(color_attr))
-                names_widgets.append((len(markup), w))
-                self.widgets.append(w)
-
-            for n in o.names:
-                if n.registry:
-                    add_subwidget(n.registry + "/", "main_list_dg")
-                if n.namespace and n.repo:
-                    add_subwidget(n.namespace + "/" + n.repo, "main_list_lg")
-                else:
-                    if n.repo == "<none>":
-                        add_subwidget(n.repo, "main_list_dg")
-                    else:
-                        add_subwidget(n.repo, "main_list_lg")
-                if n.tag:
-                    if n.tag not in ["<none>", "latest"]:
-                        add_subwidget(":" + n.tag, "main_list_dg")
-                add_subwidget(", ", "main_list_dg")
-            names_widgets = names_widgets[:-1]
-            names = AdHocAttrMap(urwid.Columns(names_widgets), get_map())
-            self.widgets.append(names)
-            columns.append(names)
-
-        elif isinstance(o, DockerContainer):
-            container_id = AdHocAttrMap(urwid.Text(o.container_id[:12]), get_map())
-            self.widgets.append(container_id)
-            columns.append((12, container_id))
-
-            command = AdHocAttrMap(urwid.Text(o.command, wrap="clip"),
-                                   get_map(defult="main_list_ddg"))
-            self.widgets.append(command)
-            columns.append(command)
-
-            image = AdHocAttrMap(urwid.Text(o.image_name()), get_map())
-            self.widgets.append(image)
-            columns.append((self.THIRD_COL, image))
-
-            if o.status.startswith("Up"):
-                attr_map = get_map("main_list_green")
-            elif o.status.startswith("Exited (0)"):
-                attr_map = get_map("main_list_orange")
-            elif o.status.startswith("Created"):
-                attr_map = get_map("main_list_yellow")
+def get_image_names_markup(docker_image):
+    text_markup = []
+    for n in docker_image.names:
+        if n.registry:
+            text_markup.append(("main_list_dg", n.registry + "/"))
+        if n.namespace and n.repo:
+            text_markup.append(("main_list_lg", n.namespace + "/" + n.repo))
+        else:
+            if n.repo == "<none>":
+                text_markup.append(("main_list_dg", n.repo))
             else:
-                attr_map = get_map("main_list_red")
-            status = AdHocAttrMap(urwid.Text(o.status), attr_map)
-            self.widgets.append(status)
-            columns.append((self.FOURTH_COL, status))
+                text_markup.append(("main_list_lg", n.repo))
+        if n.tag:
+            if n.tag not in ["<none>", "latest"]:
+                text_markup.append(("main_list_dg", ":" + n.tag))
+        text_markup.append(("main_list_dg", ", "))
+    text_markup = text_markup[:-1]
+    return text_markup
 
-            name = AdHocAttrMap(urwid.Text(o.short_name, wrap="clip"), get_map())
-            self.widgets.append(name)
-            columns.append(name)
 
-        self.columns = urwid.Columns(columns, dividechars=1)
-        super().__init__(self.columns,
-                         "main_list_dg",
-                         focus_map=MAIN_LIST_FOCUS)
+def get_detailed_container_row(docker_container):
+    row = []
+    container_id = SelectableText(docker_container.short_id)
+    row.append(container_id)
 
+    command = SelectableText(docker_container.command, get_map(defult="main_list_ddg"))
+    row.append(command)
+
+    image = SelectableText(docker_container.image_name())
+    row.append(image)
+
+    if docker_container.running:
+        attr_map = get_map("main_list_green")
+    elif docker_container.exited_well:
+        attr_map = get_map("main_list_orange")
+    elif docker_container.status_created:
+        attr_map = get_map("main_list_yellow")
+    else:
+        attr_map = get_map("main_list_red")
+    status = SelectableText(docker_container.status, attr_map)
+    row.append(status)
+
+    name = SelectableText(docker_container.short_name)
+    row.append(name)
+
+    return row
+
+
+def get_row(docker_object):
+    if isinstance(docker_object, DockerImage):
+        return get_detailed_image_row(docker_object)
+    elif isinstance(docker_object, DockerContainer):
+        return get_detailed_container_row(docker_object)
+    else:
+        raise Exception("what ")
+
+
+class MainLineWidget(ResponsiveRowWidget):
+    def __init__(self, docker_object):
+        self.docker_object = docker_object
+        super().__init__(get_row(docker_object))
+
+    # TODO
     def matches_search(self, s):
         return self.docker_object.matches_search(s)
 
-    def selectable(self):
-        return True
-
-    def render(self, size, focus=False):
-        for w in self.widgets:
-            w.set_map('focus' if focus else 'normal')
-        return urwid.AttrMap.render(self, size, focus)
-
-    def keypress(self, size, key):
-        logger.debug("%r keypress, focus: %s", self, self.focus)
-        return key
-
+    # TODO
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self.docker_object)
 
@@ -131,7 +121,7 @@ class MainLineWidget(urwid.AttrMap):
         return "{}".format(self.docker_object)
 
 
-class MainListBox(VimMovementListBox):
+class MainListBox(ResponsiveTable):
     def __init__(self, docker_backend, ui):
         self.d = docker_backend
         self.ui = ui
@@ -174,21 +164,22 @@ class MainListBox(VimMovementListBox):
             if w:
                 self.ui.notify_widget(w)
 
-        widgets = []
+        rows = []
+
         query, c_op, i_op = self.d.filter()
         for o in query:
-            line = MainLineWidget(o)
-            widgets.append(line)
+            rows.append(MainLineWidget(o))
         query_notify(i_op)
         query_notify(c_op)
-        return widgets
+
+        return rows
 
     @property
     def focused_docker_object(self):
         try:
             return self.get_focus()[0].docker_object
         except AttributeError as ex:
-            raise NotifyError("Nothing selected!")
+            raise NotifyError("Can't select focused object")
 
     def filter(self, s, widgets_to_filter=None):
         s = s.strip()

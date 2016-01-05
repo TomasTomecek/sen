@@ -6,27 +6,14 @@ import logging
 
 import urwid
 
-from sen.tui.widgets.list.util import get_map, RowWidget
-from sen.tui.widgets.table import ResponsiveTable, assemble_rows
-from sen.util import humanize_bytes
 from sen.tui.widgets.list.base import VimMovementListBox
-from sen.tui.widgets.util import AdHocAttrMap, get_basic_image_markup
+from sen.tui.widgets.list.util import get_map, RowWidget
+from sen.tui.widgets.table import assemble_rows
+from sen.tui.widgets.util import get_basic_image_markup, SelectableText
+from sen.util import humanize_bytes
+
 
 logger = logging.getLogger(__name__)
-
-
-class SelectableText(AdHocAttrMap):
-    def __init__(self, text, maps=None):
-        maps = maps or get_map()
-        super().__init__(urwid.Text(text, align="left", wrap="clip"), maps)
-
-    @property
-    def text(self):
-        return self._original_widget.text
-
-    def keypress(self, size, key):
-        """ get rid of tback: `AttributeError: 'Text' object has no attribute 'keypress'` """
-        return key
 
 
 class LayerWidget(SelectableText):
