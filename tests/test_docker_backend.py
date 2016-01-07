@@ -7,12 +7,12 @@ def test_images_call():
     b = DockerBackend()
     operation = b.get_images()
     images_response = operation.response
-    assert len(images_response) == 1
-    assert images_response[0].image_id == image_data["Id"]
-    assert images_response[0].short_name == image_data["RepoTags"][0]
-    assert images_response[0].parent_id == image_data["ParentId"]
-    assert images_response[0].created_int == image_data["Created"]
-    assert [str(x) for x in images_response[0].names] == image_data["RepoTags"]
+    assert len(images_response) == 2
+    assert images_response[0].image_id == image_data[0]["Id"]
+    assert images_response[0].short_name == image_data[0]["RepoTags"][0]
+    assert images_response[0].parent_id == image_data[0]["ParentId"]
+    assert images_response[0].created_int == image_data[0]["Created"]
+    assert [str(x) for x in images_response[0].names] == image_data[0]["RepoTags"]
 
 
 def test_containers_call():
@@ -30,3 +30,12 @@ def test_containers_call():
     assert containers_response[0].running is False
     assert containers_response[0].image_id == container_data["ImageID"]
     # assert containers_response[0].image_name()
+
+
+def test_short_id():
+    mock()
+    b = DockerBackend()
+    operation = b.get_images()
+    images_response = operation.response
+    assert images_response[0].short_id == image_data[0]["Id"][:12]
+    assert images_response[1].short_id == "3ab9a7ed8a16"

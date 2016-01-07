@@ -177,7 +177,11 @@ class DockerObject:
     def short_id(self):
         if self._short_id is None:
             self.set_id()
-            self._short_id = self._id[:12]
+            if ":" in self._id:
+                colon_index = self._id.index(":") + 1
+                self._short_id = self._id[colon_index:][:12]
+            else:
+                self._short_id = self._id[:12]
         return self._short_id
 
     def display_time_created(self):
