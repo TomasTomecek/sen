@@ -129,10 +129,26 @@ class ImageInfoWidget(VimMovementListBox):
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
 
+        def getattr_or_notify(o, attr, message):
+            try:
+                return getattr(o, attr)
+            except AttributeError:
+                self.ui.notify_message(message, level="error")
+
         if key == "d":
-            img = self.focus.columns.widget_list[0].docker_image
-            tag = self.focus.columns.widget_list[0].tag
-            img.remove_tag(tag)  # FIXME: do this async
+            img = getattr_or_notify(self.focus.columns.widget_list[0], "docker_image",
+                                    "Focused object isn't a docker image!")
+            if not img:
+                return
+            tag = getattr_or_notify(self.focus.columns.widget_list[0], "tag",
+                                    "Focused object doesn't have a tag!")
+            if not tag:
+                return
+            try:
+                img.remove_tag(tag)  # FIXME: do this async
+            except Exception as ex:
+                self.ui.notify_message("Can't remove tag '%s': %s" % (tag, ex), level="error")
+                return
             self.walker.remove(self.focus)
             return
 
