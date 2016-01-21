@@ -2,7 +2,6 @@ import logging
 
 import urwidtrees
 
-from sen.tui.widgets.info import SelectableText
 from sen.tui.widgets.list.util import RowWidget
 from sen.tui.widgets.util import get_basic_image_markup, SelectableText
 
