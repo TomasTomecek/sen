@@ -154,3 +154,73 @@ class ImageInfoWidget(VimMovementListBox):
 
         key = super().keypress(size, key)
         return key
+
+
+class ContainerInfoWidget(VimMovementListBox):
+    """
+    display info about image
+    """
+    def __init__(self, ui, docker_container):
+        self.ui = ui
+        self.docker_container = docker_container
+
+        self.walker = urwid.SimpleFocusListWalker([])
+
+        self._basic_data()
+
+        super().__init__(self.walker)
+
+        self.set_focus(0)  # or assemble list first and then stuff it into walker
+
+    def _basic_data(self):
+        data = [
+            [SelectableText("Id", maps=get_map("main_list_green")),
+             SelectableText(self.docker_container.container_id)],
+            [SelectableText("Status", maps=get_map("main_list_green")),
+             SelectableText(self.docker_container.status)],
+            [SelectableText("Created", maps=get_map("main_list_green")),
+             SelectableText("{0}, {1}".format(self.docker_container.display_formal_time_created(),
+                                              self.docker_container.display_time_created()))],
+            [SelectableText("Command", maps=get_map("main_list_green")),
+             SelectableText(self.docker_container.command)],
+        ]
+        self.walker.extend(assemble_rows(data))
+
+    def _labels(self):
+        if not self.docker_image.labels:
+            return []
+        data = []
+        self.walker.append(RowWidget([SelectableText("")]))
+        self.walker.append(RowWidget([SelectableText("Labels", maps=get_map("main_list_white"))]))
+        for label_key, label_value in self.docker_image.labels.items():
+            data.append([SelectableText(label_key, maps=get_map("main_list_green")), SelectableText(label_value)])
+        self.walker.extend(assemble_rows(data))
+
+    def keypress(self, size, key):
+        logger.debug("%s, %s", key, size)
+
+        def getattr_or_notify(o, attr, message):
+            try:
+                return getattr(o, attr)
+            except AttributeError:
+                self.ui.notify_message(message, level="error")
+
+        if key == "d":
+            img = getattr_or_notify(self.focus.columns.widget_list[0], "docker_image",
+                                    "Focused object isn't a docker image!")
+            if not img:
+                return
+            tag = getattr_or_notify(self.focus.columns.widget_list[0], "tag",
+                                    "Focused object doesn't have a tag!")
+            if not tag:
+                return
+            try:
+                img.remove_tag(tag)  # FIXME: do this async
+            except Exception as ex:
+                self.ui.notify_message("Can't remove tag '%s': %s" % (tag, ex), level="error")
+                return
+            self.walker.remove(self.focus)
+            return
+
+        key = super().keypress(size, key)
+        return key

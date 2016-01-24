@@ -5,9 +5,10 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from sen.exceptions import NotifyError
 from sen.tui.commands import search, filter
 from sen.tui.statusbar import Footer
-from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer, ImageInfoBuffer, TreeBuffer
+from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer, ImageInfoBuffer, TreeBuffer, \
+    ContainerInfoBuffer
 from sen.tui.constants import PALLETE
-from sen.docker_backend import DockerBackend
+from sen.docker_backend import DockerBackend, DockerImage, DockerContainer
 
 import urwid
 
@@ -167,9 +168,17 @@ class UI(urwid.MainLoop):
     def inspect(self, docker_object):
         self.add_and_display_buffer(InspectBuffer(docker_object))
 
-    def display_image_info(self, docker_image):
+    def display_info(self, docker_object):
+        if isinstance(docker_object, DockerImage):
+            buffer_class = ImageInfoBuffer
+        elif isinstance(docker_object, DockerContainer):
+            buffer_class = ContainerInfoBuffer
+        else:
+            self.notify_message("Can't display info for '%s'" % docker_object, level="error")
+            logger.error("unable to display info buffer for %r", docker_object)
+            return
         try:
-            self.add_and_display_buffer(ImageInfoBuffer(docker_image, self))
+            self.add_and_display_buffer(buffer_class(docker_object, self))
         except NotifyError as ex:
             self.notify_message(str(ex), level="error")
             logger.error(repr(ex))

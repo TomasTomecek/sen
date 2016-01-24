@@ -3,7 +3,7 @@ import logging
 from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
 from sen.tui.constants import HELP_TEXT
-from sen.tui.widgets.info import ImageInfoWidget
+from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget
 from sen.tui.widgets.list.main import MainListBox
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
@@ -73,6 +73,19 @@ class ImageInfoBuffer(Buffer):
             raise NotifyError("Image \"scratch\" doesn't provide any more information.")
         self.display_name = docker_image.short_name
         self.widget = ImageInfoWidget(ui, docker_image)
+        super().__init__()
+
+
+class ContainerInfoBuffer(Buffer):
+    tag = "I"
+
+    def __init__(self, docker_container, ui):
+        """
+        :param docker_container:
+        :param ui: ui object so we refresh
+        """
+        self.display_name = docker_container.short_name
+        self.widget = ContainerInfoWidget(ui, docker_container)
         super().__init__()
 
 
