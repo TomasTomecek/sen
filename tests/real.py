@@ -47,6 +47,59 @@ version_data = {
     'Version': '1.9.0-dev-fc24'
 }
 
+top_data = {
+    "Titles": [
+        "PID",
+        "PPID",
+        "WCHAN",
+        "COMMAND"
+    ],
+    "Processes": [
+        [
+            "18725",
+            "23743",
+            "hrtime",
+            "sleep 100000"
+        ],
+        [
+            "18733",
+            "23743",
+            "hrtime",
+            "sleep 100000"
+        ],
+        [
+            "18743",
+            "23743",
+            "hrtime",
+            "sleep 100000"
+        ],
+        [
+            "23743",
+            "24542",
+            "poll_s",
+            "sh"
+        ],
+        [
+            "23819",
+            "23743",
+            "hrtime",
+            "sleep 100000"
+        ],
+        [
+            "24502",
+            "21459",
+            "wait",
+            "sh"
+        ],
+        [
+            "24542",
+            "24502",
+            "wait",
+            "sh"
+        ]
+    ]
+}
+
 
 def images_response(*args, **kwargs):
     global image_data
@@ -62,3 +115,4 @@ def mock():
     flexmock(docker.Client, images=images_response)
     flexmock(docker.Client, containers=containers_response)
     flexmock(docker.Client, version=lambda *args, **kwargs: version_data)
+    flexmock(docker.Client, top=lambda *args, **kwargs: top_data)

@@ -3,7 +3,7 @@ import logging
 from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
 from sen.tui.constants import HELP_TEXT
-from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget
+from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget, ProcessTree
 from sen.tui.widgets.list.main import MainListBox
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox

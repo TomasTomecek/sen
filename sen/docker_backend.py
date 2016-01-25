@@ -197,6 +197,11 @@ class DockerObject:
     def display_inspect(self):
         return json.dumps(self.inspect().response, indent=2)
 
+    @property
+    def labels(self):
+        labels = self.data["Labels"]
+        return labels
+
     def __eq__(self, other):
         return type(self) == type(other) and self._id == other._id
 
@@ -301,11 +306,6 @@ class DockerImage(DockerObject):
         return self.data["VirtualSize"]
 
     @property
-    def labels(self):
-        labels = self.data["Labels"]
-        return labels
-
-    @property
     def names(self):
         if self._names is None:
             self._names = []
@@ -358,7 +358,7 @@ class DockerImage(DockerObject):
     def remove(self):
         return self.d.remove_image(self.image_id)
 
-    @operation("tag of {object_type} {object_short_name} removed!")
+    @operation("Tag of {object_type} {object_short_name} removed!")
     def remove_tag(self, tag):
         assert tag in self.names
         return self.d.remove_image(str(tag))
@@ -430,7 +430,7 @@ class DockerContainer(DockerObject):
     def names(self):
         if self._names is None:
             self._names = []
-            for t in self.data["Names"] or []:
+            for t in self.data.get("Names", []):
                 self._names.append(t)
             # sort by name length
             self._names.sort(key=lambda x: len(x))
@@ -491,6 +491,25 @@ class DockerContainer(DockerObject):
         return s in self.container_id or \
                s in self.short_name
     # api calls
+
+    @operation("List processes in running container.")
+    def top(self):
+        """
+        list of processes in a running container
+
+        :return: None or list of dicts
+        """
+        if not self.running:
+            return
+        # let's get resources from .stats()
+        ps_args = "-eo pid,ppid,wchan,args"
+        # returns {"Processes": [values], "Titles": [values]}
+        # it's easier to play with list of dicts: [{"pid": 1, "ppid": 0}]
+        response = self.d.top(self.container_id, ps_args=ps_args)
+        # TODO: sort?
+        logger.debug(json.dumps(response, indent=2))
+        return [dict(zip(response["Titles"], process))
+                for process in response["Processes"]]
 
     @operation("Inspect container {object_short_name}.")
     def inspect(self, cached=False):
