@@ -40,7 +40,7 @@ $ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek
 You can easily build a docker image with sen inside:
 
 ```
-$ docker build --tag=$USER/sen git://github.com/tomastomecek/sen
+$ docker build --tag=$USER/sen https://github.com/tomastomecek/sen
 $ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
 ```
 
