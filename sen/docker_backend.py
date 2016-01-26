@@ -500,7 +500,7 @@ class DockerContainer(DockerObject):
         :return: None or list of dicts
         """
         if not self.running:
-            return
+            return []
         # let's get resources from .stats()
         ps_args = "-eo pid,ppid,wchan,args"
         # returns {"Processes": [values], "Titles": [values]}
@@ -509,7 +509,7 @@ class DockerContainer(DockerObject):
         # TODO: sort?
         logger.debug(json.dumps(response, indent=2))
         return [dict(zip(response["Titles"], process))
-                for process in response["Processes"]]
+                for process in response["Processes"] or []]
 
     @operation("Inspect container {object_short_name}.")
     def inspect(self, cached=False):

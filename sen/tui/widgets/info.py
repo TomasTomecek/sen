@@ -318,6 +318,7 @@ class ContainerInfoWidget(VimMovementListBox):
 
         self._basic_data()
         self._process_tree()
+        self._resources()
         self._labels()
 
         super().__init__(self.walker)
@@ -338,6 +339,16 @@ class ContainerInfoWidget(VimMovementListBox):
         ]
         self.walker.extend(assemble_rows(data))
 
+    def _resources(self):
+        graph = urwid.BarGraph(
+            ['status_text_orange','status_text_red','status_text_green'],
+            None,
+            {(1, 0): 'status_text_red/status_text_orange',
+             (2, 1): 'status_text_yellow/status_text_green'},
+        )
+        graph.set_data([[2], [3], [6]], 10)
+        self.walker.append(BoxAdapter(graph, 8))
+
     def _labels(self):
         if not self.docker_container.labels:
             return []
@@ -350,8 +361,9 @@ class ContainerInfoWidget(VimMovementListBox):
 
     def _process_tree(self):
         top = self.docker_container.top().response
-        logger.debug("len=%d, %s", len(top), top)
-        self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
+        if top:
+            logger.debug("len=%d, %s", len(top), top)
+            self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
 
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
