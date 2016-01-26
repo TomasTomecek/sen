@@ -31,7 +31,7 @@ $ docker pull tomastomecek/sen
 This repository has set up automated builds on docker hub. In case you run into some issue, try pulling latest version before opening issue. You should run `sen` in containers like this:
 
 ```
-$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek/sen
+$ docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek/sen
 ```
 
 
@@ -41,7 +41,7 @@ You can easily build a docker image with sen inside:
 
 ```
 $ docker build --tag=$USER/sen https://github.com/tomastomecek/sen
-$ docker run -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
+$ docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
 ```
 
 
