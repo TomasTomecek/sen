@@ -365,6 +365,15 @@ class ContainerInfoWidget(VimMovementListBox):
             logger.debug("len=%d, %s", len(top), top)
             self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
 
+        satt = {(1,0): 'status_text_red', (2,0): 'status_text_orange'}
+        x = urwid.BarGraph(
+            ["main_list_dg", "status_text_red", "status_text_yellow"],
+            hatt=["status_text_yellow", "main_list_orange", "main_list_green"],
+            satt=satt,
+        )
+        x.set_data([[3], [1], [7], [5]], 10)
+        self.walker.append(BoxAdapter(x, 12))
+
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
 
