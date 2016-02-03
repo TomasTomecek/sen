@@ -1,4 +1,5 @@
 import logging
+import threading
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from sen.exceptions import NotifyError
@@ -24,6 +25,8 @@ class UI(urwid.MainLoop):
         self.buffers = []
         self.footer = Footer(self)
 
+        self.refresh_lock = threading.Lock()
+
         self.executor = ThreadPoolExecutor(max_workers=4)
 
         root_widget = urwid.AttrMap(self.mainframe, "root")
@@ -43,7 +46,8 @@ class UI(urwid.MainLoop):
 
     def refresh(self):
         try:
-            self.draw_screen()
+            with self.refresh_lock:
+                self.draw_screen()
         except AssertionError:
             logger.warning("application is not running")
             pass
