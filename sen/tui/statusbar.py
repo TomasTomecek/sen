@@ -6,6 +6,7 @@ import urwid
 from sen.tui.constants import CLEAR_NOTIF_BAR_MESSAGE_IN
 from sen.util import log_traceback
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,27 +20,18 @@ class Footer:
         self.notif_bar = None
         self.status_bar = self.build_statusbar()
         self.prompt_bar = None
-        # self.executor = ThreadPoolExecutor(max_workers=8)
         self.notifications = []
+
         # lock when managing notifications:
         #  * when accessing self.notifications
         #  * when accessing widgets
         # and most importantly, remember, locking is voodoo
+        # FIXME: Rlock may be better
         self.notifications_lock = threading.Lock()
+        # urwid is not thread safe, so changing data and rendering needs to be atomic
+        self.refresh_lock = threading.Lock()
 
-    def reload_notif_bar(self):
-        logger.debug("reload notif bar")
-        bottom = []
-        if self.notif_bar:
-            bottom.append(self.notif_bar)
-        if self.prompt_bar:
-            bottom.append(self.prompt_bar)
-        else:
-            bottom.append(self.status_bar)
-        self.ui.set_footer(urwid.Pile(bottom))
-        self.ui.refresh()
-
-    def reload_footer(self):
+    def reload_footer(self, refresh=True, rebuild_statusbar=True):
         logger.debug("reload footer")
         bottom = []
         if self.notif_bar:
@@ -47,10 +39,13 @@ class Footer:
         if self.prompt_bar:
             bottom.append(self.prompt_bar)
         else:
-            self.status_bar = self.build_statusbar()
+            if rebuild_statusbar:
+                self.status_bar = self.build_statusbar()
             bottom.append(self.status_bar)
-        self.ui.set_footer(urwid.Pile(bottom))
-        # do not refresh here b/c mainloop might not started
+        with self.refresh_lock:
+            self.ui.set_footer(urwid.Pile(bottom))
+            if refresh:
+                self.ui.refresh()
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
@@ -123,7 +118,7 @@ class Footer:
                     self.notif_bar = None
             else:
                 self.notif_bar = None
-        self.reload_notif_bar()
+        self.reload_footer(rebuild_statusbar=False)
 
     def notify_message(self, message=None, level="info", clear_if_dupl=True,
                         clear_in=CLEAR_NOTIF_BAR_MESSAGE_IN):
@@ -133,10 +128,9 @@ class Footer:
         opens notification popup.
         """
         with self.notifications_lock:
-            if clear_if_dupl:
-                if message in self.notifications:
-                    # notification is already displayed
-                    return
+            if clear_if_dupl and message in self.notifications:
+                logger.debug("notification %r is already displayed", message)
+                return
             self.notifications.append(message)
         logger.debug("display notification %r", message)
         widget = urwid.AttrMap(urwid.Text(message), "notif_{}".format(level))
@@ -168,7 +162,7 @@ class Footer:
                         self.notif_bar = None
                 else:
                     self.notif_bar = None
-            self.reload_notif_bar()
+            self.reload_footer(rebuild_statusbar=False)
 
         if not widget:
             return
@@ -185,6 +179,5 @@ class Footer:
                 newpile = self.notif_bar.widget_list + widget_list
                 self.notif_bar = urwid.Pile(newpile)
 
-        self.reload_notif_bar()
-        # self.executor.submit(clear_notification)
+        self.reload_footer(rebuild_statusbar=False)
         self.ui.set_alarm_in(clear_in, clear_notification)

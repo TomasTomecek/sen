@@ -9,6 +9,8 @@ import sys
 
 # let's be so gentle and print the error message even on python 2
 # running on py 2, halt
+import traceback
+
 if sys.version_info.major <= 2:
     error_message = """\
 It looks like you are running sen with python 2. I'm sorry but sen is a python 3 only project.
@@ -61,7 +63,10 @@ def main():
         if args.debug:
             raise
         else:
-            logger.error("Exception caught: %r", ex)
+            # TODO: improve this message to be more thorough
+            # FIXME: reset terminal and remove all the curses crap
+            print("There was an error during program execution, see logs for more info.")
+            logger.debug(traceback.format_exc())
             return 1
     return 0
 

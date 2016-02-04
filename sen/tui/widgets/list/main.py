@@ -128,16 +128,20 @@ class MainListBox(ResponsiveTable):
         self.walker = urwid.SimpleFocusListWalker([])
         super(MainListBox, self).__init__(self.walker)
 
+        # urwid is not thread safe
+        self.refresh_lock = threading.Lock()
+
         self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
         self.thread.start()
 
     def populate(self, focus_on_top=False):
         widgets = self._assemble_initial_content()
-        self.walker[:] = widgets
-        self.ro_content = widgets
-        if focus_on_top:
-            self.set_focus(0)
-        self.ui.refresh()
+        with self.refresh_lock:
+            self.walker[:] = widgets
+            self.ro_content = widgets
+            if focus_on_top:
+                self.set_focus(0)
+            self.ui.refresh()
 
     def realtime_updates(self):
         """
@@ -154,9 +158,10 @@ class MainListBox(ResponsiveTable):
                     logger.error("%r", ex)
                     continue
                 widgets.append(line)
-            self.walker[:] = widgets
-            self.ui.reload_footer()
-            self.ui.refresh()
+            with self.refresh_lock:
+                self.walker[:] = widgets
+                self.ui.reload_footer()
+                self.ui.refresh()
 
     def _assemble_initial_content(self):
         def query_notify(operation):
