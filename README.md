@@ -28,11 +28,15 @@ I strongly advise to run `sen` from a docker container provided on docker hub:
 $ docker pull tomastomecek/sen
 ```
 
-This repository has set up automated builds on docker hub. In case you run into some issue, try pulling latest version before opening issue. You should run `sen` in containers like this:
+This repository has set up automated builds on docker hub. In case you run into some issue, try pulling latest version first before opening an issue.
+
+This is the recommended way of running `sen` in a container:
 
 ```
-$ docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek/sen
+$ docker run --privileged -v /var/run/docker.sock:/run/docker.sock -ti -e TERM=$TERM tomastomecek/sen
 ```
+
+Some distros have `/var/run` simlinked to `/run`, so you can do `/run/docker.sock:/run/docker.sock` instead.
 
 
 ## docker
@@ -41,7 +45,7 @@ You can easily build a docker image with sen inside:
 
 ```
 $ docker build --tag=$USER/sen https://github.com/tomastomecek/sen
-$ docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
+$ docker run --privileged -v /var/run/docker.sock:/run/docker.sock -ti -e TERM=$TERM $USER/sen
 ```
 
 
