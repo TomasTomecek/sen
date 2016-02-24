@@ -26,8 +26,7 @@ import logging
 from sen import set_logging
 from sen.exceptions import TerminateApplication
 from sen.tui.init import UI
-from sen.util import get_log_file_path
-
+from sen.util import get_log_file_path, log_vars_from_tback
 
 logger = logging.getLogger("sen")
 
@@ -54,21 +53,30 @@ def main():
         print("Error: {0}".format(str(ex)), file=sys.stderr)
         return 1
 
-    try:
-        ui.run()
-    except KeyboardInterrupt:
-        print("Quitting on user request.")
-        return 1
-    except Exception as ex:  # pylint: disable=broad-except
-        if args.debug:
-            raise
-        else:
-            # TODO: improve this message to be more thorough
-            # FIXME: reset terminal and remove all the curses crap
-            print("There was an error during program execution, see logs for more info.")
-            logger.debug(traceback.format_exc())
+    forever = True
+    while forever:
+        try:
+            ui.run()
+        except KeyboardInterrupt:
+            print("Quitting on user request.")
             return 1
-    return 0
+        except AssertionError as ex:
+            log_vars_from_tback()
+            if ex.args[0] == "rows, render mismatch":
+                logger.error("race condition happened")
+                # restart the ui
+                continue
+            return 2
+        except Exception as ex:  # pylint: disable=broad-except
+            log_vars_from_tback()
+            if args.debug:
+                raise
+            else:
+                # TODO: improve this message to be more thorough
+                # FIXME: reset terminal and remove all the curses crap
+                print("There was an error during program execution, see logs for more info.")
+                return 1
+        return 0
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import functools
 import traceback
@@ -65,3 +66,24 @@ def humanize_bytes(bytesize, precision=2):
     if factor == 1:
         precision = 0
     return '%.*f %s' % (precision, bytesize / float(factor), suffix)
+
+
+def log_vars_from_tback():
+    logger.error(traceback.format_exc())
+    tb = sys.exc_info()[2]
+    while 1:
+        if not tb.tb_next:
+            break
+        tb = tb.tb_next
+    stack = []
+    f = tb.tb_frame
+    while f:
+        stack.append(f)
+        f = f.f_back
+    for frame in stack[:5]:
+        logger.debug("frame %s:%s", frame.f_code.co_filename, frame.f_lineno)
+        for key, value in frame.f_locals.items():
+            try:
+                logger.debug("%20s = %s", key, value)
+            except Exception:
+                logger.debug("%20s = CANNOT PRINT VALUE", key, value)
