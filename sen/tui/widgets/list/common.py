@@ -1,5 +1,6 @@
 import logging
 import threading
+import traceback
 
 import urwid
 
@@ -32,15 +33,24 @@ class AsyncScrollableListBox(VimMovementListBox):
                     self.log_texts.append(urwid.Text(("main_list_dg", log_entry),
                                                      align="left", wrap="any"))
         walker = urwid.SimpleFocusListWalker(self.log_texts)
+        walker.set_focus(len(walker) - 1)
         super(AsyncScrollableListBox, self).__init__(walker)
 
         def fetch_logs():
             line_w = urwid.AttrMap(
                 urwid.Text("", align="left", wrap="any"), "main_list_dg", "main_list_white"
             )
-            walker.append(line_w)
 
-            for line in generator:
+            while True:
+                try:
+                    line = next(generator)
+                except StopIteration:
+                    logger.info("no more logs")
+                    break
+                except Exception as ex:
+                    logger.error(traceback.format_exc())
+                    ui.notify_message("Error while fetching logs: %s", ex)
+                    break
                 line = _ensure_unicode(line)
                 if self.stop.is_set():
                     break
@@ -48,13 +58,13 @@ class AsyncScrollableListBox(VimMovementListBox):
                     if self.filter_query not in line:
                         continue
                 line_w.original_widget.set_text(line_w.original_widget.text + line.rstrip("\r\n"))
-                logger.debug(repr(line))
+                if line_w != walker[-1]:
+                    walker.append(line_w)
                 if line.endswith("\n"):
                     walker.set_focus(len(walker) - 1)
                     line_w = urwid.AttrMap(
                         urwid.Text("", align="left", wrap="any"), "main_list_dg", "main_list_white"
                     )
-                    walker.append(line_w)
                 ui.refresh()
 
         self.stop = threading.Event()
