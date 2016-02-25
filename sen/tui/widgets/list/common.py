@@ -27,7 +27,7 @@ class AsyncScrollableListBox(VimMovementListBox):
         if static_data:
             static_data = _ensure_unicode(static_data).split("\n")
             for d in static_data:
-                log_entry = d.strip()
+                log_entry = d.rstrip()
                 if log_entry:
                     self.log_texts.append(urwid.Text(("main_list_dg", log_entry),
                                                      align="left", wrap="any"))

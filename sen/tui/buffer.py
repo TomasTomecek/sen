@@ -115,13 +115,16 @@ class LogsBuffer(Buffer):
             try:
                 pre_message = "Getting logs for container {}...".format(docker_object.short_name)
                 ui.notify_message(pre_message)
-                operation = docker_object.logs(follow=follow)
+                if follow:
+                    # FIXME: this is a bit race-y -- we might lose some logs with this approach
+                    operation = docker_object.logs(follow=follow, lines=0)
+                    static_data = docker_object.logs(follow=False).response
+                    self.widget = AsyncScrollableListBox(operation.response, ui, static_data=static_data)
+                else:
+                    operation = docker_object.logs(follow=follow)
+                    self.widget = ScrollableListBox(operation.response)
                 ui.remove_notification_message(pre_message)
                 ui.notify_widget(get_operation_notify_widget(operation, display_always=False))
-                if follow:
-                    self.widget = AsyncScrollableListBox(operation.response, ui)
-                else:
-                    self.widget = ScrollableListBox(operation.response)
             except Exception as ex:
                 # FIXME: let's catch 404 and print that container doesn't exist
                 #        instead of printing ugly HTTP error
