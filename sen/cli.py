@@ -68,12 +68,18 @@ def main():
                 continue
             return 2
         except Exception as ex:  # pylint: disable=broad-except
+            # restore terminal
+            import curses
+            curses.nocbreak()
+            curses.echo()
+            curses.endwin()
+            # import ipdb ; ipdb.set_trace()
+
             log_vars_from_tback()
             if args.debug:
                 raise
             else:
                 # TODO: improve this message to be more thorough
-                # FIXME: reset terminal and remove all the curses crap
                 print("There was an error during program execution, see logs for more info.")
                 return 1
         return 0
