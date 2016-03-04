@@ -1,4 +1,5 @@
 import logging
+import threading
 
 import urwid
 
@@ -63,3 +64,25 @@ class SelectableText(AdHocAttrMap):
     def keypress(self, size, key):
         """ get rid of tback: `AttributeError: 'Text' object has no attribute 'keypress'` """
         return key
+
+
+class ThreadSafeFrame(urwid.Frame):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update_lock = threading.Lock()
+
+    def set_body(self, body):
+        with self.update_lock:
+            return super().set_body(body=body)
+
+    def set_footer(self, footer):
+        with self.update_lock:
+            return super().set_footer(footer=footer)
+
+    def set_header(self, header):
+        with self.update_lock:
+            return super().set_header(header=header)
+
+    def render(self, size, focus=False):
+        with self.update_lock:
+            return super().render(size=size, focus=focus)

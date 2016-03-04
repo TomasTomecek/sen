@@ -11,6 +11,7 @@ from sen.docker_backend import DockerBackend
 
 import urwid
 
+from sen.tui.widgets.util import ThreadSafeFrame
 from sen.util import log_traceback
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class UI(urwid.MainLoop):
         self.d = DockerBackend()
 
         # root widget
-        self.mainframe = urwid.Frame(urwid.SolidFill())
+        self.mainframe = ThreadSafeFrame(urwid.SolidFill())
         self.buffers = []
         self.footer = Footer(self)
 
