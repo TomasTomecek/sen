@@ -36,7 +36,7 @@ class UI(urwid.MainLoop):
         screen.set_terminal_properties(256)
         screen.register_palette(PALLETE)
 
-        super().__init__(root_widget, screen=screen)
+        super().__init__(root_widget, screen=screen, event_loop=urwid.AsyncioEventLoop())
         self.handle_mouse = False
         self.current_buffer = None
 
