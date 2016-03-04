@@ -68,7 +68,7 @@ def humanize_bytes(bytesize, precision=2):
     return '%.*f %s' % (precision, bytesize / float(factor), suffix)
 
 
-def log_vars_from_tback():
+def log_vars_from_tback(process_frames=5):
     logger.error(traceback.format_exc())
     tb = sys.exc_info()[2]
     while 1:
@@ -80,10 +80,22 @@ def log_vars_from_tback():
     while f:
         stack.append(f)
         f = f.f_back
-    for frame in stack[:5]:
+    for frame in stack[:process_frames]:
         logger.debug("frame %s:%s", frame.f_code.co_filename, frame.f_lineno)
         for key, value in frame.f_locals.items():
             try:
                 logger.debug("%20s = %s", key, value)
             except Exception:
                 logger.debug("%20s = CANNOT PRINT VALUE", key, value)
+
+            self_instance = frame.f_locals.get("self", None)
+            if not self_instance:
+                continue
+            for key in dir(self_instance):
+                if key.startswith("__"):
+                    continue
+                value = getattr(self_instance, key, None)
+                try:
+                    logger.debug("%20s = %s", "self." + key, value)
+                except Exception:
+                    logger.debug("%20s = CANNOT PRINT VALUE", "self." + key, value)

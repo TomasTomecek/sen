@@ -72,7 +72,7 @@ def main():
         # curses.endwin()
         # import ipdb ; ipdb.set_trace()
 
-        log_vars_from_tback()
+        log_vars_from_tback(process_frames=100)  # show complete stack trace
         if args.debug:
             raise
         else:

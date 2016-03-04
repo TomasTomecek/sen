@@ -2,7 +2,7 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 import time
 
-from sen.util import _ensure_unicode, log_traceback
+from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback
 
 import pytest
 
@@ -49,3 +49,22 @@ def test_log_traceback_threaded(caplog):
     assert caplog.records()[0].message.startswith("starting thread")
     assert caplog.records()[1].message.startswith("Traceback")
     assert caplog.records()[1].message.endswith("Exception\n")
+
+
+def test_log_vars_from_tback(caplog):
+    a = 1
+    b = None
+    c = []
+    try:
+        raise Exception()
+    except Exception:
+        log_vars_from_tback(1)
+
+    def has_similar_message(msg):
+        for log_entry in caplog.records():
+            if msg in log_entry.message:
+                return True
+
+    assert has_similar_message("c = []")
+    assert has_similar_message("b = None")
+    assert has_similar_message("a = 1")
