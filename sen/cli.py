@@ -53,36 +53,33 @@ def main():
         print("Error: {0}".format(str(ex)), file=sys.stderr)
         return 1
 
-    forever = True
-    while forever:
-        try:
-            ui.run()
-        except KeyboardInterrupt:
-            print("Quitting on user request.")
-            return 1
-        except AssertionError as ex:
-            log_vars_from_tback()
-            if ex.args[0] == "rows, render mismatch":
-                logger.error("race condition happened")
-                # restart the ui
-                continue
-            return 2
-        except Exception as ex:  # pylint: disable=broad-except
-            # restore terminal
-            import curses
-            curses.nocbreak()
-            curses.echo()
-            curses.endwin()
-            # import ipdb ; ipdb.set_trace()
+    try:
+        ui.run()
+    except KeyboardInterrupt:
+        print("Quitting on user request.")
+        return 1
+    # except AssertionError as ex:
+        # if ex.args[0] == "rows, render mismatch":
+        #     logger.error("race condition happened")
+        #     # restart the ui
+        #     # # continue
+    #    return 2
+    except Exception as ex:  # pylint: disable=broad-except
+        # # restore terminal
+        # import curses
+        # curses.nocbreak()
+        # curses.echo()
+        # curses.endwin()
+        # import ipdb ; ipdb.set_trace()
 
-            log_vars_from_tback()
-            if args.debug:
-                raise
-            else:
-                # TODO: improve this message to be more thorough
-                print("There was an error during program execution, see logs for more info.")
-                return 1
-        return 0
+        log_vars_from_tback()
+        if args.debug:
+            raise
+        else:
+            # TODO: improve this message to be more thorough
+            print("There was an error during program execution, see logs for more info.")
+            return 1
+    return 0
 
 
 if __name__ == "__main__":
