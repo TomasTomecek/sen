@@ -43,3 +43,15 @@ def test_short_id():
 
 def test_top():
     pass
+
+
+def test_stats():
+    b = DockerBackend()
+    c = b.get_containers(stopped=False)
+    c0 = c.response.pop()
+    operation = c0.stats()
+    stats_stream = operation.response
+    for x in stats_stream:
+        import json
+        print(json.dumps(x, indent=2))
+        raise Exception()

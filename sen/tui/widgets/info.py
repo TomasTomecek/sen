@@ -5,6 +5,7 @@ Info widgets:
 import json
 import logging
 import pprint
+import threading
 
 import urwid
 import urwidtrees
@@ -14,8 +15,7 @@ from sen.tui.widgets.list.base import VimMovementListBox
 from sen.tui.widgets.list.util import get_map, RowWidget
 from sen.tui.widgets.table import assemble_rows
 from sen.tui.widgets.util import get_basic_image_markup, SelectableText
-from sen.util import humanize_bytes
-
+from sen.util import humanize_bytes, log_traceback
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +306,24 @@ class ProcessTree(urwidtrees.TreeBox):
         super().__init__(t)
 
 
+class ContainerInfoGraph(urwid.BarGraph):
+    def __init__(self):
+        # satt smoothes graph lines
+        satt = {(1, 0): 'graph_lines_inv'}
+
+        super().__init__(
+            ["main_list_dg", "graph_lines"],
+            hatt=["main_list_orange"],
+            satt=satt,
+        )
+        # breaks badly when set too high
+        # self.set_bar_width(1)
+        d = []
+        for y in range(1, 30):
+            d.append([0])
+        self.set_data(d[:], 100)
+
+
 class ContainerInfoWidget(VimMovementListBox):
     """
     display info about image
@@ -315,6 +333,8 @@ class ContainerInfoWidget(VimMovementListBox):
         self.docker_container = docker_container
 
         self.walker = urwid.SimpleFocusListWalker([])
+
+        self.stop = threading.Event()
 
         self._basic_data()
         self._process_tree()
@@ -340,14 +360,25 @@ class ContainerInfoWidget(VimMovementListBox):
         self.walker.extend(assemble_rows(data))
 
     def _resources(self):
-        graph = urwid.BarGraph(
-            ['status_text_orange','status_text_red','status_text_green'],
-            None,
-            {(1, 0): 'status_text_red/status_text_orange',
-             (2, 1): 'status_text_yellow/status_text_green'},
-        )
-        graph.set_data([[2], [3], [6]], 10)
-        self.walker.append(BoxAdapter(graph, 8))
+        cpu_g = ContainerInfoGraph()
+        mem_g = ContainerInfoGraph()
+        self.walker.append(urwid.Columns([BoxAdapter(cpu_g, 12), BoxAdapter(mem_g, 12)]))
+
+        @log_traceback
+        def realtime_updates():
+            cpu_data = cpu_g.data[0]
+            mem_data = mem_g.data[0]
+            for update in self.docker_container.stats().response:
+                if self.stop.is_set():
+                    break
+                logger.debug(update)
+                cpu_data = cpu_data[1:] + [[int(update["cpu_percent"])]]
+                cpu_g.set_data(cpu_data, 100)
+                mem_data = mem_data[1:] + [[int(update["mem_percent"] * 100)]]
+                mem_g.set_data(mem_data, 100)
+
+        self.thread = threading.Thread(target=realtime_updates, daemon=True)
+        self.thread.start()
 
     def _labels(self):
         if not self.docker_container.labels:
@@ -364,15 +395,6 @@ class ContainerInfoWidget(VimMovementListBox):
         if top:
             logger.debug("len=%d, %s", len(top), top)
             self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
-
-        satt = {(1,0): 'status_text_red', (2,0): 'status_text_orange'}
-        x = urwid.BarGraph(
-            ["main_list_dg", "status_text_red", "status_text_yellow"],
-            hatt=["status_text_yellow", "main_list_orange", "main_list_green"],
-            satt=satt,
-        )
-        x.set_data([[3], [1], [7], [5]], 10)
-        self.walker.append(BoxAdapter(x, 12))
 
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
@@ -402,3 +424,6 @@ class ContainerInfoWidget(VimMovementListBox):
 
         key = super().keypress(size, key)
         return key
+
+    def destroy(self):
+        self.stop.set()

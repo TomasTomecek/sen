@@ -10,6 +10,7 @@ from sen.exceptions import TerminateApplication
 import docker
 import humanize
 
+from sen.util import calculate_cpu_percent
 
 logger = logging.getLogger(__name__)
 
@@ -491,6 +492,16 @@ class DockerContainer(DockerObject):
         return s in self.container_id or \
                s in self.short_name
     # api calls
+
+    @operation("Get resources statistics.")
+    def stats(self):
+        for x in self.d.stats(self.container_id, decode=True, stream=True):
+            r = {}
+            r["cpu_percent"] = calculate_cpu_percent(x)
+            r["mem_current"] = x["memory_stats"]["usage"]
+            r["mem_total"] = x["memory_stats"]["limit"]
+            r["mem_percent"] = r["mem_current"] / r["mem_total"]
+            yield r
 
     @operation("List processes in running container.")
     def top(self):
