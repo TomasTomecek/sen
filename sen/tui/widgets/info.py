@@ -221,10 +221,11 @@ class ProcessList:
             return None
         logger.debug("prev of %s has children %s", process, children)
         prev_idx = children.index(process) - 1
-        # if prev_idx < 0:
-        #     return None
-        # else:
-        return children[prev_idx]
+        if prev_idx < 0:
+            # when this code path is not present, tree navigation is seriously messed up
+            return None
+        else:
+            return children[prev_idx]
 
 
 class ProcessTreeBackend(urwidtrees.Tree):
