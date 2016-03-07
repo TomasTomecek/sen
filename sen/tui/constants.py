@@ -34,8 +34,11 @@ PALLETE = [
     ('notif_text_red', 'white', 'default', "white", "#f66", "default"),
     ('tree', 'dark green', 'default', "default", "dark green", "default"),
 
-    ('graph_lines', "white", 'default', "default", "white", "#060"),
-    ('graph_lines_inv', "default", 'default', "default", "#060", "white"),
+    ('graph_bg', "default", 'default', "default", "default", "default"),
+    ('graph_lines_cpu', "white", 'default', "default", "white", "#060"),
+    ('graph_lines_cpu_inv', "default", 'default', "default", "#060", "white"),
+    ('graph_lines_mem', "white", 'default', "default", "white", "#0f0"),
+    ('graph_lines_mem_inv', "default", 'default', "default", "#0f0", "white"),
 ]
 
 STATUS_BAR_REFRESH_SECONDS = 5

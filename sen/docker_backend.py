@@ -479,12 +479,35 @@ class DockerContainer(DockerObject):
             image_id = self.inspect(cached=True).response["Image"]
         return image_id
 
+    @property
+    def image(self):
+        return self.docker_backend.get_image_by_id(self.image_id)
+
+    @property
+    def ip_address(self):
+        # docker == 1.10
+        ip_address = self.inspect(cached=True).response["NetworkSettings"]["IPAddress"]
+        return ip_address
+
+    @property
+    def port_mapping(self):
+        """
+        get ACTIVE port mappings of a container
+
+        :return: dict:
+        {
+            "container_port": "host_port"
+        }
+        """
+        # docker == 1.10
+        ip_address = self.inspect(cached=True).response["NetworkSettings"]["IPAddress"]
+        return
+
     # methods
 
     def image_name(self):
-        image = self.docker_backend.get_image_by_id(self.image_id)
-        if image is not None:
-            return image.short_name
+        if self.image is not None:
+            return self.image.short_name
         else:
             return self.image_id[:12]
 

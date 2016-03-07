@@ -86,7 +86,7 @@ def log_vars_from_tback(process_frames=5):
             try:
                 logger.debug("%20s = %s", key, value)
             except Exception:
-                logger.debug("%20s = CANNOT PRINT VALUE", key, value)
+                logger.debug("%20s = CANNOT PRINT VALUE", key)
 
             self_instance = frame.f_locals.get("self", None)
             if not self_instance:
@@ -94,11 +94,11 @@ def log_vars_from_tback(process_frames=5):
             for key in dir(self_instance):
                 if key.startswith("__"):
                     continue
-                value = getattr(self_instance, key, None)
                 try:
+                    value = getattr(self_instance, key, None)
                     logger.debug("%20s = %s", "self." + key, value)
                 except Exception:
-                    logger.debug("%20s = CANNOT PRINT VALUE", "self." + key, value)
+                    logger.debug("%20s = CANNOT PRINT VALUE", "self." + key)
 
 
 # this is taken directly from docker client:

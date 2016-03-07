@@ -52,18 +52,29 @@ def get_basic_image_markup(docker_image):
     return text_markup
 
 
-class SelectableText(AdHocAttrMap):
-    def __init__(self, text, maps=None):
-        maps = maps or get_map()
-        super().__init__(urwid.Text(text, align="left", wrap="clip"), maps)
-
+class ColorTextMixin:
     @property
     def text(self):
         return self.original_widget.text
 
+    @text.setter
+    def text(self, value):
+        self.original_widget.set_text(value)
+
     def keypress(self, size, key):
         """ get rid of tback: `AttributeError: 'Text' object has no attribute 'keypress'` """
         return key
+
+
+class ColorText(ColorTextMixin, urwid.AttrMap):
+    def __init__(self, text, color):
+        super().__init__(urwid.Text(text, align="left", wrap="clip"), color)
+
+
+class SelectableText(ColorTextMixin, AdHocAttrMap):
+    def __init__(self, text, maps=None):
+        maps = maps or get_map()
+        super().__init__(urwid.Text(text, align="left", wrap="clip"), maps)
 
 
 class ThreadSafeFrame(urwid.Frame):

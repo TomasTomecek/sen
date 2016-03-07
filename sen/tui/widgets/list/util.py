@@ -59,7 +59,7 @@ def get_time_attr_map(t):
         return get_map("main_list_dg")
 
 
-class RowWidget(urwid.AttrMap):
+class UnselectableRowWidget(urwid.AttrMap):
     def __init__(self, columns, attr="main_list_dg", focus_map=MAIN_LIST_FOCUS, dividechars=1):
         self.widgets = columns
         self.columns = urwid.Columns(columns, dividechars=dividechars)
@@ -69,14 +69,16 @@ class RowWidget(urwid.AttrMap):
     def contents(self):
         return self.columns.contents
 
-    def selectable(self):
-        return True
-
     def render(self, size, focus=False):
         for w in self.columns.widget_list:
             if hasattr(w, "set_map"):
                 w.set_map('focus' if focus else 'normal')
         return urwid.AttrMap.render(self, size, focus)
+
+
+class RowWidget(UnselectableRowWidget):
+    def selectable(self):
+        return True
 
 
 class ResponsiveRowWidget(RowWidget):
