@@ -152,6 +152,7 @@ class UI(urwid.MainLoop):
     def run(self):
         self.main_list_buffer = MainListBuffer(self.d, self)
 
+        # FIXME: this breaks rendering -- focus is not being displayed correctly
         @log_traceback
         def chain_fcs():
             self.main_list_buffer.refresh(focus_on_top=True)
