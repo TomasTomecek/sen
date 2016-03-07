@@ -8,8 +8,6 @@ from __future__ import print_function
 import sys
 
 # let's be so gentle and print the error message even on python 2
-# running on py 2, halt
-import traceback
 
 if sys.version_info.major <= 2:
     error_message = """\
