@@ -125,8 +125,7 @@ class MainListBox(ResponsiveTable):
     def __init__(self, docker_backend, ui):
         self.d = docker_backend
         self.ui = ui
-        self.walker = urwid.SimpleFocusListWalker([])
-        super(MainListBox, self).__init__(self.walker)
+        super(MainListBox, self).__init__(urwid.SimpleFocusListWalker([]))
 
         # urwid is not thread safe
         self.refresh_lock = threading.Lock()
@@ -137,7 +136,7 @@ class MainListBox(ResponsiveTable):
     def populate(self, focus_on_top=False):
         widgets = self._assemble_initial_content()
         with self.refresh_lock:
-            self.walker[:] = widgets
+            self.set_body(widgets)
             self.ro_content = widgets
             if focus_on_top:
                 self.set_focus(0)
@@ -159,7 +158,7 @@ class MainListBox(ResponsiveTable):
                     continue
                 widgets.append(line)
             with self.refresh_lock:
-                self.walker[:] = widgets
+                self.set_body(widgets)
                 self.ui.reload_footer()
                 self.ui.refresh()
 

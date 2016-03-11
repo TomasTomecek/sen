@@ -1,4 +1,5 @@
 import logging
+import threading
 
 import urwid
 from sen.exceptions import NotifyError
@@ -17,13 +18,16 @@ class WidgetBase(urwid.ListBox):
         self.filter_query = None
         super().__init__(*args, **kwargs)
         self.ro_content = self.body[:]  # unfiltered content of a widget
+        self.body_change_lock = threading.Lock()
 
     def set_body(self, widgets):
-        self.body[:] = widgets
+        with self.body_change_lock:
+            self.body[:] = widgets
 
     def reload_widget(self):
         # this is the easiest way to refresh body
-        self.body[:] = self.body
+        with self.body_change_lock:
+            self.body[:] = self.body
 
     def _search(self, reverse_search=False):
         if self.search_string is None:
@@ -67,7 +71,7 @@ class WidgetBase(urwid.ListBox):
 
         if not s:
             self.filter_query = None
-            self.body[:] = self.ro_content
+            self.set_body(self.ro_content)
             return
 
         widgets = []
@@ -156,7 +160,7 @@ class VimMovementListBox(WidgetBase):
             return
         elif key == "G":
             self.set_focus(len(self.body) - 1)
-            self.body[:] = self.body
+            self.reload_widget()
             return
         elif key == "g":
             if self.cached_key is None:
