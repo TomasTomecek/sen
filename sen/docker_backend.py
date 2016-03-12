@@ -608,6 +608,7 @@ class DockerBackend:
         if cached is False or self._images is None:
             logger.debug("doing images() query")
             self._images = {}
+            # FIXME: this can raise 500
             for i in self.client.images():
                 img = DockerImage(i, self)
                 self._images[img.image_id] = img
