@@ -13,7 +13,7 @@ def set_logging(name="sen", level=logging.DEBUG, path=FALLBACK_LOG_PATH):
     handler.setLevel(logging.DEBUG)
     # handler = logging.StreamHandler(sys.stderr)
 
-    formatter = logging.Formatter('%(asctime)s %(name)-18s %(levelname)-6s %(message)s',
-                                  '%H:%M:%S')
+    formatter = logging.Formatter(
+        '%(asctime)s.%(msecs).03d %(filename)-17s %(levelname)-6s %(message)s', '%H:%M:%S')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
