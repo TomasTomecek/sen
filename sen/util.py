@@ -80,6 +80,7 @@ def log_vars_from_tback(process_frames=5):
     while f:
         stack.append(f)
         f = f.f_back
+    stack.reverse()  # top most frame will be on the bottom of a log file
     for frame in stack[:process_frames]:
         logger.debug("frame %s:%s", frame.f_code.co_filename, frame.f_lineno)
         for key, value in frame.f_locals.items():
