@@ -10,6 +10,7 @@ from sen.exceptions import TerminateApplication
 import docker
 import humanize
 
+from sen.net import NetData
 from sen.util import calculate_cpu_percent
 
 logger = logging.getLogger(__name__)
@@ -490,7 +491,7 @@ class DockerContainer(DockerObject):
         return ip_address
 
     @property
-    def port_mapping(self):
+    def net(self):
         """
         get ACTIVE port mappings of a container
 
@@ -499,9 +500,7 @@ class DockerContainer(DockerObject):
             "container_port": "host_port"
         }
         """
-        # docker == 1.10
-        ip_address = self.inspect(cached=True).response["NetworkSettings"]["IPAddress"]
-        return
+        return NetData(self.inspect(cached=True).response)
 
     # methods
 

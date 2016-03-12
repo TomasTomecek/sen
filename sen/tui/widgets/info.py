@@ -299,6 +299,7 @@ class ContainerInfoWidget(VimMovementListBox):
         self.stop = threading.Event()
 
         self._basic_data()
+        self._net()
         self._image()
         self._process_tree()
         self._resources()
@@ -319,10 +320,41 @@ class ContainerInfoWidget(VimMovementListBox):
                                               self.docker_container.display_time_created()))],
             [SelectableText("Command", maps=get_map("main_list_green")),
              SelectableText(self.docker_container.command)],
-            [SelectableText("IP Address", maps=get_map("main_list_green")),
-             SelectableText(self.docker_container.ip_address)],
         ]
         self.walker.extend(assemble_rows(data))
+
+    def _net(self):
+        ports = self.docker_container.net.ports
+        data = []
+        if ports:
+            data.extend([[SelectableText("")], [
+                SelectableText("Host Port", maps=get_map("main_list_white")),
+                SelectableText("Container Port", maps=get_map("main_list_white"))
+            ]])
+            for host_port, container_port in ports.items():
+                data.append([
+                    SelectableText(host_port), SelectableText(container_port)
+                ])
+
+        ips = self.docker_container.net.ips
+        if ips:
+            data.extend([[SelectableText("")], [
+                SelectableText("Network Name", maps=get_map("main_list_white")),
+                SelectableText("IP Address", maps=get_map("main_list_white"))
+            ]])
+            for net_name, net_data in ips.items():
+                a4 = net_data["ip_address4"]
+                a6 = net_data["ip_address6"]
+                if a4:
+                    data.append([
+                        SelectableText(net_name), SelectableText(a4)
+                    ])
+                if a6:
+                    data.append([
+                        SelectableText(net_name), SelectableText(a6)
+                    ])
+        if data:
+            self.walker.extend(assemble_rows(data, dividechars=3))
 
     def _image(self):
         self.walker.append(RowWidget([SelectableText("")]))

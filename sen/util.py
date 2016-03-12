@@ -113,3 +113,14 @@ def calculate_cpu_percent(d):
     if system_delta > 0.0:
         cpu_percent = cpu_delta / system_delta * 100.0 * cpu_count
     return cpu_percent
+
+
+def graceful_chain_get(d, *args, default=None):
+    t = d
+    for a in args:
+        try:
+            t = t[a]
+        except (KeyError, ValueError, TypeError) as ex:
+            logger.debug("can't get %r from %s", a, t)
+            return default
+    return t

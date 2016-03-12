@@ -31,7 +31,7 @@ def calculate_max_cols_length(table, size):
     return max_cols_lengths
 
 
-def assemble_rows(data, headers=None, max_allowed_lengths=None):
+def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1):
     """
     :param data: list of lists:
     [["row 1 column 1", "row 1 column 2"],
@@ -77,7 +77,7 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None):
         for idx, item in enumerate(row):
             row_widgets.append((max_lengths[idx], item))
         rows.append(
-            RowWidget(row_widgets)
+            RowWidget(row_widgets, dividechars=dividechars)
         )
 
     return rows
