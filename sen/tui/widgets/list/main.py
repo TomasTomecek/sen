@@ -160,7 +160,6 @@ class MainListBox(ResponsiveTable):
             with self.refresh_lock:
                 self.set_body(widgets)
                 self.ui.reload_footer()
-                self.ui.refresh()
 
     def _assemble_initial_content(self):
         def query_notify(operation):

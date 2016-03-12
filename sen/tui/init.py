@@ -46,7 +46,12 @@ class UI(urwid.MainLoop):
         logger.info("running task %r(%s, %s) in background", task, args, kwargs)
         self.executor.submit(task, *args, **kwargs)
 
+    def entering_idle(self):
+        with self.refresh_lock:
+            return super().entering_idle()
+
     def refresh(self):
+        logger.debug("refresh user interface")
         try:
             with self.refresh_lock:
                 self.draw_screen()
