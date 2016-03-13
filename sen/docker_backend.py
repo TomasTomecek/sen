@@ -634,8 +634,13 @@ class DockerBackend:
         for event in self.client.events(decode=True):
             logger.debug("RT event: %s", event)
 
-            # event["from'] means it's a container
-            if "from" in event:
+            try:
+                # 1.10+
+                is_container = event["Type"] == "container"
+            except KeyError:
+                # event["from'] means it's a container
+                is_container = "from" in event
+            if is_container:
                 # inspect doesn't contain info about status and you can't query just one
                 # container with containers()
                 # let's do full-blown containers() query; it's not that expensive
