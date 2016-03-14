@@ -367,16 +367,24 @@ class ContainerInfoWidget(VimMovementListBox):
                                                      maps=get_map("main_list_white"))]))
         cpu_g = ContainerInfoGraph("graph_lines_cpu_inv", "graph_lines_cpu")
         mem_g = ContainerInfoGraph("graph_lines_mem_inv", "graph_lines_mem")
+        # blk and net io doesn't have current stats, just all stats
+        # that doesn't make sense to graph
         cpu_label = ColorText("CPU ", "graph_lines_cpu_inv")
         cpu_value = ColorText("0.0 %", "graph_lines_cpu_inv")
         mem_label = ColorText("Memory ", "graph_lines_mem_inv")
         mem_value = ColorText("0.0 %", "graph_lines_mem_inv")
+        blk_read_label = ColorText("I/O Read ", "graph_lines_blkio_inv")
+        blk_read_value = ColorText("0 B", "graph_lines_blkio_inv")
+        blk_write_label = ColorText("I/O Write ", "graph_lines_blkio_inv")
+        blk_write_value = ColorText("0 B", "graph_lines_blkio_inv")
         self.walker.append(urwid.Columns([
             BoxAdapter(cpu_g, 12),
             BoxAdapter(mem_g, 12),
             BoxAdapter(urwid.ListBox(urwid.SimpleFocusListWalker([
-                UnselectableRowWidget([(7, cpu_label), cpu_value]),
-                UnselectableRowWidget([(7, mem_label), mem_value])
+                UnselectableRowWidget([(12, cpu_label), cpu_value]),
+                UnselectableRowWidget([(12, mem_label), mem_value]),
+                UnselectableRowWidget([(12, blk_read_label), blk_read_value]),
+                UnselectableRowWidget([(12, blk_write_label), blk_write_value])
             ])), 12)
         ]))
 
@@ -384,6 +392,7 @@ class ContainerInfoWidget(VimMovementListBox):
         def realtime_updates():
             cpu_data = cpu_g.data[0]
             mem_data = mem_g.data[0]
+
             for update in self.docker_container.stats().response:
                 if self.stop.is_set():
                     break
@@ -398,6 +407,10 @@ class ContainerInfoWidget(VimMovementListBox):
                 mem_value.text = "%.2f %% (%s)" % (mem_percent, mem_current)
                 mem_data = mem_data[1:] + [[int(mem_percent)]]
                 mem_g.set_data(mem_data, 100)
+
+                blk_read = update["blk_read"]
+                blk_read_value.text = humanize_bytes(blk_read)
+                blk_write_value.text = humanize_bytes(update["blk_write"])
 
         self.thread = threading.Thread(target=realtime_updates, daemon=True)
         self.thread.start()

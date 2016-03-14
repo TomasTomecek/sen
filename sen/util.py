@@ -116,6 +116,25 @@ def calculate_cpu_percent(d):
     return cpu_percent
 
 
+def calculate_blkio_bytes(d):
+    """
+
+    :param d:
+    :return: (read_bytes, wrote_bytes), ints
+    """
+    bytes_stats = graceful_chain_get(d, "blkio_stats", "io_service_bytes_recursive")
+    if not bytes_stats:
+        return 0, 0
+    r = 0
+    w = 0
+    for s in bytes_stats:
+        if s["op"] == "Read":
+            r += s["value"]
+        elif s["op"] == "Write":
+            w += s["value"]
+    return r, w
+
+
 def graceful_chain_get(d, *args, default=None):
     t = d
     for a in args:

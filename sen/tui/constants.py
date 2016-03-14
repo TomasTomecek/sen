@@ -39,6 +39,8 @@ PALLETE = [
     ('graph_lines_cpu_inv', "default", 'default', "default", "#060", "white"),
     ('graph_lines_mem', "white", 'default', "default", "white", "#0f0"),
     ('graph_lines_mem_inv', "default", 'default', "default", "#0f0", "white"),
+    ('graph_lines_blkio', "white", 'default', "default", "white", "#00f"),
+    ('graph_lines_blkio_inv', "default", 'default', "default", "#00f", "white"),
 ]
 
 STATUS_BAR_REFRESH_SECONDS = 5
