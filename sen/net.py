@@ -17,11 +17,13 @@ def extract_data_from_inspect(network_name, network_data):
     a4 = None
     if network_name == "host":
         a4 = "127.0.0.1"
+    n = {}
     a4 = graceful_chain_get(network_data, "IPAddress") or a4
-    n = {
-        "ip_address4": a4,
-        "ip_address6": graceful_chain_get(network_data, "GlobalIPv6Address")
-    }
+    if a4:
+        n["ip_address4"] = a4
+    a6 = graceful_chain_get(network_data, "GlobalIPv6Address")
+    if a6:
+        n["ip_address4"] = a6
     return n
 
 
@@ -44,9 +46,10 @@ class NetData:
 
         if self._ports is None:
             self._ports = {}
-            for key, value in self.net_settings["Ports"].items():
-                cleaned_port = key.split("/")[0]
-                self._ports[cleaned_port] = graceful_chain_get(value, 0, "HostPort")
+            if self.net_settings["Ports"]:
+                for key, value in self.net_settings["Ports"].items():
+                    cleaned_port = key.split("/")[0]
+                    self._ports[cleaned_port] = graceful_chain_get(value, 0, "HostPort")
         return self._ports
 
     @property
@@ -64,9 +67,10 @@ class NetData:
         }
         """
         if self._ips is None:
-            self._ips = {
-                "default": extract_data_from_inspect("default", self.net_settings)
-            }
+            self._ips = {}
+            default_net = extract_data_from_inspect("default", self.net_settings)
+            if default_net:
+                self._ips["default"] = default_net
             for network_name, network_data in self.inspect_data["NetworkSettings"]["Networks"].items():
                 self._ips[network_name] = extract_data_from_inspect(network_name, network_data)
 

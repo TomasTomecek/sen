@@ -338,18 +338,18 @@ class ContainerInfoWidget(VimMovementListBox):
                     ])
 
         ips = self.docker_container.net.ips
+        logger.debug(ips)
         if ips:
             data.extend([[SelectableText("")], [
                 SelectableText("Network Name", maps=get_map("main_list_white")),
                 SelectableText("IP Address", maps=get_map("main_list_white"))
             ]])
             for net_name, net_data in ips.items():
-                a4 = net_data["ip_address4"]
-                a6 = net_data["ip_address6"]
-                if a4:
-                    data.append([
-                        SelectableText(net_name), SelectableText(a4)
-                    ])
+                a4 = net_data.get("ip_address4", "none")
+                a6 = net_data.get("ip_address6", "")
+                data.append([
+                    SelectableText(net_name), SelectableText(a4)
+                ])
                 if a6:
                     data.append([
                         SelectableText(net_name), SelectableText(a6)
