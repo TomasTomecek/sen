@@ -523,7 +523,7 @@ class DockerContainer(DockerObject):
             r["cpu_percent"] = calculate_cpu_percent(x)
             r["mem_current"] = x["memory_stats"]["usage"]
             r["mem_total"] = x["memory_stats"]["limit"]
-            r["mem_percent"] = r["mem_current"] / r["mem_total"]
+            r["mem_percent"] = (r["mem_current"] / r["mem_total"]) * 100.0
             yield r
 
     @operation("List processes in running container.")
