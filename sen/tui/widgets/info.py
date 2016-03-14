@@ -332,9 +332,10 @@ class ContainerInfoWidget(VimMovementListBox):
                 SelectableText("Container Port", maps=get_map("main_list_white"))
             ]])
             for host_port, container_port in ports.items():
-                data.append([
-                    SelectableText(host_port), SelectableText(container_port)
-                ])
+                if host_port and container_port:
+                    data.append([
+                        SelectableText(host_port), SelectableText(container_port)
+                    ])
 
         ips = self.docker_container.net.ips
         if ips:
