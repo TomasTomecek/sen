@@ -11,7 +11,7 @@ import docker
 import humanize
 
 from sen.net import NetData
-from sen.util import calculate_cpu_percent, calculate_blkio_bytes
+from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -524,6 +524,7 @@ class DockerContainer(DockerObject):
             r["mem_total"] = x["memory_stats"]["limit"]
             r["mem_percent"] = (r["mem_current"] / r["mem_total"]) * 100.0
             r["blk_read"], r["blk_write"] = calculate_blkio_bytes(x)
+            r["net_rx"], r["net_tx"] = calculate_network_bytes(x)
             yield r
 
     @operation("List processes in running container.")

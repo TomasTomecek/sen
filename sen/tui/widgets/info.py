@@ -368,8 +368,7 @@ class ContainerInfoWidget(VimMovementListBox):
                                                      maps=get_map("main_list_white"))]))
         cpu_g = ContainerInfoGraph("graph_lines_cpu_inv", "graph_lines_cpu")
         mem_g = ContainerInfoGraph("graph_lines_mem_inv", "graph_lines_mem")
-        # blk and net io doesn't have current stats, just all stats
-        # that doesn't make sense to graph
+        # FIXME: graph blk and net
         cpu_label = ColorText("CPU ", "graph_lines_cpu_inv")
         cpu_value = ColorText("0.0 %", "graph_lines_cpu_inv")
         mem_label = ColorText("Memory ", "graph_lines_mem_inv")
@@ -378,6 +377,10 @@ class ContainerInfoWidget(VimMovementListBox):
         blk_read_value = ColorText("0 B", "graph_lines_blkio_inv")
         blk_write_label = ColorText("I/O Write ", "graph_lines_blkio_inv")
         blk_write_value = ColorText("0 B", "graph_lines_blkio_inv")
+        net_rx_label = ColorText("Net Rx ", "graph_lines_blkio_inv")
+        net_rx_value = ColorText("0 B", "graph_lines_blkio_inv")
+        net_tx_label = ColorText("Net Tx ", "graph_lines_net_inv")
+        net_tx_value = ColorText("0 B", "graph_lines_net_inv")
         self.walker.append(urwid.Columns([
             BoxAdapter(cpu_g, 12),
             BoxAdapter(mem_g, 12),
@@ -385,7 +388,9 @@ class ContainerInfoWidget(VimMovementListBox):
                 UnselectableRowWidget([(12, cpu_label), cpu_value]),
                 UnselectableRowWidget([(12, mem_label), mem_value]),
                 UnselectableRowWidget([(12, blk_read_label), blk_read_value]),
-                UnselectableRowWidget([(12, blk_write_label), blk_write_value])
+                UnselectableRowWidget([(12, blk_write_label), blk_write_value]),
+                UnselectableRowWidget([(12, net_rx_label), net_rx_value]),
+                UnselectableRowWidget([(12, net_tx_label), net_tx_value]),
             ])), 12)
         ]))
 
@@ -412,6 +417,9 @@ class ContainerInfoWidget(VimMovementListBox):
                 blk_read = update["blk_read"]
                 blk_read_value.text = humanize_bytes(blk_read)
                 blk_write_value.text = humanize_bytes(update["blk_write"])
+
+                net_rx_value.text = humanize_bytes(update["net_rx"])
+                net_tx_value.text = humanize_bytes(update["net_tx"])
 
         self.thread = threading.Thread(target=realtime_updates, daemon=True)
         self.thread.start()

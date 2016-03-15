@@ -183,6 +183,18 @@ stats_data = {
   },
   "pids_stats": {},
   "read": "2016-03-04T17:54:13.542707177+01:00",
+  "networks": {
+    "eth0": {
+      "rx_packets": 1018,
+      "rx_errors": 0,
+      "tx_errors": 0,
+      "rx_bytes": 141847,
+      "tx_packets": 20,
+      "tx_bytes": 1636,
+      "tx_dropped": 0,
+      "rx_dropped": 0
+    }
+  },
   "blkio_stats": {
     "io_service_bytes_recursive": [
       {
