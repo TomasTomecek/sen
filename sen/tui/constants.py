@@ -35,14 +35,20 @@ PALLETE = [
     ('tree', 'dark green', 'default', "default", "dark green", "default"),
 
     ('graph_bg', "default", 'default', "default", "default", "default"),
-    ('graph_lines_cpu', "white", 'default', "default", "white", "#060"),
-    ('graph_lines_cpu_inv', "default", 'default', "default", "#060", "white"),
-    ('graph_lines_mem', "white", 'default', "default", "white", "#0f0"),
-    ('graph_lines_mem_inv', "default", 'default', "default", "#0f0", "white"),
-    ('graph_lines_blkio', "white", 'default', "default", "white", "#00f"),
-    ('graph_lines_blkio_inv', "default", 'default', "default", "#00f", "white"),
-    ('graph_lines_net', "white", 'default', "default", "white", "#04a"),
-    ('graph_lines_net_inv', "default", 'default', "default", "#04a", "white"),
+
+    ('graph_lines_cpu', "default", 'default', "default", "default", "#0aa"),
+    ('graph_lines_cpu_tips', "default", 'default', "default", "#0aa", "default"),
+    ('graph_lines_cpu_legend', "default", 'default', "default", "#0ff", "default"),
+
+    ('graph_lines_mem', "default", 'default', "default", "default", "#0a0"),
+    ('graph_lines_mem_tips', "default", 'default', "default", "#0a0", "default"),
+    ('graph_lines_mem_legend', "default", 'default', "default", "#0f0", "default"),
+
+    ('graph_lines_blkio', "default", 'default', "default", "default", "#00f"),
+    ('graph_lines_blkio_inv', "default", 'default', "default", "#00f", "default"),
+
+    ('graph_lines_net', "default", 'default', "default", "default", "#04a"),
+    ('graph_lines_net_inv', "default", 'default', "default", "#04a", "default"),
 ]
 
 STATUS_BAR_REFRESH_SECONDS = 5
