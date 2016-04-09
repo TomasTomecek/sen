@@ -305,6 +305,7 @@ class ContainerInfoWidget(VimMovementListBox):
         self._process_tree()
         self._resources()
         self._labels()
+        self._logs()
 
         super().__init__(self.walker)
 
@@ -457,6 +458,15 @@ class ContainerInfoWidget(VimMovementListBox):
                                                          maps=get_map("main_list_white"))]))
             logger.debug("len=%d, %s", len(top), top)
             self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
+
+    def _logs(self):
+        operation = self.docker_container.logs(follow=False, lines=10)
+        if operation.response:
+            self.walker.append(RowWidget([SelectableText("")]))
+            self.walker.append(RowWidget([SelectableText("Logs",
+                                                         maps=get_map("main_list_white"))]))
+            for x in operation.response.splitlines():
+                self.walker.append(RowWidget([SelectableText(x)]))
 
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
