@@ -518,13 +518,20 @@ class DockerContainer(DockerObject):
     @operation("Get resources statistics.")
     def stats(self):
         for x in self.d.stats(self.container_id, decode=True, stream=True):
-            r = {}
-            r["cpu_percent"] = calculate_cpu_percent(x)
-            r["mem_current"] = x["memory_stats"]["usage"]
-            r["mem_total"] = x["memory_stats"]["limit"]
-            r["mem_percent"] = (r["mem_current"] / r["mem_total"]) * 100.0
-            r["blk_read"], r["blk_write"] = calculate_blkio_bytes(x)
-            r["net_rx"], r["net_tx"] = calculate_network_bytes(x)
+            blk_read, blk_write = calculate_blkio_bytes(x)
+            net_r, net_w = calculate_network_bytes(x)
+            mem_current = x["memory_stats"]["usage"]
+            mem_total = x["memory_stats"]["limit"]
+            r = {
+                "cpu_percent": calculate_cpu_percent(x),
+                "mem_current": mem_current,
+                "mem_total": x["memory_stats"]["limit"],
+                "mem_percent": (mem_current / mem_total) * 100.0,
+                "blk_read": blk_read,
+                "blk_write": blk_write,
+                "net_rx": net_r,
+                "net_tx": net_w,
+            }
             yield r
 
     @operation("List processes in running container.")

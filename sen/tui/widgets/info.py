@@ -6,6 +6,7 @@ import logging
 import pprint
 import threading
 
+import math
 import urwid
 import urwidtrees
 from urwid.decoration import BoxAdapter
@@ -15,7 +16,7 @@ from sen.tui.widgets.graph import ContainerInfoGraph
 from sen.tui.widgets.list.base import VimMovementListBox
 from sen.tui.widgets.list.util import get_map, RowWidget, UnselectableRowWidget
 from sen.tui.widgets.table import assemble_rows
-from sen.tui.widgets.util import SelectableText, ColorText
+from sen.tui.widgets.util import SelectableText, ColorText, UnselectableListBox
 from sen.util import humanize_bytes, log_traceback
 
 logger = logging.getLogger(__name__)
@@ -368,58 +369,73 @@ class ContainerInfoWidget(VimMovementListBox):
                                                      maps=get_map("main_list_white"))]))
         cpu_g = ContainerInfoGraph("graph_lines_cpu_tips", "graph_lines_cpu")
         mem_g = ContainerInfoGraph("graph_lines_mem_tips", "graph_lines_mem")
-        # FIXME: graph blk and net
+        blk_r_g = ContainerInfoGraph("graph_lines_blkio_r_tips", "graph_lines_blkio_r")
+        blk_w_g = ContainerInfoGraph("graph_lines_blkio_w_tips", "graph_lines_blkio_w")
+        net_r_g = ContainerInfoGraph("graph_lines_net_r_tips", "graph_lines_net_r")
+        net_w_g = ContainerInfoGraph("graph_lines_net_w_tips", "graph_lines_net_w")
+
         cpu_label = ColorText("CPU ", "graph_lines_cpu_legend")
         cpu_value = ColorText("0.0 %", "graph_lines_cpu_legend")
         mem_label = ColorText("Memory ", "graph_lines_mem_legend")
         mem_value = ColorText("0.0 %", "graph_lines_mem_legend")
-        blk_read_label = ColorText("I/O Read ", "graph_lines_blkio_inv")
-        blk_read_value = ColorText("0 B", "graph_lines_blkio_inv")
-        blk_write_label = ColorText("I/O Write ", "graph_lines_blkio_inv")
-        blk_write_value = ColorText("0 B", "graph_lines_blkio_inv")
-        net_rx_label = ColorText("Net Rx ", "graph_lines_blkio_inv")
-        net_rx_value = ColorText("0 B", "graph_lines_blkio_inv")
-        net_tx_label = ColorText("Net Tx ", "graph_lines_net_inv")
-        net_tx_value = ColorText("0 B", "graph_lines_net_inv")
+        blk_r_label = ColorText("I/O Read ", "graph_lines_blkio_r_legend")
+        blk_r_value = ColorText("0 B", "graph_lines_blkio_r_legend")
+        blk_w_label = ColorText("I/O Write ", "graph_lines_blkio_w_legend")
+        blk_w_value = ColorText("0 B", "graph_lines_blkio_w_legend")
+        net_r_label = ColorText("Net Rx ", "graph_lines_net_r_legend")
+        net_r_value = ColorText("0 B", "graph_lines_net_r_legend")
+        net_w_label = ColorText("Net Tx ", "graph_lines_net_w_legend")
+        net_w_value = ColorText("0 B", "graph_lines_net_w_legend")
         self.walker.append(urwid.Columns([
             BoxAdapter(cpu_g, 12),
             BoxAdapter(mem_g, 12),
-            BoxAdapter(urwid.ListBox(urwid.SimpleFocusListWalker([
+            ("weight", 0.5, BoxAdapter(blk_r_g, 12)),
+            ("weight", 0.5, BoxAdapter(blk_w_g, 12)),
+            ("weight", 0.5, BoxAdapter(net_r_g, 12)),
+            ("weight", 0.5, BoxAdapter(net_w_g, 12)),
+            BoxAdapter(UnselectableListBox(urwid.SimpleFocusListWalker([
                 UnselectableRowWidget([(12, cpu_label), cpu_value]),
                 UnselectableRowWidget([(12, mem_label), mem_value]),
-                UnselectableRowWidget([(12, blk_read_label), blk_read_value]),
-                UnselectableRowWidget([(12, blk_write_label), blk_write_value]),
-                UnselectableRowWidget([(12, net_rx_label), net_rx_value]),
-                UnselectableRowWidget([(12, net_tx_label), net_tx_value]),
-            ])), 12)
+                UnselectableRowWidget([(12, blk_r_label), blk_r_value]),
+                UnselectableRowWidget([(12, blk_w_label), blk_w_value]),
+                UnselectableRowWidget([(12, net_r_label), net_r_value]),
+                UnselectableRowWidget([(12, net_w_label), net_w_value]),
+            ])), 12),
         ]))
+        self.walker.append(RowWidget([SelectableText("")]))
 
         @log_traceback
         def realtime_updates():
-            cpu_data = cpu_g.data[0]
-            mem_data = mem_g.data[0]
-
             for update in self.docker_container.stats().response:
                 if self.stop.is_set():
                     break
                 logger.debug(update)
                 cpu_percent = update["cpu_percent"]
                 cpu_value.text = "%.2f %%" % cpu_percent
-                cpu_data = cpu_data[1:] + [[int(cpu_percent)]]
-                cpu_g.set_data(cpu_data, 100)
+                cpu_g.rotate_value(int(cpu_percent), max_val=100)
 
                 mem_percent = update["mem_percent"]
                 mem_current = humanize_bytes(update["mem_current"])
                 mem_value.text = "%.2f %% (%s)" % (mem_percent, mem_current)
-                mem_data = mem_data[1:] + [[int(mem_percent)]]
-                mem_g.set_data(mem_data, 100)
+                mem_g.rotate_value(int(mem_percent), max_val=100)
 
                 blk_read = update["blk_read"]
-                blk_read_value.text = humanize_bytes(blk_read)
-                blk_write_value.text = humanize_bytes(update["blk_write"])
+                blk_write = update["blk_write"]
+                blk_r_value.text = humanize_bytes(blk_read)
+                blk_w_value.text = humanize_bytes(blk_write)
+                r_max_val = blk_r_g.rotate_value(blk_read, adaptive_max=True)
+                w_max_val = blk_w_g.rotate_value(blk_write, adaptive_max=True)
+                blk_r_g.set_max(max((r_max_val, w_max_val)))
+                blk_w_g.set_max(max((r_max_val, w_max_val)))
 
-                net_rx_value.text = humanize_bytes(update["net_rx"])
-                net_tx_value.text = humanize_bytes(update["net_tx"])
+                net_read = update["net_rx"]
+                net_write = update["net_tx"]
+                net_r_value.text = humanize_bytes(net_read)
+                net_w_value.text = humanize_bytes(net_write)
+                r_max_val = net_r_g.rotate_value(net_read, adaptive_max=True)
+                w_max_val = net_w_g.rotate_value(net_write, adaptive_max=True)
+                net_r_g.set_max(max((r_max_val, w_max_val)))
+                net_w_g.set_max(max((r_max_val, w_max_val)))
 
         self.thread = threading.Thread(target=realtime_updates, daemon=True)
         self.thread.start()
@@ -428,7 +444,6 @@ class ContainerInfoWidget(VimMovementListBox):
         if not self.docker_container.labels:
             return []
         data = []
-        self.walker.append(RowWidget([SelectableText("")]))
         self.walker.append(RowWidget([SelectableText("Labels", maps=get_map("main_list_white"))]))
         for label_key, label_value in self.docker_container.labels.items():
             data.append([SelectableText(label_key, maps=get_map("main_list_green")), SelectableText(label_value)])

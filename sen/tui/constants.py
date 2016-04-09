@@ -36,19 +36,27 @@ PALLETE = [
 
     ('graph_bg', "default", 'default', "default", "default", "default"),
 
-    ('graph_lines_cpu', "default", 'default', "default", "default", "#0aa"),
-    ('graph_lines_cpu_tips', "default", 'default', "default", "#0aa", "default"),
-    ('graph_lines_cpu_legend', "default", 'default', "default", "#0ff", "default"),
+    ('graph_lines_cpu', "default", 'default', "default", "default", "#d20"),
+    ('graph_lines_cpu_tips', "default", 'default', "default", "#d20", "default"),
+    ('graph_lines_cpu_legend', "default", 'default', "default", "#f60", "default"),
 
-    ('graph_lines_mem', "default", 'default', "default", "default", "#0a0"),
-    ('graph_lines_mem_tips', "default", 'default', "default", "#0a0", "default"),
-    ('graph_lines_mem_legend', "default", 'default', "default", "#0f0", "default"),
+    ('graph_lines_mem', "default", 'default', "default", "default", "#06d"),
+    ('graph_lines_mem_tips', "default", 'default', "default", "#06d", "default"),
+    ('graph_lines_mem_legend', "default", 'default', "default", "#08f", "default"),
 
-    ('graph_lines_blkio', "default", 'default', "default", "default", "#00f"),
-    ('graph_lines_blkio_inv', "default", 'default', "default", "#00f", "default"),
+    ('graph_lines_blkio_r', "default", 'default', "default", "default", "#9b0"),
+    ('graph_lines_blkio_r_tips', "default", 'default', "default", "#9b0", "default"),
+    ('graph_lines_blkio_r_legend', "default", 'default', "default", "#cf0", "default"),
+    ('graph_lines_blkio_w', "default", 'default', "default", "default", "#b90"),
+    ('graph_lines_blkio_w_tips', "default", 'default', "default", "#b90", "default"),
+    ('graph_lines_blkio_w_legend', "default", 'default', "default", "#fc0", "default"),
 
-    ('graph_lines_net', "default", 'default', "default", "default", "#04a"),
-    ('graph_lines_net_inv', "default", 'default', "default", "#04a", "default"),
+    ('graph_lines_net_r', "default", 'default', "default", "default", "#0c9"),
+    ('graph_lines_net_r_tips', "default", 'default', "default", "#0c9", "default"),
+    ('graph_lines_net_r_legend', "default", 'default', "default", "#0fc", "default"),
+    ('graph_lines_net_w', "default", 'default', "default", "default", "#09c"),
+    ('graph_lines_net_w_tips', "default", 'default', "default", "#09c", "default"),
+    ('graph_lines_net_w_legend', "default", 'default', "default", "#0cf", "default"),
 ]
 
 STATUS_BAR_REFRESH_SECONDS = 5

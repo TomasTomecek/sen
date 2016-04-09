@@ -122,3 +122,7 @@ class ThreadSafeFrame(urwid.Frame):
     def render(self, size, focus=False):
         with self.update_lock:
             return super().render(size=size, focus=focus)
+
+
+class UnselectableListBox(urwid.ListBox):
+    _selectable = False
