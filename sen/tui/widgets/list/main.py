@@ -6,6 +6,7 @@ import urwid
 
 from sen.exceptions import NotifyError
 from sen.docker_backend import DockerImage, DockerContainer
+from sen.tui.chunks.elemental import ContainerStatusWidget
 from sen.tui.widgets.list.util import (
     get_map, get_time_attr_map, get_operation_notify_widget, ResponsiveRowWidget
 )
@@ -78,16 +79,7 @@ def get_detailed_container_row(docker_container):
     image = SelectableText(docker_container.image_name())
     row.append(image)
 
-    if docker_container.running:
-        attr_map = get_map("main_list_green")
-    elif docker_container.exited_well:
-        attr_map = get_map("main_list_orange")
-    elif docker_container.status_created:
-        attr_map = get_map("main_list_yellow")
-    else:
-        attr_map = get_map("main_list_red")
-    status = SelectableText(docker_container.status, attr_map)
-    row.append(status)
+    row.append(ContainerStatusWidget(docker_container))
 
     name = SelectableText(docker_container.short_name)
     row.append(name)

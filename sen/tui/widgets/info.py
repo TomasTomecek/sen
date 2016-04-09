@@ -10,7 +10,7 @@ import urwid
 import urwidtrees
 from urwid.decoration import BoxAdapter
 
-from sen.tui.chunks.elemental import LayerWidget
+from sen.tui.chunks.elemental import LayerWidget, ContainerStatusWidget, ContainerOneLinerWidget
 from sen.tui.widgets.graph import ContainerInfoGraph
 from sen.tui.widgets.list.base import VimMovementListBox
 from sen.tui.widgets.list.util import get_map, RowWidget, UnselectableRowWidget
@@ -107,7 +107,7 @@ class ImageInfoWidget(VimMovementListBox):
         self.walker.append(RowWidget([SelectableText("")]))
         self.walker.append(RowWidget([SelectableText("Containers", maps=get_map("main_list_white"))]))
         for container in self.docker_image.containers():
-            self.walker.append(RowWidget([SelectableText(str(container))]))
+            self.walker.append(RowWidget([ContainerOneLinerWidget(self.ui, container)]))
 
     def keypress(self, size, key):
         logger.debug("%s, %s", key, size)
@@ -314,7 +314,7 @@ class ContainerInfoWidget(VimMovementListBox):
             [SelectableText("Id", maps=get_map("main_list_green")),
              SelectableText(self.docker_container.container_id)],
             [SelectableText("Status", maps=get_map("main_list_green")),
-             SelectableText(self.docker_container.status)],
+             ContainerStatusWidget(self.docker_container)],
             [SelectableText("Created", maps=get_map("main_list_green")),
              SelectableText("{0}, {1}".format(self.docker_container.display_formal_time_created(),
                                               self.docker_container.display_time_created()))],

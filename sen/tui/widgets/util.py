@@ -52,6 +52,31 @@ def get_basic_image_markup(docker_image):
     return text_markup
 
 
+def get_container_status_markup(docker_container):
+    if docker_container.running:
+        attr_map = get_map("main_list_green")
+    elif docker_container.exited_well:
+        attr_map = get_map("main_list_orange")
+    elif docker_container.status_created:
+        attr_map = get_map("main_list_yellow")
+    else:
+        attr_map = get_map("main_list_red")
+    return docker_container.status, attr_map
+
+
+def get_basic_container_markup(docker_container):
+    text_markup = [docker_container.short_id, " "]
+
+    markup, attr = get_container_status_markup(docker_container)
+    text_markup.append((attr["normal"], markup))
+
+    if docker_container.names:
+        text_markup.append(" ")
+        text_markup.append(("main_list_lg", docker_container.names[0]))
+
+    return text_markup
+
+
 class ColorTextMixin:
     @property
     def text(self):
