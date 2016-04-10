@@ -333,7 +333,7 @@ class ContainerInfoWidget(VimMovementListBox):
                 SelectableText("Host Port", maps=get_map("main_list_white")),
                 SelectableText("Container Port", maps=get_map("main_list_white"))
             ]])
-            for host_port, container_port in ports.items():
+            for container_port, host_port in ports.items():
                 if host_port and container_port:
                     data.append([
                         SelectableText(host_port), SelectableText(container_port)

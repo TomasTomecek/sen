@@ -497,7 +497,7 @@ class DockerContainer(DockerObject):
 
         :return: dict:
         {
-            "container_port": "host_port"
+            "host_port": "container_port"
         }
         """
         return NetData(self.inspect(cached=True).response)
