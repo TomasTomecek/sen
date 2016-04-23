@@ -4,7 +4,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 
 from sen.exceptions import NotifyError
 from sen.tui.commands import search, filter
-from sen.tui.statusbar import Footer
+from sen.tui.statusbar import UIFrameWidget
 from sen.tui.buffer import LogsBuffer, MainListBuffer, InspectBuffer, HelpBuffer, ImageInfoBuffer, TreeBuffer, \
     ContainerInfoBuffer
 from sen.tui.constants import PALLETE
@@ -12,7 +12,6 @@ from sen.docker_backend import DockerBackend, DockerImage, DockerContainer
 
 import urwid
 
-from sen.tui.widgets.util import ThreadSafeFrame
 from sen.util import log_traceback
 
 logger = logging.getLogger(__name__)
@@ -23,9 +22,8 @@ class UI(urwid.MainLoop):
         self.d = DockerBackend()
 
         # root widget
-        self.mainframe = ThreadSafeFrame(urwid.SolidFill())
+        self.mainframe = UIFrameWidget(self, urwid.SolidFill())
         self.buffers = []
-        self.footer = Footer(self)
 
         self.refresh_lock = threading.Lock()
 
@@ -141,7 +139,7 @@ class UI(urwid.MainLoop):
             elif key == "/":
                 self.prompt("/", search)
             elif key == "f4":
-                self.footer.prompt("filter ", filter)
+                self.mainframe.prompt("filter ", filter)
             elif key == "n":
                 self.current_buffer.find_next()
             elif key == "N":
@@ -207,16 +205,16 @@ class UI(urwid.MainLoop):
         self.mainframe.set_footer(widget)
 
     def reload_footer(self):
-        self.footer.reload_footer()
+        self.mainframe.reload_footer()
 
     def remove_notification_message(self, message):
-        self.footer.remove_notification_message(message)
+        self.mainframe.remove_notification_message(message)
 
     def notify_widget(self, *args, **kwargs):
-        self.footer.notify_widget(*args, **kwargs)
+        self.mainframe.notify_widget(*args, **kwargs)
 
     def notify_message(self, *args, **kwargs):
-        self.footer.notify_message(*args, **kwargs)
+        self.mainframe.notify_message(*args, **kwargs)
 
     def prompt(self, *args, **kwargs):
-        self.footer.prompt(*args, **kwargs)
+        self.mainframe.prompt(*args, **kwargs)

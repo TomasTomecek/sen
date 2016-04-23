@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import functools
+import threading
 import traceback
 
 from sen.constants import PROJECT_NAME, LOG_FILE_NAME
@@ -69,7 +70,10 @@ def humanize_bytes(bytesize, precision=2):
 
 
 def log_vars_from_tback(process_frames=5):
+    for th in threading.enumerate():
+        logger.debug(''.join(traceback.format_stack(sys._current_frames()[th.ident])))
     logger.error(traceback.format_exc())
+    return
     tb = sys.exc_info()[2]
     while 1:
         if not tb.tb_next:
