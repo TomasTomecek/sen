@@ -5,7 +5,7 @@ from .real import image_data, mock, container_data
 def test_images_call():
     mock()
     b = DockerBackend()
-    operation = b.get_images()
+    operation = b.get_images(cached=False)
     images_response = operation.response
     assert len(images_response) == 2
     assert images_response[0].image_id == image_data[0]["Id"]
@@ -18,7 +18,7 @@ def test_images_call():
 def test_containers_call():
     mock()
     b = DockerBackend()
-    operation = b.get_containers()
+    operation = b.get_containers(cached=False)
     containers_response = operation.response
     assert len(containers_response) == 1
     assert containers_response[0].container_id == container_data["Id"]
