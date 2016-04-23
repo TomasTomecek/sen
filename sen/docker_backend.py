@@ -11,7 +11,7 @@ import docker
 import humanize
 
 from sen.net import NetData
-from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes
+from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes, repeater
 
 logger = logging.getLogger(__name__)
 
@@ -617,12 +617,13 @@ class DockerBackend:
         if cached is False or self._images is None:
             logger.debug("doing images() query")
             self._images = {}
-            # FIXME: this can raise 500
-            for i in self.client.images():
+            images_response = repeater(self.client.images)
+            for i in images_response:
                 img = DockerImage(i, self)
                 self._images[img.image_id] = img
             self._all_images = {}
-            for i in self.client.images(all=True):
+            all_images_response = repeater(self.client.images, kwargs={"all": True})
+            for i in all_images_response:
                 img = DockerImage(i, self)
                 self._all_images[img.image_id] = img
         return list(self._images.values())
@@ -632,7 +633,8 @@ class DockerBackend:
         if cached is False or self._containers is None:
             logger.debug("doing containers() query")
             self._containers = {}
-            for c in self.client.containers(all=stopped):
+            containers_reponse = repeater(self.client.containers, kwargs={"all": stopped})
+            for c in containers_reponse:
                 container = DockerContainer(c, self)
                 self._containers[container.container_id] = container
         if not stopped:

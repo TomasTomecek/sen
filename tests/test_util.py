@@ -2,7 +2,7 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 import time
 
-from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback
+from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback, repeater
 
 import pytest
 
@@ -69,3 +69,13 @@ def test_log_vars_from_tback(caplog):
     assert has_similar_message("c = []")
     assert has_similar_message("b = None")
     assert has_similar_message("a = 1")
+
+
+def test_repeater():
+    def g(l, item=1):
+        l.append(1)
+        return l[item]
+
+    assert repeater(g, args=([], )) == 1
+    with pytest.raises(Exception):
+        repeater(f, args=([], ), kwargs={"item": 10}) == 1

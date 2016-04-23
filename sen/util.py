@@ -5,6 +5,8 @@ import functools
 import threading
 import traceback
 
+from docker.errors import APIError
+
 from sen.constants import PROJECT_NAME, LOG_FILE_NAME
 
 logger = logging.getLogger(__name__)
@@ -171,3 +173,26 @@ def graceful_chain_get(d, *args, default=None):
             logger.debug("can't get %r from %s", a, t)
             return default
     return t
+
+
+def repeater(call, args=None, kwargs=None, retries=3):
+    """
+    repeat call x-times: docker API is just awesome
+
+    :param call: function
+    :param args: tuple, args for function
+    :param kwargs: dict, kwargs for function
+    :param retries: int, how many times we try?
+    :return: response of the call
+    """
+    args = args or ()
+    kwargs = kwargs or {}
+    for x in range(retries):
+        try:
+            return call(*args, **kwargs)
+        except APIError as ex:
+            logger.error("query #%d: docker returned an error: %r", x, ex)
+        except Exception as ex:
+            # this may be pretty bad
+            log_vars_from_tback(0)
+            logger.error("query #%d: generic error: %r", x, ex)
