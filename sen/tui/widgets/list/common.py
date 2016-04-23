@@ -40,6 +40,7 @@ class AsyncScrollableListBox(VimMovementListBox):
             line_w = urwid.AttrMap(
                 urwid.Text("", align="left", wrap="any"), "main_list_dg", "main_list_white"
             )
+            walker.append(line_w)
 
             while True:
                 try:
@@ -58,13 +59,12 @@ class AsyncScrollableListBox(VimMovementListBox):
                     if self.filter_query not in line:
                         continue
                 line_w.original_widget.set_text(line_w.original_widget.text + line.rstrip("\r\n"))
-                if line_w != walker[-1]:
-                    walker.append(line_w)
                 if line.endswith("\n"):
                     walker.set_focus(len(walker) - 1)
                     line_w = urwid.AttrMap(
                         urwid.Text("", align="left", wrap="any"), "main_list_dg", "main_list_white"
                     )
+                    walker.append(line_w)
                 ui.refresh()
 
         self.stop = threading.Event()

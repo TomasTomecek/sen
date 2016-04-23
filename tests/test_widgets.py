@@ -1,3 +1,5 @@
+from itertools import chain
+
 import pytest
 from flexmock import flexmock
 from sen.tui.widgets.list.common import ScrollableListBox, AsyncScrollableListBox
@@ -14,13 +16,14 @@ class DataGenerator:
 
     @classmethod
     def stream(cls, prefix="line", lines_no=3, return_bytes=False):
-        response = []
+        text = []
         for x in range(lines_no):
-            l = "{}{}".format(prefix, x+1)
+            l = "{}{}\n".format(prefix, x+1)
             if return_bytes:
                 l = l.encode("utf-8")
-            response.append(l)
-        return iter(response)
+            text.append(l)
+        s = chain(text)
+        return iter(s)
 
     @classmethod
     def render(cls, prefix="line", lines_no=3, return_bytes=True):
