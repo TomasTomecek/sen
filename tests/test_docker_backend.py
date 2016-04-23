@@ -47,7 +47,7 @@ def test_top():
 def test_stats():
     mock()
     b = DockerBackend()
-    c = b.get_containers(stopped=False)
+    c = b.get_containers()
     c0 = c.response.pop()
     operation = c0.stats()
     stats_stream = operation.response
