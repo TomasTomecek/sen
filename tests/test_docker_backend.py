@@ -7,7 +7,7 @@ def test_images_call():
     b = DockerBackend()
     operation = b.get_images(cached=False)
     images_response = operation.response
-    assert len(images_response) == 2
+    assert len(images_response) == 1
     assert images_response[0].image_id == image_data[0]["Id"]
     assert images_response[0].short_name == image_data[0]["RepoTags"][0]
     assert images_response[0].parent_id == image_data[0]["ParentId"]
@@ -37,8 +37,7 @@ def test_short_id():
     b = DockerBackend()
     operation = b.get_images()
     images_response = operation.response
-    assert images_response[0].short_id == image_data[0]["Id"][:12]
-    assert images_response[1].short_id == "3ab9a7ed8a16"
+    assert images_response[0].short_id == image_data[0]["Id"][image_data[0]["Id"].index(":")+1:][:12]
 
 
 def test_top():

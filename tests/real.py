@@ -1,22 +1,16 @@
+import logging
+
 from flexmock import flexmock
 import docker
 
 
-# docker 1.9
+# docker 1.10
 image_data = [{
-    'Created': 1414577076,
-    'Id': '3ab9a7ed8a169ab89b09fb3e12a14a390d3c662703b65b4541c0c7bde0ee97eb',
-    'ParentId': 'a79ad4dac406fcf85b9c7315fe08de5b620c1f7a12f45c8185c843f4b4a49c4e',
-    'RepoDigests': [],
-    'RepoTags': ['image:latest'],
-    'Size': 0,
-    'VirtualSize': 856564160
-}, {  # docker 1.10
     'Created': 1500000000,
     'Id': 'sha256:3ab9a7ed8a169ab89b09fb3e12a14a390d3c662703b65b4541c0c7bde0ee97eb',
     'ParentId': '3ab9a7ed8a169ab89b09fb3e12a14a390d3c662703b65b4541c0c7bde0ee97eb',
     'RepoDigests': [],
-    'RepoTags': ['banana:latest'],
+    'RepoTags': ['image:latest'],
     'Size': 0,
     'VirtualSize': 850000000
 }]
@@ -389,8 +383,87 @@ stats_data = {
   }
 }
 
+# docker 1.11; docker inspect fedora
+inspect_image_data = [
+    {
+        "Id": "sha256:6547ce9b34076d54d455d99a77d6e4e4e03203610b1a82d83c60cc4a0cee1434",
+        "RepoTags": [
+            "fedora:latest"
+        ],
+        "RepoDigests": [],
+        "Parent": "a79ad4dac406fcf85b9c7315fe08de5b620c1f7a12f45c8185c843f4b4a49c4e",  # faked
+        "Comment": "",
+        "Created": "2016-01-04T21:26:31.943198534Z",
+        "Container": "328e8788d8464dca333fd928a128778871e14668f38f5ae8e4121d44eaddd177",
+        "ContainerConfig": {
+            "Hostname": "328e8788d846",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": False,
+            "AttachStdout": False,
+            "AttachStderr": False,
+            "Tty": False,
+            "OpenStdin": False,
+            "StdinOnce": False,
+            "Env": None,
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "#(nop) ADD file:b028ccee96c12c106da1e17b9cd93f3dbce86b888b2114116a481b289a46def8 in /"
+            ],
+            "Image": "b0082ba983ef3569aad347f923a9cec8ea764c239179081a1e2c47709788dc44",
+            "Volumes": None,
+            "WorkingDir": "",
+            "Entrypoint": None,
+            "OnBuild": None,
+            "Labels": None
+        },
+        "DockerVersion": "1.8.3",
+        "Author": "Adam Miller \u003cmaxamillion@fedoraproject.org\u003e",
+        "Config": {
+            "Hostname": "328e8788d846",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": False,
+            "AttachStdout": False,
+            "AttachStderr": False,
+            "Tty": False,
+            "OpenStdin": False,
+            "StdinOnce": False,
+            "Env": None,
+            "Cmd": None,
+            "Image": "b0082ba983ef3569aad347f923a9cec8ea764c239179081a1e2c47709788dc44",
+            "Volumes": None,
+            "WorkingDir": "",
+            "Entrypoint": None,
+            "OnBuild": None,
+            "Labels": None
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 206283556,
+        "VirtualSize": 206283556,
+        "GraphDriver": {
+            "Name": "devicemapper",
+            "Data": {
+                "DeviceId": "139",
+                "DeviceName": "docker-253:0-559511492-aa5ca2480c3fb5665db23937f543319feb0a5c36b09b31c396230280a80d6a69",
+                "DeviceSize": "107374182400"
+            }
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+                "sha256:15b864f11a279764b047bdd56de7fcb813118196f16a4f471296bb21e18358a2"
+            ]
+        }
+    }
+]
+
 
 def images_response(*args, **kwargs):
+    logging.debug("fake image response")
     global image_data
     return image_data
 
@@ -404,9 +477,11 @@ def stats_response(*args, **kwargs):
     global stats_data
     return iter([stats_data])
 
+
 def mock():
     flexmock(docker.Client, images=images_response)
     flexmock(docker.Client, containers=containers_response)
     flexmock(docker.Client, version=lambda *args, **kwargs: version_data)
     flexmock(docker.Client, top=lambda *args, **kwargs: top_data)
     flexmock(docker.Client, stats=stats_response)
+    flexmock(docker.Client, inspect_image=lambda *args, **kwargs: inspect_image_data)
