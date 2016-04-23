@@ -66,4 +66,7 @@ def test_async_scrollable_listbox(inp, expected):
     lb.thread.join()
     canvas = lb.render((SCREEN_WIDTH, SCREEN_HEIGHT))
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
+    w = "{:%d}" % SCREEN_WIDTH
+    s = w.format("{}".format("No more logs."))
+    expected[4] = s.encode("utf-8")
     assert text == expected
