@@ -58,12 +58,13 @@ def test_log_vars_from_tback(caplog):
     try:
         raise Exception()
     except Exception:
-        log_vars_from_tback(1)
+        log_vars_from_tback(4)
 
     def has_similar_message(msg):
         for log_entry in caplog.records():
             if msg in log_entry.message:
                 return True
+        return False
 
     assert has_similar_message("c = []")
     assert has_similar_message("b = None")

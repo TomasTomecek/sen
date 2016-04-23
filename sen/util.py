@@ -73,7 +73,8 @@ def log_vars_from_tback(process_frames=5):
     for th in threading.enumerate():
         logger.debug(''.join(traceback.format_stack(sys._current_frames()[th.ident])))
     logger.error(traceback.format_exc())
-    return
+    if process_frames <= 0:
+        return
     tb = sys.exc_info()[2]
     while 1:
         if not tb.tb_next:
@@ -84,7 +85,6 @@ def log_vars_from_tback(process_frames=5):
     while f:
         stack.append(f)
         f = f.f_back
-    stack.reverse()  # top most frame will be on the bottom of a log file
     for frame in stack[:process_frames]:
         logger.debug("frame %s:%s", frame.f_code.co_filename, frame.f_lineno)
         for key, value in frame.f_locals.items():

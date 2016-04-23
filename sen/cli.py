@@ -24,7 +24,8 @@ import logging
 from sen import set_logging
 from sen.exceptions import TerminateApplication
 from sen.tui.init import UI
-from sen.util import get_log_file_path, log_vars_from_tback
+from sen.util import get_log_file_path, log_vars_from_tback, setup_dirs
+
 
 logger = logging.getLogger("sen")
 
@@ -38,10 +39,10 @@ def main():
 
     args = parser.parse_args()
 
-    # if args.debug:
-    set_logging(level=logging.DEBUG, path=get_log_file_path())
-    # else:
-    #     set_logging(level=logging.INFO, path=setup_dirs())
+    if args.debug:
+        set_logging(level=logging.DEBUG, path=get_log_file_path())
+    else:
+        set_logging(level=logging.INFO, path=setup_dirs())
 
     logger.info("application started")
 
@@ -63,14 +64,7 @@ def main():
         #     # # continue
     #    return 2
     except Exception as ex:  # pylint: disable=broad-except
-        # # restore terminal
-        # import curses
-        # curses.nocbreak()
-        # curses.echo()
-        # curses.endwin()
-        # import ipdb ; ipdb.set_trace()
-
-        log_vars_from_tback(process_frames=100)  # show complete stack trace
+        log_vars_from_tback(process_frames=3 if args.debug else 0)  # show complete stack trace
         if args.debug:
             raise
         else:
