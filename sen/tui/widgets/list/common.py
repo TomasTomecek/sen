@@ -47,6 +47,12 @@ class AsyncScrollableListBox(VimMovementListBox):
                     line = next(generator)
                 except StopIteration:
                     logger.info("no more logs")
+                    line_w = urwid.AttrMap(
+                        urwid.Text("No more logs.", align="left", wrap="any"),
+                        "main_list_dg", "main_list_white"
+                    )
+                    walker.append(line_w)
+                    walker.set_focus(len(walker) - 1)
                     break
                 except Exception as ex:
                     logger.error(traceback.format_exc())

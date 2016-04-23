@@ -5,7 +5,9 @@ import logging
 import datetime
 import traceback
 
-from sen.exceptions import TerminateApplication
+import time
+
+from sen.exceptions import TerminateApplication, NotifyError
 
 import docker
 import humanize
@@ -617,12 +619,12 @@ class DockerBackend:
         if cached is False or self._images is None:
             logger.debug("doing images() query")
             self._images = {}
-            images_response = repeater(self.client.images)
+            images_response = repeater(self.client.images) or []
             for i in images_response:
                 img = DockerImage(i, self)
                 self._images[img.image_id] = img
             self._all_images = {}
-            all_images_response = repeater(self.client.images, kwargs={"all": True})
+            all_images_response = repeater(self.client.images, kwargs={"all": True}) or []
             for i in all_images_response:
                 img = DockerImage(i, self)
                 self._all_images[img.image_id] = img
@@ -633,7 +635,7 @@ class DockerBackend:
         if cached is False or self._containers is None:
             logger.debug("doing containers() query")
             self._containers = {}
-            containers_reponse = repeater(self.client.containers, kwargs={"all": stopped})
+            containers_reponse = repeater(self.client.containers, kwargs={"all": stopped}) or []
             for c in containers_reponse:
                 container = DockerContainer(c, self)
                 self._containers[container.container_id] = container
@@ -642,7 +644,14 @@ class DockerBackend:
         return list(self._containers.values())
 
     def realtime_updates(self):
-        for event in self.client.events(decode=True):
+        it = repeater(self.client.events, kwargs={"decode": True}, retries=5)
+        while True:
+            event = repeater(next, args=(it, ), retries=2)  # likely an engine restart
+            if not event:
+                it = repeater(self.client.events, kwargs={"decode": True}, retries=5)
+                if not it:
+                    raise NotifyError("Unable to fetch realtime updates from docker engine.")
+                continue
             logger.debug("RT event: %s", event)
 
             try:

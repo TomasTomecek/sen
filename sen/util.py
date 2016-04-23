@@ -5,6 +5,7 @@ import functools
 import threading
 import traceback
 
+import time
 from docker.errors import APIError
 
 from sen.constants import PROJECT_NAME, LOG_FILE_NAME
@@ -175,7 +176,7 @@ def graceful_chain_get(d, *args, default=None):
     return t
 
 
-def repeater(call, args=None, kwargs=None, retries=3):
+def repeater(call, args=None, kwargs=None, retries=4):
     """
     repeat call x-times: docker API is just awesome
 
@@ -187,6 +188,7 @@ def repeater(call, args=None, kwargs=None, retries=3):
     """
     args = args or ()
     kwargs = kwargs or {}
+    t = 1.0
     for x in range(retries):
         try:
             return call(*args, **kwargs)
@@ -196,3 +198,5 @@ def repeater(call, args=None, kwargs=None, retries=3):
             # this may be pretty bad
             log_vars_from_tback(0)
             logger.error("query #%d: generic error: %r", x, ex)
+        t *= 2
+        time.sleep(t)

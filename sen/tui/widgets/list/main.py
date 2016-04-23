@@ -140,7 +140,13 @@ class MainListBox(ResponsiveTable):
 
         :return:
         """
-        for content in self.d.realtime_updates():
+        it = self.d.realtime_updates()
+        while True:
+            try:
+                content = next(it)
+            except NotifyError as ex:
+                self.ui.notify_message(ex.args[0], level="error")
+                return
             widgets = []
             for o in content:
                 try:
