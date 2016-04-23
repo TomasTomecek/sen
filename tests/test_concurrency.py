@@ -78,4 +78,5 @@ def test_main_frame():
     bt.start()
     for x in range(50):
         frame.render((70, 70))
-        print(x)
+    nt.join()
+    bt.join()
