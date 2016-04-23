@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-from concurrent.futures.thread import ThreadPoolExecutor
 import time
+from concurrent.futures.thread import ThreadPoolExecutor
+from datetime import datetime, timedelta
 
-from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback, repeater
+from flexmock import flexmock
+
+from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback, repeater, humanize_time
 
 import pytest
 
@@ -79,3 +82,31 @@ def test_repeater():
     assert repeater(g, args=([], )) == 1
     with pytest.raises(Exception):
         repeater(f, args=([], ), kwargs={"item": 10}) == 1
+
+
+@pytest.mark.parametrize("inp,expected", [
+    (timedelta(seconds=1), "now"),
+    (timedelta(seconds=2), "2 seconds ago"),
+    (timedelta(seconds=59), "59 seconds ago"),
+    (timedelta(minutes=1), "1 minute ago"),
+    (timedelta(minutes=1, seconds=1), "1 minute ago"),
+    (timedelta(minutes=1, seconds=59), "1 minute ago"),
+    (timedelta(minutes=2), "2 minutes ago"),
+    (timedelta(minutes=59, seconds=59), "59 minutes ago"),
+    (timedelta(minutes=60), "1 hour ago"),
+    (timedelta(hours=1), "1 hour ago"),
+    (timedelta(hours=1, minutes=59, seconds=59), "1 hour ago"),
+    (timedelta(hours=2), "2 hours ago"),
+    (timedelta(hours=23, minutes=59, seconds=59), "23 hours ago"),
+    (timedelta(hours=24), "1 day ago"),
+    (timedelta(days=1, hours=23, minutes=59, seconds=59), "1 day ago"),
+    (timedelta(hours=48), "2 days ago"),
+    (timedelta(days=29, hours=23, minutes=59, seconds=59), "29 days ago"),
+    (timedelta(days=30), "1 month ago"),
+    (timedelta(days=59, hours=23, minutes=59, seconds=59), "1 month ago"),
+    (timedelta(days=60), "2 months ago"),
+])
+def test_humanize_time(inp, expected):
+    # flexmock(datetime, now=datetime(year=2000, month=1, day=1))
+    n = datetime.now()
+    assert humanize_time(n - inp) == expected

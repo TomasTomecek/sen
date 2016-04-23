@@ -6,6 +6,8 @@ import threading
 import traceback
 
 import time
+from datetime import datetime
+
 from docker.errors import APIError
 
 from sen.constants import PROJECT_NAME, LOG_FILE_NAME
@@ -71,6 +73,38 @@ def humanize_bytes(bytesize, precision=2):
         precision = 0
     return '%.*f %s' % (precision, bytesize / float(factor), suffix)
 
+
+def humanize_time(value):
+    abbrevs = (
+        (1, "now"),
+        (2, "{seconds} seconds ago"),
+        (59, "{seconds} seconds ago"),
+        (60, "{minutes} minute ago"),
+        (119, "{minutes} minute ago"),
+        (120, "{minutes} minutes ago"),
+        (3599, "{minutes} minutes ago"),
+        (3600, "{hours} hour ago"),
+        (7199, "{hours} hour ago"),
+        (86399, "{hours} hours ago"),
+        (86400, "{days} day ago"),
+        (172799, "{days} day ago"),
+        (172800, "{days} days ago"),
+        (172800, "{days} days ago"),
+        (2591999, "{days} days ago"),
+        (2592000, "{months} month ago"),
+        (5183999, "{months} month ago"),
+        (5184000, "{months} months ago"),
+    )
+    n = datetime.now()
+    delta = n - value
+    for guard, message in abbrevs:
+        s = int(delta.total_seconds())
+        logger.debug("guard: %s, delta seconds: %s", guard, s)
+        if guard >= s:
+            break
+    return message.format(seconds=delta.seconds, minutes=int(delta.seconds // 60),
+                          hours=int(delta.seconds // 3600), days=delta.days,
+                          months=int(delta.days // 30))
 
 def log_vars_from_tback(process_frames=5):
     for th in threading.enumerate():

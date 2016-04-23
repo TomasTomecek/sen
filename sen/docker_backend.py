@@ -5,15 +5,13 @@ import logging
 import datetime
 import traceback
 
-import time
-
 from sen.exceptions import TerminateApplication, NotifyError
 
 import docker
-import humanize
 
 from sen.net import NetData
-from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes, repeater
+from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes, repeater, \
+    humanize_time
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +187,7 @@ class DockerObject:
         return self._short_id
 
     def display_time_created(self):
-        return humanize.naturaltime(self.created)
+        return humanize_time(self.created)
 
     def display_formal_time_created(self):
         # http://tools.ietf.org/html/rfc2822.html#section-3.3
