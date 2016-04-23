@@ -1,6 +1,8 @@
 machine:
   python:
     version: 3.4.3
+  services:
+    - docker
 
 dependencies:
   pre:
