@@ -71,7 +71,12 @@ def humanize_bytes(bytesize, precision=2):
 
 def log_vars_from_tback(process_frames=5):
     for th in threading.enumerate():
-        logger.debug(''.join(traceback.format_stack(sys._current_frames()[th.ident])))
+        try:
+            thread_frames = sys._current_frames()[th.ident]
+        except KeyError:
+            continue
+        logger.debug(''.join(traceback.format_stack(thread_frames)))
+
     logger.error(traceback.format_exc())
     if process_frames <= 0:
         return
