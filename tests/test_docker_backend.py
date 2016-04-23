@@ -45,6 +45,7 @@ def test_top():
 
 
 def test_stats():
+    mock()
     b = DockerBackend()
     c = b.get_containers(stopped=False)
     c0 = c.response.pop()
