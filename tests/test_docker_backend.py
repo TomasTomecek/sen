@@ -51,7 +51,4 @@ def test_stats():
     c0 = c.response.pop()
     operation = c0.stats()
     stats_stream = operation.response
-    for x in stats_stream:
-        import json
-        print(json.dumps(x, indent=2))
-        raise Exception()
+    assert next(stats_stream)

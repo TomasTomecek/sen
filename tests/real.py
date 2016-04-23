@@ -389,6 +389,7 @@ stats_data = {
   }
 }
 
+
 def images_response(*args, **kwargs):
     global image_data
     return image_data
@@ -399,8 +400,13 @@ def containers_response(*args, **kwargs):
     return [container_data]
 
 
+def stats_response(*args, **kwargs):
+    global stats_data
+    return iter([stats_data])
+
 def mock():
     flexmock(docker.Client, images=images_response)
     flexmock(docker.Client, containers=containers_response)
     flexmock(docker.Client, version=lambda *args, **kwargs: version_data)
     flexmock(docker.Client, top=lambda *args, **kwargs: top_data)
+    flexmock(docker.Client, stats=stats_response)
