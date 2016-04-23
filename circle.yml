@@ -4,6 +4,7 @@ machine:
 
 dependencies:
   pre:
+    - "pip3 install urwid"  # urwidtrees can't be installed via pip
     - "pip3 install -r requirements-test.txt"
 
 test:
