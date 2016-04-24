@@ -53,6 +53,8 @@ class UIFrameWidget(ThreadSafeFrame):
         except AttributeError:
             left_widgets = []
         text_list = []
+        # FIXME: this code should be placed in buffer
+        # TODO: display current active worker threads
         for idx, buffer in enumerate(self.ui.buffers):
             #  #1 [I] fedora #2 [L]
             fmt = "#{idx} [{tag}] {name}"
