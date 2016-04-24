@@ -1,8 +1,15 @@
+import logging
+import random
 from itertools import chain
 
 import pytest
 from flexmock import flexmock
+from urwid.listbox import SimpleListWalker
+
 from sen.tui.widgets.list.common import ScrollableListBox, AsyncScrollableListBox
+from sen.tui.widgets.list.util import ResponsiveRowWidget
+from sen.tui.widgets.table import ResponsiveTable
+from .utils import get_random_text_widget
 from .constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
@@ -70,3 +77,23 @@ def test_async_scrollable_listbox(inp, expected):
     s = w.format("{}".format("No more logs."))
     expected[4] = s.encode("utf-8")
     assert text == expected
+
+
+def test_table_random_data():
+    rows = [ResponsiveRowWidget([get_random_text_widget(random.randint(2, 9)) for _ in range(5)])
+            for _ in range(random.randint(0, 5))]
+    table = ResponsiveTable(SimpleListWalker(rows))
+    canvas = table.render((80, 20), focus=False)
+    text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
+    logging.info("%r", text)
+    assert len(text) == 20
+    assert text[0].startswith(rows[0].original_widget.widget_list[0].text.encode("utf-8"))
+
+
+def test_table_empty():
+    rows = []
+    table = ResponsiveTable(SimpleListWalker(rows))
+    canvas = table.render((80, 20), focus=False)
+    text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
+    assert len(text) == 20
+    assert text[0] == b" " * 80

@@ -28,6 +28,7 @@ def calculate_max_cols_length(table, size):
             max_cols_lengths[idx] = max(max_cols_lengths.get(idx, 0), l)
             col_index += 1
 
+    max_cols_lengths.setdefault(0, 1)  # in case table is empty
     return max_cols_lengths
 
 

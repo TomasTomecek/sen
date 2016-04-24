@@ -3,12 +3,13 @@ This suite should test whether sen is capable of running in concurrent high load
 """
 import random
 import threading
-import uuid
 
 from sen.tui.statusbar import UIFrameWidget
 from sen.tui.widgets.list.base import VimMovementListBox
 
 import urwid
+
+from .utils import get_random_text_widget, get_random_text
 
 
 class MockUI:
@@ -25,12 +26,6 @@ def test_main_frame():
     lower_bound = 5
     upper_bound = 10
     list_count = 50
-
-    def get_random_text():
-        return uuid.uuid4().hex
-
-    def get_random_text_widget():
-        return urwid.Text(get_random_text())
 
     def loop_skeleton(greater_f, less_f, l, l_b, u_b, l_c):
         # we could do while True, but then we need to clean the threads
