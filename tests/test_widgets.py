@@ -81,7 +81,7 @@ def test_async_scrollable_listbox(inp, expected):
 
 def test_table_random_data():
     rows = [ResponsiveRowWidget([get_random_text_widget(random.randint(2, 9)) for _ in range(5)])
-            for _ in range(random.randint(0, 5))]
+            for _ in range(5)]
     table = ResponsiveTable(SimpleListWalker(rows))
     canvas = table.render((80, 20), focus=False)
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
