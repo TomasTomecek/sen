@@ -27,7 +27,10 @@ class UI(urwid.MainLoop):
 
         self.refresh_lock = threading.Lock()
 
-        self.executor = ThreadPoolExecutor(max_workers=4)
+        # worker for long-running tasks - requests
+        self.worker = ThreadPoolExecutor(max_workers=4)
+        # worker for quick ui operations
+        self.ui_worker = ThreadPoolExecutor(max_workers=2)
 
         root_widget = urwid.AttrMap(self.mainframe, "root")
         self.main_list_buffer = None  # singleton
@@ -42,7 +45,11 @@ class UI(urwid.MainLoop):
 
     def run_in_background(self, task, *args, **kwargs):
         logger.info("running task %r(%s, %s) in background", task, args, kwargs)
-        self.executor.submit(task, *args, **kwargs)
+        self.worker.submit(task, *args, **kwargs)
+
+    def run_quickly_in_bacakground(self, task, *args, **kwargs):
+        logger.info("running a quick task %r(%s, %s) in background", task, args, kwargs)
+        self.ui_worker.submit(task, *args, **kwargs)
 
     def entering_idle(self):
         with self.refresh_lock:
@@ -128,7 +135,8 @@ class UI(urwid.MainLoop):
         logger.debug("unhandled input: %r", key)
         try:
             if key in ('q', 'Q'):
-                self.executor.shutdown(wait=False)
+                self.worker.shutdown(wait=False)
+                self.ui_worker.shutdown(wait=False)
                 raise urwid.ExitMainLoop()
             elif key == "ctrl o":
                 self.pick_and_display_buffer(self.current_buffer_index - 1)
@@ -160,7 +168,7 @@ class UI(urwid.MainLoop):
         def chain_fcs():
             self.main_list_buffer.refresh(focus_on_top=True)
             self.add_and_display_buffer(self.main_list_buffer, redraw=True)
-        self.run_in_background(chain_fcs)
+        self.run_quickly_in_bacakground(chain_fcs)
         super().run()
 
     def display_logs(self, docker_container):

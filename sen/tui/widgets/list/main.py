@@ -300,18 +300,19 @@ class MainListBox(ResponsiveTable):
 
         try:
             if key == "@":
-                self.ui.run_in_background(self.populate, None)
+                # I guess we want refresh to be as quick as possible
+                self.ui.run_quickly_in_bacakground(self.populate, None)
             elif key == "i":
-                self.ui.run_in_background(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
+                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
                 return
             elif key == "l":
-                self.ui.run_in_background(do_and_report_on_fail, self.ui.display_logs, self.focused_docker_object)
+                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_logs, self.focused_docker_object)
                 return
             elif key == "f":
-                self.ui.run_in_background(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
+                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
                 return
             elif key == "enter":
-                self.ui.run_in_background(do_and_report_on_fail, self.ui.display_info, self.focused_docker_object)
+                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_info, self.focused_docker_object)
                 return
             elif key == "d":
                 self.ui.run_in_background(
