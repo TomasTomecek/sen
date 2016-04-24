@@ -99,12 +99,12 @@ def humanize_time(value):
     delta = n - value
     for guard, message in abbrevs:
         s = int(delta.total_seconds())
-        logger.debug("guard: %s, delta seconds: %s", guard, s)
         if guard >= s:
             break
     return message.format(seconds=delta.seconds, minutes=int(delta.seconds // 60),
                           hours=int(delta.seconds // 3600), days=delta.days,
                           months=int(delta.days // 30))
+
 
 def log_vars_from_tback(process_frames=5):
     for th in threading.enumerate():

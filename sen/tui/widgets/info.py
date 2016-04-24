@@ -452,11 +452,11 @@ class ContainerInfoWidget(VimMovementListBox):
 
     def _process_tree(self):
         top = self.docker_container.top().response
+        logger.debug(top)
         if top:
             self.walker.append(RowWidget([SelectableText("")]))
             self.walker.append(RowWidget([SelectableText("Process Tree",
                                                          maps=get_map("main_list_white"))]))
-            logger.debug("len=%d, %s", len(top), top)
             self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
 
     def _logs(self):
