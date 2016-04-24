@@ -42,7 +42,7 @@ def main():
     if args.debug:
         set_logging(level=logging.DEBUG, path=get_log_file_path())
     else:
-        set_logging(level=logging.INFO, path=setup_dirs())
+        set_logging(level=logging.INFO, path=get_log_file_path())
 
     logger.info("application started")
 
