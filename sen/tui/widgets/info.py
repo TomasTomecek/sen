@@ -323,6 +323,11 @@ class ContainerInfoWidget(VimMovementListBox):
             [SelectableText("Command", maps=get_map("main_list_green")),
              SelectableText(self.docker_container.command)],
         ]
+        if self.docker_container.names:
+            data.append(
+                [SelectableText("Name", maps=get_map("main_list_green")),
+                 SelectableText("".join(self.docker_container.names))],
+            )
         self.walker.extend(assemble_rows(data))
 
     def _net(self):
