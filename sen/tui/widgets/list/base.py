@@ -54,7 +54,6 @@ class WidgetBase(urwid.ListBox):
                         (pos > original_position and not reverse_search) or
                         (pos < original_position and reverse_search)
             ):
-                self.search_string = None
                 raise NotifyError("Pattern not found: %r." % self.search_string)
             # FIXME: figure out nicer search api
             if hasattr(obj, "matches_search"):
