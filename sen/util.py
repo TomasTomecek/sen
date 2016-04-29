@@ -234,3 +234,11 @@ def repeater(call, args=None, kwargs=None, retries=4):
             logger.error("query #%d: generic error: %r", x, ex)
         t *= 2
         time.sleep(t)
+
+
+class OrderedSet(list):
+    def append(self, p_object):
+        if p_object in self:
+            self.remove(p_object)
+        return super().append(p_object)
+

@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 
 from flexmock import flexmock
 
-from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback, repeater, humanize_time
+from sen.util import _ensure_unicode, log_traceback, log_vars_from_tback, repeater, humanize_time, \
+    OrderedSet
 
 import pytest
 
@@ -110,3 +111,13 @@ def test_humanize_time(inp, expected):
     # flexmock(datetime, now=datetime(year=2000, month=1, day=1))
     n = datetime.now()
     assert humanize_time(n - inp) == expected
+
+
+def test_ordered_set():
+    s = OrderedSet()
+    s.append(1)
+    assert s == [1]
+    s.append(2)
+    assert s == [1, 2]
+    s.append(1)
+    assert s == [2, 1]

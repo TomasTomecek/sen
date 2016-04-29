@@ -12,7 +12,7 @@ from sen.docker_backend import DockerBackend, DockerImage, DockerContainer
 
 import urwid
 
-from sen.util import log_traceback
+from sen.util import log_traceback, OrderedSet
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ class UI(urwid.MainLoop):
         # root widget
         self.mainframe = UIFrameWidget(self, urwid.SolidFill())
         self.buffers = []
+        self.buffer_movement_history = OrderedSet()
 
         self.refresh_lock = threading.Lock()
 
@@ -84,6 +85,8 @@ class UI(urwid.MainLoop):
         :param buffer: Buffer
         :return:
         """
+        self.buffer_movement_history.append(buffer)
+        logger.debug("movement history: %s", self.buffer_movement_history)
         self.current_buffer = buffer
         self._set_main_widget(buffer.widget, redraw=redraw)
 
@@ -127,9 +130,9 @@ class UI(urwid.MainLoop):
             logger.warning("you can't remove main list widget")
             return
         self.buffers.remove(self.current_buffer)
+        self.buffer_movement_history.remove(self.current_buffer)
         self.current_buffer.destroy()
-        # FIXME: we should display last displayed widget here
-        self.display_buffer(self.buffers[0], True)
+        self.display_buffer(self.buffer_movement_history[-1], True)
 
     def unhandled_input(self, key):
         logger.debug("unhandled input: %r", key)
