@@ -61,11 +61,12 @@ class ImageTree(urwidtrees.TreeBox):
         tree = TreeBackend(docker_backend, ui)
 
         # We hide the usual arrow tip and use a customized collapse-icon.
-        t = urwidtrees.CollapsibleArrowTree(
+        t = urwidtrees.ArrowTree(
             tree,
             arrow_att="tree",  # lines, tip
             icon_collapsed_att="tree",  # +
             icon_expanded_att="tree",  # -
             icon_frame_att="tree",  # [ ]
+            indent=2,
         )
         super().__init__(t)
