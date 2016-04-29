@@ -171,6 +171,8 @@ r      restart container
 p      pause container
 u      unpause container
 X      kill container
+!      toggle realtime updates of the interface (this is useful when you are removing multiple
+       objects and don't want the listing change during that so you accidentally remove something)
 ```
 
 ## Tree buffer

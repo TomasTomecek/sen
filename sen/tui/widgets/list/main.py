@@ -122,8 +122,12 @@ class MainListBox(ResponsiveTable):
         # urwid is not thread safe
         self.refresh_lock = threading.Lock()
 
-        self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
-        self.thread.start()
+        # realtime lock
+        self.realtime_lock = threading.Lock()
+
+        self.thread = None
+        self.stop_realtime_events = threading.Event()
+        self.toggle_realtime_events(initial_start=True)
 
     def populate(self, focus_on_top=False):
         widgets = self._assemble_initial_content()
@@ -140,6 +144,7 @@ class MainListBox(ResponsiveTable):
 
         :return:
         """
+        logger.info("starting receiving events from docker")
         it = self.d.realtime_updates()
         while True:
             try:
@@ -147,6 +152,10 @@ class MainListBox(ResponsiveTable):
             except NotifyError as ex:
                 self.ui.notify_message(ex.args[0], level="error")
                 return
+            with self.realtime_lock:
+                if self.stop_realtime_events.is_set():
+                    logger.info("received docker event when this functionality is disabled")
+                    return
             widgets = []
             for o in content:
                 try:
@@ -158,6 +167,24 @@ class MainListBox(ResponsiveTable):
             with self.refresh_lock:
                 self.set_body(widgets)
                 self.ui.reload_footer()
+
+    def toggle_realtime_events(self, initial_start=None):
+        if initial_start:
+            self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
+            self.thread.start()
+            return
+
+        with self.realtime_lock:
+            if self.stop_realtime_events.is_set():
+                self.stop_realtime_events.clear()
+                self.ui.notify_message("Starting receiving events from docker.")
+                if not self.thread.is_alive():
+                    logger.info("starting events thread: it wasn't active")
+                    self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
+                    self.thread.start()
+            else:
+                self.stop_realtime_events.set()
+                self.ui.notify_message("Stopping receiving events from docker.")
 
     def _assemble_initial_content(self):
         def query_notify(operation):
@@ -302,6 +329,10 @@ class MainListBox(ResponsiveTable):
             if key == "@":
                 # I guess we want refresh to be as quick as possible
                 self.ui.run_quickly_in_bacakground(self.populate, None)
+                return
+            elif key == "!":
+                self.ui.run_quickly_in_bacakground(self.toggle_realtime_events)
+                return
             elif key == "i":
                 self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
                 return
