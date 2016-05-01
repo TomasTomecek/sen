@@ -175,14 +175,15 @@ class MainListBox(ResponsiveTable):
         with self.realtime_lock:
             if self.stop_realtime_events.is_set():
                 self.stop_realtime_events.clear()
-                self.ui.notify_message("Starting receiving events from docker.")
+                self.ui.notify_message("Enabling live updates from docker.")
                 if not self.thread.is_alive():
                     logger.info("starting events thread: it wasn't active")
                     self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
                     self.thread.start()
             else:
                 self.stop_realtime_events.set()
-                self.ui.notify_message("Stopping receiving events from docker.")
+                self.ui.notify_message("Disabling live updates from docker.")
+        self.ui.reload_footer()
 
     def _assemble_initial_content(self):
         def query_notify(operation):
@@ -444,6 +445,10 @@ class MainListBox(ResponsiveTable):
         running_containers_n = len(running_containers)
         add_subwidget(str(running_containers_n),
                       "status_text_green" if running_containers_n > 0 else "status_text")
+
+        with self.realtime_lock:
+            if self.stop_realtime_events.is_set():
+                add_subwidget(", Live updates are disabled")
 
         parent_cols = super().status_bar()
         if parent_cols:
