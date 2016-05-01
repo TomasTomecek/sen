@@ -101,11 +101,9 @@ class MainLineWidget(ResponsiveRowWidget):
         self.docker_object = docker_object
         super().__init__(get_row(docker_object))
 
-    # TODO
     def matches_search(self, s):
         return self.docker_object.matches_search(s)
 
-    # TODO
     def __repr__(self):
         return "{}({})".format(self.__class__.__name__, self.docker_object)
 
@@ -282,6 +280,7 @@ class MainListBox(ResponsiveTable):
         return widgets
 
     def keypress(self, size, key):
+        # TODO: log how long it took to run this
         # FIXME: put this into own file
         # these functions will be executed in threads
         # provide arguments, don't access self.<attrib> b/c those will be
