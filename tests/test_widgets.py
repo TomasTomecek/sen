@@ -6,9 +6,10 @@ import pytest
 from flexmock import flexmock
 from urwid.listbox import SimpleListWalker
 
+from sen.tui.widgets.list.base import VimMovementListBox
 from sen.tui.widgets.list.common import ScrollableListBox, AsyncScrollableListBox
 from sen.tui.widgets.list.util import ResponsiveRowWidget
-from sen.tui.widgets.table import ResponsiveTable
+from sen.tui.widgets.table import ResponsiveTable, assemble_rows
 from .utils import get_random_text_widget
 from .constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
@@ -97,3 +98,17 @@ def test_table_empty():
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
     assert len(text) == 20
     assert text[0] == b" " * 80
+
+
+def test_assemble_rows_long_text():
+    rows = [[get_random_text_widget(10),
+             get_random_text_widget(300)] for _ in range(5)]
+    assembled_rows = assemble_rows(rows, ignore_columns=[1])
+    lb = VimMovementListBox(SimpleListWalker(assembled_rows))
+    canvas = lb.render((80, 20), focus=False)
+    text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
+    logging.info("%r", text)
+    assert len(text) == 20
+    first_col, second_col = text[0].split(b" ", 1)
+    assert first_col == rows[0][0].text.encode("utf-8")
+    assert rows[0][1].text.encode("utf-8").startswith(second_col)

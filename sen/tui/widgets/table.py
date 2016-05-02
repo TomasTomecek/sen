@@ -32,7 +32,8 @@ def calculate_max_cols_length(table, size):
     return max_cols_lengths
 
 
-def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1):
+def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1,
+                  ignore_columns=None):
     """
     :param data: list of lists:
     [["row 1 column 1", "row 1 column 2"],
@@ -42,9 +43,11 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1):
     :param headers: list of str, headers of table
     :param max_allowed_lengths: dict:
         {col_index: maximum_allowed_length}
+    :param ignore_columns: list of ints, indexes which should not be calculated
     """
     rows = []
-    max_lengths = []
+    max_lengths = {}
+    ignore_columns = ignore_columns or []
 
     # shitty performance, here we go
     # it would be way better to do a single double loop and provide mutable variable
@@ -52,16 +55,16 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1):
     for row in data:
         col_index = 0
         for widget in row:
+            if col_index in ignore_columns:
+                continue
             l = len(widget.text)
             if max_allowed_lengths:
                 if col_index in max_allowed_lengths and max_allowed_lengths[col_index] < l:
                     # l is bigger then what is allowed
                     l = max_allowed_lengths[col_index]
 
-            try:
-                max_lengths[col_index] = max(l, max_lengths[col_index])
-            except IndexError:
-                max_lengths.append(l)
+            max_lengths.setdefault(col_index, l)
+            max_lengths[col_index] = max(l, max_lengths[col_index])
             col_index += 1
 
     if headers:
@@ -76,7 +79,10 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1):
     for row in data:
         row_widgets = []
         for idx, item in enumerate(row):
-            row_widgets.append((max_lengths[idx], item))
+            if idx in ignore_columns:
+                row_widgets.append(item)
+            else:
+                row_widgets.append((max_lengths[idx], item))
         rows.append(
             RowWidget(row_widgets, dividechars=dividechars)
         )

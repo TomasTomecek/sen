@@ -66,7 +66,7 @@ class ImageInfoWidget(VimMovementListBox):
             [SelectableText("Command", maps=get_map("main_list_green")),
              SelectableText(self.docker_image.container_command)],
         ]
-        self.walker.extend(assemble_rows(data))
+        self.walker.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _image_names(self):
         if not self.docker_image.names:
@@ -100,7 +100,7 @@ class ImageInfoWidget(VimMovementListBox):
         self.walker.append(RowWidget([SelectableText("Labels", maps=get_map("main_list_white"))]))
         for label_key, label_value in self.docker_image.labels.items():
             data.append([SelectableText(label_key, maps=get_map("main_list_green")), SelectableText(label_value)])
-        self.walker.extend(assemble_rows(data))
+        self.walker.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _containers(self):
         if not self.docker_image.containers():
@@ -328,7 +328,7 @@ class ContainerInfoWidget(VimMovementListBox):
                 [SelectableText("Name", maps=get_map("main_list_green")),
                  SelectableText("".join(self.docker_container.names))],
             )
-        self.walker.extend(assemble_rows(data))
+        self.walker.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _net(self):
         ports = self.docker_container.net.ports
@@ -362,7 +362,7 @@ class ContainerInfoWidget(VimMovementListBox):
                         SelectableText(net_name), SelectableText(a6)
                     ])
         if data:
-            self.walker.extend(assemble_rows(data, dividechars=3))
+            self.walker.extend(assemble_rows(data, dividechars=3, ignore_columns=[1]))
 
     def _image(self):
         self.walker.append(RowWidget([SelectableText("")]))
@@ -453,7 +453,7 @@ class ContainerInfoWidget(VimMovementListBox):
         self.walker.append(RowWidget([SelectableText("Labels", maps=get_map("main_list_white"))]))
         for label_key, label_value in self.docker_container.labels.items():
             data.append([SelectableText(label_key, maps=get_map("main_list_green")), SelectableText(label_value)])
-        self.walker.extend(assemble_rows(data))
+        self.walker.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _process_tree(self):
         top = self.docker_container.top().response
