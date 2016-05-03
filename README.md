@@ -6,14 +6,14 @@
 `sen` is a terminal user interface for docker engine:
  * it can interactively manage your containers and images:
   * manage? start, stop, restart, kill, delete,...
+ * there is a "dashboard" view for containers and images
  * you are able to inspect containers and images
  * sen can fetch logs of containers and even stream logs real-time
- * all buffers support searching and filtering
+ * buffers support searching and filtering
  * sen receives real-time updates from docker when anything changes
-  * e.g. if you create a container in another terminal, sen will pick it up
+  * e.g. if you pull a container in another terminal, sen will pick it up
  * sen notifies you whenever something happens (and reports slow queries)
  * supports a lot of vim-like keybindings (`j`, `k`, `gg`, `/`, ...)
- * there is a special buffer which display detailed info about images
  * you can get interactive tree view of all images (equivalent of `docker images --tree`)
 
 You can [see the features yourself](/docs/features.md).
@@ -37,6 +37,8 @@ $ docker run --privileged -v /var/run/docker.sock:/run/docker.sock -ti -e TERM t
 ```
 
 Some distros have `/var/run` simlinked to `/run`, so you can do `/run/docker.sock:/run/docker.sock` instead.
+
+In case you would like to try development version of sen, you can pull `tomastomecek/sen:dev`.
 
 
 ## docker
@@ -96,7 +98,7 @@ Either:
 
 * The unix socket for docker engine needs to be accessible. By default it's located at `/run/docker.sock`.
 
-OR
+Or:
 
 * Have the `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, and `DOCKER_CERT_PATH` set properly.  If you're using `docker-machine` or `boot2docker` you're all set!
 
@@ -195,3 +197,4 @@ i      inspect image (when layer is focused)
 Since I started using docker, I always dreamed of having a docker TUI. Something like [tig](https://github.com/jonas/tig), [htop](http://hisham.hm/htop/) or [alot](https://github.com/pazz/alot). Some appeared over time. Such as [docker-mon](https://github.com/icecrime/docker-mon) or [ctop](https://github.com/yadutaf/ctop). Unfortunately, those are not proper docker TUIs. They are meant for monitoring and diagnostics.
 
 So I realized that if I want make my dream come true, I need to do it myself. That's where I started working on *sen* (*dream* in Slovak).
+
