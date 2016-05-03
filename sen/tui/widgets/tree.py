@@ -17,7 +17,7 @@ class TreeNodeWidget(SelectableText):
     def keypress(self, size, key):
         logger.debug("%s %s %s", self.__class__, key, size)
         if key == "enter":
-            self.ui.display_image_info(self.docker_image)
+            self.ui.display_info(self.docker_image)
             return
         return key
 
