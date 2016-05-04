@@ -45,5 +45,7 @@ $ byzanz-record -v --delay=5 -x 164 -y 183 -w 892 -h 418 -d 25 -- out.gif
 
  * `-d` — duration
 
-http://unix.stackexchange.com/questions/113695/gif-screencasting-the-unix-way
+Current gifs are created with `st`, `100x30`, `Inconsolata dz` size 16.
+
+http://unix.stackexchange.com/questions/113695/gif-screencasting-the-unix-way  
 http://askubuntu.com/questions/4428/how-to-create-a-screencast
