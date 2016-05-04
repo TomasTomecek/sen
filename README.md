@@ -18,7 +18,7 @@
 
 You can [see the features yourself](/docs/features.md).
 
-![sen preview](/data/sen-preview.gif)
+![Preview of sen](/data/sen-preview.gif)
 
 # Installation and running `sen`
 

@@ -5,11 +5,18 @@
 
 You can invoke the buffer with `f5`.
 
-[![asciicast](https://asciinema.org/a/145qljt3ki9t7oauq30vsdhip.png)](https://asciinema.org/a/145qljt3ki9t7oauq30vsdhip)
+![Image Tree](/data/image-tree.gif)
+
+
+## Container Info
+
+Press `<enter>` to see more info about a container.
+
+![Image Tree](/data/container-info.gif)
 
 
 ## Image Info
 
-Press `<enter>` to see the defatiled info about your image.
+Press `<enter>` to see the detailed info about your image.
 
-[![asciicast](https://asciinema.org/a/exhi7zj7bs9t1wb6j5gg4fddb.png)](https://asciinema.org/a/exhi7zj7bs9t1wb6j5gg4fddb)
+![Image Tree](/data/image-info.gif)
