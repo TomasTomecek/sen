@@ -1,7 +1,7 @@
 FROM alpine:3.2
 MAINTAINER Tomas Tomecek <ttomecek@redhat.com> @TomasTomec
 
-LABEL RUN docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM --name \${NAME} \${IMAGE}
+LABEL RUN docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM --name \${NAME} \${IMAGE}
 
 COPY . /home/sen
 

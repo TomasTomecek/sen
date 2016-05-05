@@ -1,7 +1,7 @@
 FROM fedora:22
 MAINTAINER Tomas Tomecek <ttomecek@redhat.com> @TomasTomec
 
-LABEL RUN docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM=$TERM --name \${NAME} \${IMAGE}
+LABEL RUN docker run --privileged -v /run/docker.sock:/run/docker.sock -ti -e TERM --name \${NAME} \${IMAGE}
 
 RUN dnf install -y python3-pip git python3-urwid python3-docker-py python3-humanize && dnf clean all
 
