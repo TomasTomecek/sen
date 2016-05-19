@@ -62,6 +62,7 @@ PALLETE = [
 STATUS_BAR_REFRESH_SECONDS = 5
 CLEAR_NOTIF_BAR_MESSAGE_IN = 5
 
+# FIXME: generate dynamically now
 HELP_TEXT = """\
 # Keybindings
 

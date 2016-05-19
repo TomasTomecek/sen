@@ -6,7 +6,7 @@ import pytest
 from flexmock import flexmock
 from urwid.listbox import SimpleListWalker
 
-from sen.tui.widgets.list.base import VimMovementListBox
+from sen.tui.widgets.list.base import WidgetBase
 from sen.tui.widgets.list.common import ScrollableListBox, AsyncScrollableListBox
 from sen.tui.widgets.list.util import ResponsiveRowWidget
 from sen.tui.widgets.table import ResponsiveTable, assemble_rows
@@ -104,7 +104,7 @@ def test_assemble_rows_long_text():
     rows = [[get_random_text_widget(10),
              get_random_text_widget(300)] for _ in range(5)]
     assembled_rows = assemble_rows(rows, ignore_columns=[1])
-    lb = VimMovementListBox(SimpleListWalker(assembled_rows))
+    lb = WidgetBase(SimpleListWalker(assembled_rows))
     canvas = lb.render((80, 20), focus=False)
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
     logging.info("%r", text)

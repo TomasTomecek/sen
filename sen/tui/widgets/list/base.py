@@ -13,7 +13,8 @@ class WidgetBase(urwid.ListBox):
     common class fot widgets
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, ui, *args, **kwargs):
+        self.ui = ui
         self.search_string = None
         self.filter_query = None
         super().__init__(*args, **kwargs)
@@ -86,7 +87,7 @@ class WidgetBase(urwid.ListBox):
                 widgets.append(obj)
         if not widgets_to_filter:
             self.filter_query = s
-        return widgets
+        self.set_body(widgets)
 
     def find_previous(self, search_pattern=None):
         if search_pattern is not None:
@@ -121,53 +122,6 @@ class WidgetBase(urwid.ListBox):
 
         return columns_list
 
-
-class VimMovementListBox(WidgetBase):
-    """
-    ListBox with vim-like movement which can be inherited in other widgets
-    """
-
-    def __init__(self, *args, **kwargs):
-        # we want "gg"!
-        self.cached_key = None
-        super().__init__(*args, **kwargs)
-
-    def keypress(self, size, key):
-        logger.debug("VimListBox keypress %r", key)
-
-        # FIXME: workaround so we allow "gg" only, and not "g*"
-        if self.cached_key == "g" and key != "g":
-            self.cached_key = None
-
-        if key == "j":
-            return super().keypress(size, "down")
-        elif key == "k":
-            return super().keypress(size, "up")
-        elif key == "ctrl d":
-            try:
-                self.set_focus(self.get_focus()[1] + 10)
-            except IndexError:
-                self.set_focus(len(self.body) - 1)
-            self.reload_widget()
-            return
-        elif key == "ctrl u":
-            try:
-                self.set_focus(self.get_focus()[1] - 10)
-            except IndexError:
-                self.set_focus(0)
-            self.reload_widget()
-            return
-        elif key == "G":
-            self.set_focus(len(self.body) - 1)
-            self.reload_widget()
-            return
-        elif key == "g":
-            if self.cached_key is None:
-                self.cached_key = "g"
-            elif self.cached_key == "g":
-                self.set_focus(0)
-                self.reload_widget()
-                self.cached_key = None
-            return
-        key = super().keypress(size, key)
-        return key
+    @property
+    def focused_docker_object(self):
+        return self.get_focus()[0].docker_object

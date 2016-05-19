@@ -10,10 +10,12 @@ from concurrent.futures.thread import ThreadPoolExecutor
 import urwid
 
 from sen.exceptions import NotifyError
-from sen.tui.buffer import MainListBuffer
+from sen.tui.commands.base import FrontendPriority, BackendPriority, SameThreadPriority, \
+    KeyNotMapped
 from sen.tui.constants import CLEAR_NOTIF_BAR_MESSAGE_IN
 from sen.tui.widgets.util import ThreadSafeFrame
 from sen.util import log_traceback, OrderedSet
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +27,19 @@ class ConcurrencyMixin:
         # worker for quick ui operations
         self.ui_worker = ThreadPoolExecutor(max_workers=2)
 
+    @staticmethod
+    def _run(worker, f, *args, **kwargs):
+        # TODO: do another wrapper to wrap notify exceptions and show them
+        f = log_traceback(f)
+        worker.submit(f, *args, **kwargs)
+
     def run_in_background(self, task, *args, **kwargs):
         logger.info("running task %r(%s, %s) in background", task, args, kwargs)
-        self.worker.submit(task, *args, **kwargs)
+        self._run(self.worker, task, *args, **kwargs)
 
     def run_quickly_in_background(self, task, *args, **kwargs):
         logger.info("running a quick task %r(%s, %s) in background", task, args, kwargs)
-        self.ui_worker.submit(task, *args, **kwargs)
+        self._run(self.ui_worker, task, *args, **kwargs)
 
 
 class UI(ThreadSafeFrame, ConcurrencyMixin):
@@ -55,7 +63,9 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         # and most importantly, remember, locking is voodoo
         self.notifications_lock = threading.RLock()
 
-        self.loop = None  # populated when loop and UI are instantiated
+        # populated when loop and UI are instantiated
+        self.loop = None
+        self.commander = None
 
         self.buffers = []
         self.buffer_movement_history = OrderedSet()
@@ -64,6 +74,10 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
 
         self.current_buffer = None
 
+    def refresh(self):
+        self.loop.refresh()
+
+    # FIXME: move these to separate mixin
     def _set_main_widget(self, widget, redraw):
         """
         add provided widget to widget list and display it
@@ -75,7 +89,7 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         self.reload_footer()
         if redraw:
             logger.debug("redraw main widget")
-            self.loop.refresh()
+            self.refresh()
 
     def display_buffer(self, buffer, redraw=True):
         """
@@ -84,8 +98,8 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         :param buffer: Buffer
         :return:
         """
+        logger.debug("display buffer %r", buffer)
         self.buffer_movement_history.append(buffer)
-        logger.debug("movement history: %s", self.buffer_movement_history)
         self.current_buffer = buffer
         self._set_main_widget(buffer.widget, redraw=redraw)
 
@@ -124,15 +138,15 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
     def current_buffer_index(self):
         return self.buffers.index(self.current_buffer)
 
-    def remove_current_buffer(self):
-        # don't allow removing main_list
-        if isinstance(self.current_buffer, MainListBuffer):
-            logger.warning("you can't remove main list widget")
+    def remove_current_buffer(self, close_if_no_buffer=False):
+        if len(self.buffers) == 1 and not close_if_no_buffer:
             return
         self.buffers.remove(self.current_buffer)
         self.buffer_movement_history.remove(self.current_buffer)
         self.current_buffer.destroy()
-        self.display_buffer(self.buffer_movement_history[-1], True)
+        if len(self.buffers) > 0:
+            self.display_buffer(self.buffer_movement_history[-1], True)
+        return len(self.buffers)
 
     def reload_footer(self, refresh=True, rebuild_statusbar=True):
         logger.debug("reload footer")
@@ -175,36 +189,14 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         columns = urwid.Columns(left_widgets + [buffer_text])
         return urwid.AttrMap(columns, "status")
 
-    def prompt(self, prompt_text, callback):
-        """
-        prompt for text input.
-        """
-        oldfooter = self.get_footer()
-
-        # set up widgets
-        leftpart = urwid.Text(prompt_text, align='left')
-        editpart = urwid.Edit(multiline=True)
-
-        # build promptwidget
-        edit = urwid.Columns(
-            [
-                ('fixed', len(prompt_text), leftpart),
-                ('weight', 1, editpart),
-            ])
-        self.prompt_bar = urwid.AttrMap(edit, "main_list_dg")
-
-        self.reload_footer()
-        self.set_focus("footer")
-
-        urwid.connect_signal(editpart, "change", callback, user_args=[self, oldfooter])
-
     def remove_notification_message(self, message):
         logger.debug("requested remove of message %r from notif bar", message)
         with self.notifications_lock:
             try:
                 w = self.message_widget_dict[message]
             except KeyError:
-                logger.warning("there is no notification %r displayed", message)
+                logger.warning("there is no notification %r displayed: %s",
+                               message, self.message_widget_dict)
                 return
             else:
                 logger.debug("remove widget %r from new pile", w)
@@ -215,7 +207,11 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
     def remove_widget(self, widget, message=None):
         logger.debug("remove widget %r from notif bar", widget)
         with self.notifications_lock:
-            del self.widget_message_dict[widget]
+            try:
+                del self.widget_message_dict[widget]
+            except KeyError:
+                logger.info("widget %s was already removed", widget)
+                return
             if message:
                 del self.message_widget_dict[message]
         self.reload_footer(rebuild_statusbar=False)
@@ -236,7 +232,7 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
                 return
             logger.debug("display notification %r", message)
             widget = urwid.AttrMap(urwid.Text(message), "notif_{}".format(level))
-        return self.notify_widget(widget, clear_in=clear_in)
+        return self.notify_widget(widget, message=message, clear_in=clear_in)
 
     def notify_widget(self, widget, message=None, clear_in=CLEAR_NOTIF_BAR_MESSAGE_IN):
         """
@@ -267,35 +263,58 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
 
         return widget
 
-    # FIXME: this will be moved to commands
-    def unhandled_input(self, key):
-        logger.debug("unhandled input: %r", key)
+    def run_command(self, command_input, **kwargs):
+        kwargs["buffer"] = self.current_buffer
+        command = self.commander.get_command(command_input, **kwargs)
+        if command is None:
+            return
+        if isinstance(command.priority, FrontendPriority):
+            self.run_quickly_in_background(command.run)
+        elif isinstance(command.priority, BackendPriority):
+            self.run_in_background(command.run)
+        elif isinstance(command.priority, SameThreadPriority):
+            try:
+                command.run()
+            except NotifyError as ex:
+                self.notify_message(str(ex), level="error")
+                logger.error(repr(ex))
+        else:
+            raise RuntimeError("command %s doesn't have any priority: %s %s" %
+                               (command_input, command.priority, FrontendPriority))
+
+    def run_command_by_key(self, key, size, **kwargs):
+        command_input = self.commander.get_command_input_by_key(key)
+        self.run_command(command_input, size=size, **kwargs)
+
+    def keypress(self, size, key):
+        logger.debug("%s keypress %r", self.__class__.__name__, key)
+
+        # we should pass the key to header, body, footer first so it's consumed in e.g. statusbar
+        key = super().keypress(size, key)
+        if key is None:
+            logger.info("key was consumed by frame components")
+            return
+
+        # FIXME: sen tracebacks when current buffer is not initialized and you try to run commmands
+        #   repro: run sen and hit "?" asap
+        focused_docker_object = None
+        selected_widget = getattr(self.current_buffer, "widget", None)
+        if selected_widget:
+            focused_docker_object = getattr(self.current_buffer.widget, "focused_docker_object", None)
         try:
-            if key in ('q', 'Q'):
-                self.worker.shutdown(wait=False)
-                self.ui_worker.shutdown(wait=False)
-                raise urwid.ExitMainLoop()
-            elif key == "ctrl o":
-                self.pick_and_display_buffer(self.current_buffer_index - 1)
-            elif key == "ctrl i":
-                self.pick_and_display_buffer(self.current_buffer_index + 1)
-            elif key == "x":
-                self.remove_current_buffer()
-            elif key == "/":
-                self.prompt("/", search)
-            elif key == "f4":
-                self.prompt("filter ", filter)
-            elif key == "n":
-                self.current_buffer.find_next()
-            elif key == "N":
-                self.current_buffer.find_previous()
-            elif key in ["h", "?"]:
-                self.display_help()
-            elif key == "f5":
-                self.display_tree()
-        except NotifyError as ex:
-            self.notify_message(str(ex), level="error")
-            logger.error(repr(ex))
+            self.run_command_by_key(
+                key,
+                docker_object=focused_docker_object,
+                size=size
+            )
+        except KeyNotMapped:
+            super_class = ThreadSafeFrame
+            logger.debug("calling: %s.keypress(%s, %s)", super_class, size, key)
+            # TODO: up/down doesn't do anything if len(lines) < screen height - confusing
+            key = super_class.keypress(self, size, key)
+            logger.debug("was key handled? %s", "yes" if key is None else "no")
+            return key
+        return
 
 
 class ThreadSafeLoop(urwid.MainLoop):
@@ -325,7 +344,7 @@ def get_app_in_loop(pallete):
     screen.set_terminal_properties(256)
     screen.register_palette(pallete)
 
-    ui = UI()
+    ui = UI(urwid.SolidFill())
     decorated_ui = urwid.AttrMap(ui, "root")
     loop = ThreadSafeLoop(decorated_ui, screen=screen, event_loop=urwid.AsyncioEventLoop(),
                           handle_mouse=False)

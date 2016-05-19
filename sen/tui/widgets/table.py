@@ -2,7 +2,7 @@ import logging
 
 import urwid
 
-from sen.tui.widgets.list.base import VimMovementListBox
+from sen.tui.widgets.list.base import WidgetBase
 from sen.tui.widgets.list.util import RowWidget
 
 logger = logging.getLogger(__name__)
@@ -90,8 +90,8 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1,
     return rows
 
 
-class ResponsiveTable(VimMovementListBox):
-    def __init__(self, walker, headers=None, dividechars=1, responsive=True):
+class ResponsiveTable(WidgetBase):
+    def __init__(self, ui, walker, headers=None, dividechars=1, responsive=True):
         """
         :param walker: list of ResponsiveRow instances
         :param headers: list of widgets which should be displayed as headers
@@ -99,7 +99,7 @@ class ResponsiveTable(VimMovementListBox):
         self.dividechars = dividechars
         self.responsive = responsive
 
-        super().__init__(walker)
+        super().__init__(ui, walker)
 
     def render(self, size, focus=False):
         screen_width = size[0]

@@ -4,8 +4,8 @@ This suite should test whether sen is capable of running in concurrent high load
 import random
 import threading
 
-from sen.tui.ui import UIFrameWidget
-from sen.tui.widgets.list.base import VimMovementListBox
+from sen.tui.ui import UI
+from sen.tui.widgets.list.base import WidgetBase
 
 import urwid
 
@@ -38,8 +38,8 @@ def test_main_frame():
                     less_f()
 
     body_widgets = [get_random_text_widget() for _ in range(100)]
-    body = VimMovementListBox(urwid.SimpleFocusListWalker(body_widgets))
-    frame = UIFrameWidget(MockUI(), body)
+    body = WidgetBase(urwid.SimpleFocusListWalker(body_widgets))
+    frame = UI(MockUI(), body)
 
     def add_and_remove_random():
         widgets = []
