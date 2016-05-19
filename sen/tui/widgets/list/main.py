@@ -133,7 +133,10 @@ class MainListBox(ResponsiveTable):
             self.set_body(widgets)
             self.ro_content = widgets
             if focus_on_top:
-                self.set_focus(0)
+                try:
+                    self.set_focus(0)
+                except IndexError:
+                    pass
             self.ui.refresh()
 
     def realtime_updates(self):
