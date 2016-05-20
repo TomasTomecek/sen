@@ -4,6 +4,8 @@ import threading
 
 import urwid
 
+from operator import attrgetter
+
 from sen.exceptions import NotifyError
 from sen.docker_backend import DockerImage, DockerContainer
 from sen.tui.chunks.elemental import ContainerStatusWidget
@@ -197,6 +199,7 @@ class MainListBox(ResponsiveTable):
         rows = []
 
         query, c_op, i_op = self.d.filter()
+        query.sort(key=attrgetter("natural_sort_value"), reverse=True)
         for o in query:
             rows.append(MainLineWidget(o))
         query_notify(i_op)

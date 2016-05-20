@@ -204,6 +204,27 @@ class DockerObject:
         labels = self.data["Labels"]
         return labels
 
+    @property
+    def natural_sort_value(self):
+        if isinstance(self, DockerContainer):
+            try:
+                response = self.inspect().response
+                started = datetime.datetime.strptime(
+                    response["State"]["StartedAt"][:-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                finished = datetime.datetime.strptime(
+                    response["State"]["FinishedAt"][:-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
+                if started > finished:
+                    return started
+                if started < finished:
+                    return finished
+                # the case when they equals means they're stopped or something went wrong
+            except KeyError:
+                logger.info(self.data)
+                # container might not be started yet so values are missing
+                pass
+
+        return datetime.datetime.fromtimestamp(0)
+
     def __eq__(self, other):
         return type(self) == type(other) and self._id == other._id
 
