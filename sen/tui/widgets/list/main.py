@@ -4,6 +4,8 @@ import threading
 
 import urwid
 
+from operator import attrgetter
+
 from sen.exceptions import NotifyError
 from sen.docker_backend import DockerImage, DockerContainer
 from sen.tui.chunks.elemental import ContainerStatusWidget
@@ -157,7 +159,10 @@ class MainListBox(ResponsiveTable):
                 if self.stop_realtime_events.is_set():
                     logger.info("received docker event when this functionality is disabled")
                     return
+
+            content.sort(key=attrgetter("natural_sort_value"), reverse=True)
             widgets = []
+
             for o in content:
                 try:
                     line = MainLineWidget(o)
