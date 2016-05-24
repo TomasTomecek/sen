@@ -289,7 +289,7 @@ class ProcessTree(urwidtrees.TreeBox):
 
 class ContainerInfoWidget(VimMovementListBox):
     """
-    display info about image
+    display info about container
     """
     def __init__(self, ui, docker_container):
         self.ui = ui
