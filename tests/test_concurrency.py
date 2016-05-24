@@ -38,8 +38,8 @@ def test_main_frame():
                     less_f()
 
     body_widgets = [get_random_text_widget() for _ in range(100)]
-    body = WidgetBase(urwid.SimpleFocusListWalker(body_widgets))
-    frame = UI(MockUI(), body)
+    ui = MockUI()
+    frame = WidgetBase(ui, urwid.SimpleFocusListWalker(body_widgets))
 
     def add_and_remove_random():
         widgets = []
