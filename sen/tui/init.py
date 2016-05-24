@@ -1,5 +1,6 @@
 import logging
 import threading
+import webbrowser
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from sen.exceptions import NotifyError
@@ -197,6 +198,31 @@ class UI(urwid.MainLoop):
         except NotifyError as ex:
             self.notify_message(str(ex), level="error")
             logger.error(repr(ex))
+
+    def open_browser(self, docker_object):
+        # NOTE: there's a little delay between container's state running and ready of the application on the port
+        if isinstance(docker_object, DockerContainer):
+            response = docker_object.inspect().response
+            if not response["State"]["Running"] or response["State"]["Paused"]:  # may throw KeyError ?
+                logger.info("Container is stopped - no available ports.")
+                self.notify_message("Container is not running - no ports are available.")
+                return
+            try:
+                if len(response["NetworkSettings"]["Ports"]) == 0:
+                    # I could raise TypeError for not rewriting code below but don't know if it is best practise :)
+                    logger.info("No ports available for '%s" % docker_object)
+                    self.notify_message("There are no ports available for '%s" % docker_object.short_name, level="info")
+
+                for key in response["NetworkSettings"]["Ports"]:
+                    url = "http://" + response["NetworkSettings"]["IPAddress"] + ":" + key.split("/")[0]
+                    logger.info(url)
+                    webbrowser.open(url)
+            except TypeError:
+                logger.info("No ports available for '%s" % docker_object)
+                self.notify_message("There are no ports available for '%s" % docker_object.short_name, level="info")
+        else:
+            logger.info("Selected object is not a docker container.")
+            self.notify_message("Selected object is not a docker container.", level="info")
 
     def refresh_main_buffer(self, refresh_buffer=True):
         assert self.main_list_buffer is not None

@@ -159,7 +159,10 @@ class MainListBox(ResponsiveTable):
                 if self.stop_realtime_events.is_set():
                     logger.info("received docker event when this functionality is disabled")
                     return
+
+            content.sort(key=attrgetter("natural_sort_value"), reverse=True)
             widgets = []
+
             for o in content:
                 try:
                     line = MainLineWidget(o)
@@ -350,6 +353,9 @@ class MainListBox(ResponsiveTable):
                 return
             elif key == "enter":
                 self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_info, self.focused_docker_object)
+                return
+            elif key == "b":
+                self.ui.run_in_background(do_and_report_on_fail, self.ui.open_browser, self.focused_docker_object)
                 return
             elif key == "d":
                 self.ui.run_in_background(
