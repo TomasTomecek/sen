@@ -3,10 +3,12 @@ these commands may take long to finish, they are usually being run against exter
 docker engine)
 """
 import logging
+import webbrowser
 
 from sen.tui.buffer import LogsBuffer, InspectBuffer
 from sen.tui.commands.base import BackendCommand, register_command, Argument
 from sen.tui.widgets.list.util import get_operation_notify_widget
+from sen.docker_backend import DockerContainer
 
 
 logger = logging.getLogger(__name__)
@@ -110,3 +112,42 @@ class InspectCommand(BackendCommand):
             self.ui.notify_message("No docker object specified.", level="error")
             return
         self.ui.add_and_display_buffer(InspectBuffer(self.ui, self.docker_object))
+
+
+@register_command
+class OpenPortsInBrowser(BackendCommand):
+    name = "open-browser"
+
+    def run(self):
+        if not self.docker_object or not isinstance(self.docker_object, DockerContainer):
+            self.ui.notify_message("No docker container specified.", level="error")
+            return
+
+        if not self.docker_object.running:
+            self.ui.notify_message("Container is not running - no ports are available.", level="error")
+            return
+
+        ports = self.docker_object.net.ports.values()
+        logger.info(ports)
+        if not ports or len(ports) < 1:
+            # order of this calls is not logical but looks graphically better and I found out that's asynchronous so it
+            # isn't controllable which would be first
+            self.ui.notify_message("Hint: To find unmapped ports go to the detailed scope by hitting Enter.", level="info")
+            self.ui.notify_message("There are no mapped ports available for '%s" % self.docker_object.short_name, level="error")
+            return
+
+        success = False
+        for value in ports:
+            if value:
+                success = True
+                url = "http://127.0.0.1:" + value
+                logger.info(value)
+                webbrowser.open(url)
+
+        if not success:
+            self.ui.notify_message("Hint: To find unmapped ports go to the detailed scope by hitting Enter.", level="info")
+            self.ui.notify_message("There are no mapped ports available for '%s" % self.docker_object.short_name,
+                                   level="error")
+
+
+

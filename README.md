@@ -172,7 +172,7 @@ s      start container
 r      restart container
 p      pause container
 u      unpause container
-b      open all container's ports in a web-browser
+b      open container's mapped ports in a web-browser
 X      kill container
 !      toggle realtime updates of the interface (this is useful when you are removing multiple
        objects and don't want the listing change during that so you accidentally remove something)
