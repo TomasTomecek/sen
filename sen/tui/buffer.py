@@ -17,12 +17,42 @@ class Buffer:
     """
     base buffer class
     """
+    name = None  # unique identifier
     display_name = None  # display in status bar
     widget = None  # display this in main frame
     tag = None  # single char, for status
 
+    # global keybinds which will be available in every buffer
+    global_keybinds = {  # FIXME: half of these needs to be available on tree buffer
+        # navigation
+        "gg": "navigate-top",
+        "G": "navigate-bottom",
+        "j": "navigate-down",
+        "k": "navigate-up",
+        "ctrl d": "navigate-downwards",
+        "ctrl u": "navigate-upwards",
+
+        # UI
+        ":": "prompt",
+        "/": "prompt initial-text=\"search \"",
+        "n": "search-next",
+        "N": "search-previous",
+        "f4": "prompt initial-text=\"filter \"",
+        "x": "remove-buffer",
+        "q": "kill-buffer",
+        "ctrl i": "select-next-buffer",
+        "ctrl o": "select-previous-buffer",
+        "h": "help",
+        "?": "help",
+        "f5": "layers",
+    }
+
+    # buffer specific keybinds
+    keybinds = {}
+
     def __init__(self):
         logger.debug("creating buffer %r", self)
+        self._keybinds = None  # cache
 
     def __repr__(self):
         return "{}(name={!r}, widget={!r})".format(
@@ -56,13 +86,29 @@ class Buffer:
 
     def filter(self, s):
         logger.debug("filter widget %r with query %r", self.widget, s)
-        widgets = self.widget.filter(s)
-        if widgets is not None:
-            self.widget.set_body(widgets)
+        self.widget.filter(s)
+
+    def get_keybinds(self):
+        if self._keybinds is None:
+            self._keybinds = {}
+            self._keybinds.update(self.global_keybinds)
+            self._keybinds.update(self.keybinds)
+        return self._keybinds
+
+    def refresh(self):
+        refresh_func = getattr(self.widget, "refresh", None)
+        if refresh_func:
+            logger.info("refreshing widget %s", self.widget)
+            refresh_func()
 
 
 class ImageInfoBuffer(Buffer):
     tag = "I"
+    keybinds = {
+        "enter": "display-info",
+        "d": "rm",  # TODO: verify this works on image names
+        "i": "inspect",
+    }
 
     def __init__(self, docker_image, ui):
         """
@@ -78,6 +124,10 @@ class ImageInfoBuffer(Buffer):
 
 class ContainerInfoBuffer(Buffer):
     tag = "I"
+    keybinds = {
+        "enter": "display-info",
+        "i": "inspect",
+    }
 
     def __init__(self, docker_container, ui):
         """
@@ -93,30 +143,46 @@ class TreeBuffer(Buffer):
     display_name = "Tree"
     tag = "T"
 
-    def __init__(self, docker_backend, ui):
+    def __init__(self, ui, docker_backend):
         """
         """
-        self.widget = ImageTree(docker_backend, ui)
+        self.widget = ImageTree(ui, docker_backend)
         super().__init__()
 
 
 class MainListBuffer(Buffer):
     display_name = "Listing"
     tag = "M"
+    keybinds = {
+        "d": "rm",  # TODO: do also rmi
+        "s": "start",
+        "t": "stop",
+        "r": "restart",
+        "X": "kill",
+        "p": "pause",
+        "u": "unpause",
+        "enter": "display-info",
+        "l": "logs",
+        "f": "logs -f",
+        "i": "inspect",
+        "!": "toggle-live-updates",  # TODO: rfe: move to global so this affects every buffer
+        "@": "refresh-current-buffer",  # FIXME: move to global and refactor & rewrite
+    }
 
-    def __init__(self, docker_backend, ui):
+    def __init__(self, ui, docker_backend):
         self.ui = ui
-        self.widget = MainListBox(docker_backend, ui)
+        self.widget = MainListBox(ui, docker_backend)
         super().__init__()
 
     def refresh(self, focus_on_top=False):
+        logger.info("refresh listing buffer")
         self.widget.populate(focus_on_top=focus_on_top)
         self.ui.refresh()
 
 
 class LogsBuffer(Buffer):
 
-    def __init__(self, docker_object, ui, follow=False):
+    def __init__(self, ui, docker_object, follow=False):
         """
 
         :param docker_object: container to display logs
@@ -135,7 +201,7 @@ class LogsBuffer(Buffer):
                     self.widget = AsyncScrollableListBox(operation.response, ui, static_data=static_data)
                 else:
                     operation = docker_object.logs(follow=follow)
-                    self.widget = ScrollableListBox(operation.response)
+                    self.widget = ScrollableListBox(ui, operation.response)
                 ui.remove_notification_message(pre_message)
                 ui.notify_widget(get_operation_notify_widget(operation, display_always=False))
             except Exception as ex:
@@ -150,14 +216,14 @@ class LogsBuffer(Buffer):
 class InspectBuffer(Buffer):
     tag = "I"
 
-    def __init__(self, docker_object):
+    def __init__(self, ui, docker_object):
         """
 
         :param docker_object: object to inspect
         """
         self.display_name = docker_object.short_name
         inspect_data = docker_object.display_inspect()
-        self.widget = ScrollableListBox(inspect_data)
+        self.widget = ScrollableListBox(ui, inspect_data)
         self.display_name = docker_object.short_name
         super().__init__()
 
@@ -166,8 +232,8 @@ class HelpBuffer(Buffer):
     tag = "H"
     display_name = ""
 
-    def __init__(self):
+    def __init__(self, ui):
         """
         """
-        self.widget = ScrollableListBox(HELP_TEXT)
+        self.widget = ScrollableListBox(ui, HELP_TEXT, focus_bottom=False)
         super().__init__()

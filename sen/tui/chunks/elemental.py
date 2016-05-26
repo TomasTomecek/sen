@@ -19,16 +19,6 @@ class LayerWidget(SelectableText):
                 label = [2 * index * " " + separator]
         super().__init__(label + get_basic_image_markup(docker_image))
 
-    def keypress(self, size, key):
-        logger.debug("%s %s %s", self.__class__, key, size)
-        if key == "enter":
-            self.ui.display_info(self.docker_image)
-            return
-        elif key == "i":
-            self.ui.inspect(self.docker_image)  # FIXME: do this async
-            return
-        return key
-
 
 class ContainerStatusWidget(SelectableText):
     def __init__(self, docker_container):
@@ -41,13 +31,3 @@ class ContainerOneLinerWidget(SelectableText):
         self.ui = ui
         self.docker_container = docker_container
         super().__init__(get_basic_container_markup(docker_container))
-
-    def keypress(self, size, key):
-        logger.debug("%s %s %s", self.__class__, key, size)
-        if key == "enter":
-            self.ui.display_info(self.docker_container)
-            return
-        elif key == "i":
-            self.ui.inspect(self.docker_container)  # FIXME: do this async
-            return
-        return key

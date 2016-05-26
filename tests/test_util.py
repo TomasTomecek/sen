@@ -26,7 +26,7 @@ def test_log_traceback(caplog):
     def f():
         raise Exception()
     f()
-    assert caplog.records()[0].message.startswith("starting thread")
+    assert caplog.records()[0].message.endswith(" is about to be started")
     assert caplog.records()[1].message.startswith("Traceback")
     assert caplog.records()[1].message.endswith("Exception\n")
 
@@ -36,8 +36,8 @@ def test_log_traceback_without_tb(caplog):
     def f():
         pass
     f()
-    assert caplog.records()[0].message.startswith("starting thread")
-    assert caplog.records()[1].message.startswith("closing thread")
+    assert caplog.records()[0].message.endswith(" is about to be started")
+    assert caplog.records()[1].message.endswith(" finished")
 
 
 def test_log_traceback_threaded(caplog):
@@ -50,7 +50,7 @@ def test_log_traceback_threaded(caplog):
     while f.running():
         time.sleep(0.1)
 
-    assert caplog.records()[0].message.startswith("starting thread")
+    assert caplog.records()[0].message.endswith(" is about to be started")
     assert caplog.records()[1].message.startswith("Traceback")
     assert caplog.records()[1].message.endswith("Exception\n")
 

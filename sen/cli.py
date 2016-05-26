@@ -23,7 +23,7 @@ import logging
 
 from sen import set_logging
 from sen.exceptions import TerminateApplication
-from sen.tui.init import UI
+from sen.tui.init import Application
 from sen.util import get_log_file_path, log_vars_from_tback, setup_dirs
 
 
@@ -47,7 +47,7 @@ def main():
     logger.info("application started")
 
     try:
-        ui = UI()
+        ui = Application()
     except TerminateApplication as ex:
         print("Error: {0}".format(str(ex)), file=sys.stderr)
         return 1
