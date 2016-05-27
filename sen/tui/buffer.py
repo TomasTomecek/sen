@@ -161,6 +161,7 @@ class MainListBuffer(Buffer):
         "p": "pause",
         "u": "unpause",
         "enter": "display-info",
+        "b": "open-browser",
         "l": "logs",
         "f": "logs -f",
         "i": "inspect",
