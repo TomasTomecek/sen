@@ -114,10 +114,9 @@ class MainLineWidget(ResponsiveRowWidget):
 
 
 class MainListBox(ResponsiveTable):
-    def __init__(self, docker_backend, ui):
+    def __init__(self, ui, docker_backend):
         self.d = docker_backend
-        self.ui = ui
-        super(MainListBox, self).__init__(urwid.SimpleFocusListWalker([]))
+        super(MainListBox, self).__init__(ui, urwid.SimpleFocusListWalker([]))
 
         # urwid is not thread safe
         self.refresh_lock = threading.Lock()
@@ -130,6 +129,7 @@ class MainListBox(ResponsiveTable):
         self.toggle_realtime_events(initial_start=True)
 
     def populate(self, focus_on_top=False):
+        logger.info("populate widget")
         widgets = self._assemble_initial_content()
         with self.refresh_lock:
             self.set_body(widgets)
@@ -147,6 +147,7 @@ class MainListBox(ResponsiveTable):
 
         :return:
         """
+        # TODO: make this available for every buffer
         logger.info("starting receiving events from docker")
         it = self.d.realtime_updates()
         while True:
@@ -159,7 +160,10 @@ class MainListBox(ResponsiveTable):
                 if self.stop_realtime_events.is_set():
                     logger.info("received docker event when this functionality is disabled")
                     return
+
+            content.sort(key=attrgetter("natural_sort_value"), reverse=True)
             widgets = []
+
             for o in content:
                 try:
                     line = MainLineWidget(o)
@@ -191,6 +195,8 @@ class MainListBox(ResponsiveTable):
         self.ui.reload_footer()
 
     def _assemble_initial_content(self):
+        logger.info("get list of objects")
+
         def query_notify(operation):
             w = get_operation_notify_widget(operation, display_always=False)
             if w:
@@ -206,13 +212,6 @@ class MainListBox(ResponsiveTable):
         query_notify(c_op)
 
         return rows
-
-    @property
-    def focused_docker_object(self):
-        try:
-            return self.get_focus()[0].docker_object
-        except AttributeError as ex:
-            raise NotifyError("Can't select focused object")
 
     def filter(self, s, widgets_to_filter=None):
         s = s.strip()
@@ -280,141 +279,12 @@ class MainListBox(ResponsiveTable):
                 new_query = " ".join(unprocessed)
                 logger.debug("doing parent query for unprocessed string: %r", new_query)
                 widgets = super().filter(new_query, widgets_to_filter=widgets)
+            self.set_body(widgets)
         else:
             logger.debug("doing parent query: %r", s)
-            widgets = super().filter(s)
+            super().filter(s)
         self.filter_query = s
-        return widgets
-
-    def keypress(self, size, key):
-        # TODO: log how long it took to run this
-        # FIXME: put this into own file
-        # these functions will be executed in threads
-        # provide arguments, don't access self.<attrib> b/c those will be
-        # evaluated when the code is running, not when calling it
-        @log_traceback
-        def run_and_report_on_fail(fn_name, docker_object, pre_message,
-                                   notif_level="info"):
-            self.ui.notify_message(pre_message)
-            try:
-                operation = getattr(docker_object, fn_name)()
-            except AttributeError:
-                log_txt = "you can't {} {}".format(fn_name, docker_object)
-                logger.error(log_txt)
-                notif_txt = "You can't {} {} {!r}.".format(
-                    fn_name,
-                    docker_object.pretty_object_type.lower(),
-                    docker_object.short_name)
-                self.ui.notify_message(notif_txt, level="error")
-            except Exception as ex:
-                self.ui.notify_message(str(ex), level="error")
-                raise
-            else:
-                self.ui.remove_notification_message(pre_message)
-                self.ui.notify_widget(
-                    get_operation_notify_widget(operation, notif_level=notif_level)
-                )
-                # we don't need to refresh whole buffer here, since we are getting realtime
-                # updates using events call
-                # self.ui.refresh_main_buffer()
-
-        @log_traceback
-        def do_and_report_on_fail(f, docker_object):
-            try:
-                if docker_object:
-                    f(docker_object)
-                else:
-                    f()
-            except NotifyError as ex:
-                self.ui.notify_message(str(ex), level="error")
-                logger.error(repr(ex))
-
-        logger.debug("size %r, key %r", size, key)
-
-        try:
-            if key == "@":
-                # I guess we want refresh to be as quick as possible
-                self.ui.run_quickly_in_bacakground(self.populate, None)
-                return
-            elif key == "!":
-                self.ui.run_quickly_in_bacakground(self.toggle_realtime_events)
-                return
-            elif key == "i":
-                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.inspect, self.focused_docker_object)
-                return
-            elif key == "l":
-                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_logs, self.focused_docker_object)
-                return
-            elif key == "f":
-                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_and_follow_logs, self.focused_docker_object)
-                return
-            elif key == "enter":
-                self.ui.run_quickly_in_bacakground(do_and_report_on_fail, self.ui.display_info, self.focused_docker_object)
-                return
-            elif key == "d":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "remove",
-                    self.focused_docker_object,
-                    "Removing {} {}...".format(self.focused_docker_object.pretty_object_type.lower(),
-                                               self.focused_docker_object.short_name),
-                    notif_level="important"
-                )
-                return
-            elif key == "s":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "start",
-                    self.focused_docker_object,
-                    "Starting container {}...".format(self.focused_docker_object.short_name)
-                )
-                return
-            elif key == "r":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "restart",
-                    self.focused_docker_object,
-                    "Restarting container {}...".format(self.focused_docker_object.short_name)
-                )
-                return
-            elif key == "t":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "stop",
-                    self.focused_docker_object,
-                    "Stopping container {}...".format(self.focused_docker_object.short_name)
-                )
-                return
-            elif key == "p":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "pause",
-                    self.focused_docker_object,
-                    "Pausing container {}...".format(self.focused_docker_object.short_name)
-                )
-                return
-            elif key == "u":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "unpause",
-                    self.focused_docker_object,
-                    "Unpausing container {}...".format(self.focused_docker_object.short_name)
-                )
-                return
-            elif key == "X":
-                self.ui.run_in_background(
-                    run_and_report_on_fail,
-                    "kill",
-                    self.focused_docker_object,
-                    "Killing container {}...".format(self.focused_docker_object.short_name)
-                )
-                return
-        except NotifyError as ex:
-            self.ui.notify_message(str(ex), level="error")
-            logger.error(repr(ex))
-
-        key = super(MainListBox, self).keypress(size, key)
-        return key
+        logger.debug("filter = %s", self.body)
 
     def status_bar(self):
         columns_list = []

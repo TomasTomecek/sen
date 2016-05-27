@@ -6,14 +6,13 @@ import logging
 import pprint
 import threading
 
-import math
 import urwid
 import urwidtrees
+from sen.tui.widgets.list.base import WidgetBase
 from urwid.decoration import BoxAdapter
 
 from sen.tui.chunks.elemental import LayerWidget, ContainerStatusWidget, ContainerOneLinerWidget
 from sen.tui.widgets.graph import ContainerInfoGraph
-from sen.tui.widgets.list.base import VimMovementListBox
 from sen.tui.widgets.list.util import get_map, RowWidget, UnselectableRowWidget
 from sen.tui.widgets.table import assemble_rows
 from sen.tui.widgets.util import SelectableText, ColorText, UnselectableListBox
@@ -32,27 +31,40 @@ class TagWidget(SelectableText):
         super().__init__(str(self.tag))
 
 
-class ImageInfoWidget(VimMovementListBox):
+class ImageInfoWidget(WidgetBase):
     """
     display info about image
     """
     def __init__(self, ui, docker_image):
-        self.ui = ui
-        self.docker_image = docker_image
-
         self.walker = urwid.SimpleFocusListWalker([])
+        super().__init__(ui, self.walker)
+
+        self.docker_image = docker_image
 
         # self.widgets = []
 
+        self.refresh()
+
+        self.set_focus(0)  # or assemble list first and then stuff it into walker
+
+    def refresh(self):
+        # TODO: refresh when something changes
         self._basic_data()
         self._containers()
         self._image_names()
         self._layers()
         self._labels()
 
-        super().__init__(self.walker)
-
-        self.set_focus(0)  # or assemble list first and then stuff it into walker
+    @property
+    def focused_docker_object(self):
+        # TODO: enable removing image names
+        try:
+            return self.focus.columns.widget_list[0].docker_container
+        except AttributeError:
+            try:
+                return self.focus.columns.widget_list[0].docker_image
+            except AttributeError:
+                return None
 
     def _basic_data(self):
         data = [
@@ -109,35 +121,6 @@ class ImageInfoWidget(VimMovementListBox):
         self.walker.append(RowWidget([SelectableText("Containers", maps=get_map("main_list_white"))]))
         for container in self.docker_image.containers():
             self.walker.append(RowWidget([ContainerOneLinerWidget(self.ui, container)]))
-
-    def keypress(self, size, key):
-        logger.debug("%s, %s", key, size)
-
-        def getattr_or_notify(o, attr, message):
-            try:
-                return getattr(o, attr)
-            except AttributeError:
-                self.ui.notify_message(message, level="error")
-
-        if key == "d":
-            img = getattr_or_notify(self.focus.columns.widget_list[0], "docker_image",
-                                    "Focused object isn't a docker image!")
-            if not img:
-                return
-            tag = getattr_or_notify(self.focus.columns.widget_list[0], "tag",
-                                    "Focused object doesn't have a tag!")
-            if not tag:
-                return
-            try:
-                img.remove_tag(tag)  # FIXME: do this async
-            except Exception as ex:
-                self.ui.notify_message("Can't remove tag '%s': %s" % (tag, ex), level="error")
-                return
-            self.walker.remove(self.focus)
-            return
-
-        key = super().keypress(size, key)
-        return key
 
 
 class Process:
@@ -287,18 +270,23 @@ class ProcessTree(urwidtrees.TreeBox):
         super().__init__(t)
 
 
-class ContainerInfoWidget(VimMovementListBox):
+class ContainerInfoWidget(WidgetBase):
     """
     display info about container
     """
     def __init__(self, ui, docker_container):
-        self.ui = ui
-        self.docker_container = docker_container
-
         self.walker = urwid.SimpleFocusListWalker([])
+        super().__init__(ui, self.walker)
+
+        self.docker_container = docker_container
 
         self.stop = threading.Event()
 
+        self.refresh()
+
+        self.set_focus(0)  # or assemble list first and then stuff it into walker
+
+    def refresh(self):
         self._basic_data()
         self._net()
         self._image()
@@ -307,9 +295,12 @@ class ContainerInfoWidget(VimMovementListBox):
         self._labels()
         self._logs()
 
-        super().__init__(self.walker)
-
-        self.set_focus(0)  # or assemble list first and then stuff it into walker
+    @property
+    def focused_docker_object(self):
+        try:
+            return self.focus.columns.widget_list[0].docker_image
+        except AttributeError:
+            return None
 
     def _basic_data(self):
         data = [
@@ -472,35 +463,6 @@ class ContainerInfoWidget(VimMovementListBox):
                                                          maps=get_map("main_list_white"))]))
             for x in operation.response.splitlines():
                 self.walker.append(RowWidget([SelectableText(x)]))
-
-    def keypress(self, size, key):
-        logger.debug("%s, %s", key, size)
-
-        def getattr_or_notify(o, attr, message):
-            try:
-                return getattr(o, attr)
-            except AttributeError:
-                self.ui.notify_message(message, level="error")
-
-        if key == "d":
-            img = getattr_or_notify(self.focus.columns.widget_list[0], "docker_image",
-                                    "Focused object isn't a docker image!")
-            if not img:
-                return
-            tag = getattr_or_notify(self.focus.columns.widget_list[0], "tag",
-                                    "Focused object doesn't have a tag!")
-            if not tag:
-                return
-            try:
-                img.remove_tag(tag)  # FIXME: do this async
-            except Exception as ex:
-                self.ui.notify_message("Can't remove tag '%s': %s" % (tag, ex), level="error")
-                return
-            self.walker.remove(self.focus)
-            return
-
-        key = super().keypress(size, key)
-        return key
 
     def destroy(self):
         self.stop.set()

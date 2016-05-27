@@ -6,12 +6,22 @@ import pytest
 from flexmock import flexmock
 from urwid.listbox import SimpleListWalker
 
-from sen.tui.widgets.list.base import VimMovementListBox
+from sen.tui.widgets.list.base import WidgetBase
 from sen.tui.widgets.list.common import ScrollableListBox, AsyncScrollableListBox
 from sen.tui.widgets.list.util import ResponsiveRowWidget
 from sen.tui.widgets.table import ResponsiveTable, assemble_rows
 from .utils import get_random_text_widget
 from .constants import SCREEN_WIDTH, SCREEN_HEIGHT
+
+
+class MockUI:
+    buffers = []
+
+    def refresh(self):
+        pass
+
+    def set_alarm_in(self, *args, **kwargs):
+        pass
 
 
 class DataGenerator:
@@ -56,7 +66,7 @@ class DataGenerator:
     (DataGenerator.text(prefix="liné", return_bytes=True), DataGenerator.render(prefix="liné")),
 ])
 def test_scrollable_listbox(inp, expected):
-    lb = ScrollableListBox(inp)
+    lb = ScrollableListBox(MockUI(), inp)
     canvas = lb.render((SCREEN_WIDTH, SCREEN_HEIGHT))
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
     assert text == expected
@@ -83,7 +93,7 @@ def test_async_scrollable_listbox(inp, expected):
 def test_table_random_data():
     rows = [ResponsiveRowWidget([get_random_text_widget(random.randint(2, 9)) for _ in range(5)])
             for _ in range(5)]
-    table = ResponsiveTable(SimpleListWalker(rows))
+    table = ResponsiveTable(MockUI(), SimpleListWalker(rows))
     canvas = table.render((80, 20), focus=False)
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
     logging.info("%r", text)
@@ -93,7 +103,7 @@ def test_table_random_data():
 
 def test_table_empty():
     rows = []
-    table = ResponsiveTable(SimpleListWalker(rows))
+    table = ResponsiveTable(MockUI(), SimpleListWalker(rows))
     canvas = table.render((80, 20), focus=False)
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
     assert len(text) == 20
@@ -104,7 +114,7 @@ def test_assemble_rows_long_text():
     rows = [[get_random_text_widget(10),
              get_random_text_widget(300)] for _ in range(5)]
     assembled_rows = assemble_rows(rows, ignore_columns=[1])
-    lb = VimMovementListBox(SimpleListWalker(assembled_rows))
+    lb = WidgetBase(MockUI(), SimpleListWalker(assembled_rows))
     canvas = lb.render((80, 20), focus=False)
     text = [bytes().join([t for at, cs, t in ln]) for ln in canvas.content()]
     logging.info("%r", text)

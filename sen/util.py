@@ -22,16 +22,21 @@ def _ensure_unicode(s):
         return s
 
 
+def log_last_traceback():
+    logger.error(traceback.format_exc())
+
+
 def log_traceback(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        logger.info("starting thread for function %s", func)
+        logger.info("function %s is about to be started", func)
         try:
             response = func(*args, **kwargs)
         except Exception:
-            logger.error(traceback.format_exc())
+            log_last_traceback()
         else:
-            logger.info("closing thread for function %s", func)
+            logger.info("function %s finished", func)
+            # TODO: how long it took?
             return response
     return wrapper
 
@@ -135,17 +140,17 @@ def log_vars_from_tback(process_frames=5):
             except Exception:
                 logger.debug("%20s = CANNOT PRINT VALUE", key)
 
-            self_instance = frame.f_locals.get("self", None)
-            if not self_instance:
-                continue
-            for key in dir(self_instance):
-                if key.startswith("__"):
-                    continue
-                try:
-                    value = getattr(self_instance, key, None)
-                    logger.debug("%20s = %s", "self." + key, value)
-                except Exception:
-                    logger.debug("%20s = CANNOT PRINT VALUE", "self." + key)
+            # self_instance = frame.f_locals.get("self", None)
+            # if not self_instance:
+            #     continue
+            # for key in dir(self_instance):
+            #     if key.startswith("__"):
+            #         continue
+            #     try:
+            #         value = getattr(self_instance, key, None)
+            #         logger.debug("%20s = %s", "self." + key, value)
+            #     except Exception:
+            #         logger.debug("%20s = CANNOT PRINT VALUE", "self." + key)
 
 
 # this is taken directly from docker client:

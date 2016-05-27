@@ -1,9 +1,11 @@
 import logging
 
 import urwidtrees
+from sen.tui.widgets.list.base import WidgetBase
 
 from sen.tui.widgets.list.util import RowWidget
 from sen.tui.widgets.util import get_basic_image_markup, SelectableText
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,8 @@ class TreeBackend(urwidtrees.Tree):
 
 
 class ImageTree(urwidtrees.TreeBox):
-    def __init__(self, docker_backend, ui):
+    def __init__(self, ui, docker_backend):
+        self.ui = ui
         tree = TreeBackend(docker_backend, ui)
 
         # We hide the usual arrow tip and use a customized collapse-icon.
@@ -70,3 +73,11 @@ class ImageTree(urwidtrees.TreeBox):
             indent=2,
         )
         super().__init__(t)
+
+    def focus_first(self):
+        self.set_focus(self._tree.root)
+
+    def focus_last(self):
+        # taken from alot, thanks pazz!
+        logger.debug(next(self._tree.positions()))
+        self.set_focus(next(self._tree.positions(reverse=True)))
