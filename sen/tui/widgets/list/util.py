@@ -7,6 +7,7 @@ from sen.tui.constants import MAIN_LIST_FOCUS
 from sen.tui.widgets.responsive_column import ResponsiveColumns
 from sen.tui.widgets.util import SelectableText, get_map
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,6 +17,8 @@ def get_color_text(markup, color_attr="status_text"):
 
 
 def get_operation_notify_widget(operation, notif_level="info", display_always=True):
+    if not operation:
+        return
     attr = "notif_{}".format(notif_level)
     took = operation.took
     text_list = []

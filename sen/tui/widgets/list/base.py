@@ -16,7 +16,7 @@ class WidgetBase(urwid.ListBox):
     def __init__(self, ui, *args, **kwargs):
         self.ui = ui
         self.search_string = None
-        self.filter_query = None
+        self.filter_query = ""
         super().__init__(*args, **kwargs)
         self.ro_content = self.body[:]  # unfiltered content of a widget
         self.body_change_lock = threading.Lock()

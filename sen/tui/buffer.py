@@ -3,10 +3,10 @@ import logging
 from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
 from sen.tui.views.help import HelpView
+from sen.tui.views.main import MainListBox
 from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget
-from sen.tui.widgets.list.main import MainListBox
-from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
+from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.tree import ImageTree
 
 
@@ -172,11 +172,6 @@ class MainListBuffer(Buffer):
         self.ui = ui
         self.widget = MainListBox(ui, docker_backend)
         super().__init__()
-
-    def refresh(self, focus_on_top=False):
-        logger.info("refresh listing buffer")
-        self.widget.populate(focus_on_top=focus_on_top)
-        self.ui.refresh()
 
 
 class LogsBuffer(Buffer):

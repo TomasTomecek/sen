@@ -4,6 +4,7 @@ import json
 import logging
 import datetime
 import traceback
+from operator import attrgetter
 
 from sen.exceptions import TerminateApplication, NotifyError
 
@@ -105,20 +106,17 @@ def operation(fmt_str):
     def wrap(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            command_took = None
             pretty_message = ""
-            # cached queries do not access backend -- we don't care about that
-            if kwargs.get("cached", False) is True:
-                response = func(self, *args, **kwargs)
-            else:
-                before = datetime.datetime.now()
-                response = func(self, *args, **kwargs)
-                after = datetime.datetime.now()
 
-                # we want milliseconds, not seconds
-                command_took = (after - before).total_seconds() * 1000
-                logger.debug("%s(%s, %s) %s -> [%f ms]", func.__name__, args, kwargs, self,
-                             command_took)
+            before = datetime.datetime.now()
+            response = func(self, *args, **kwargs)
+            after = datetime.datetime.now()
+
+            # we want milliseconds, not seconds
+            command_took = (after - before).total_seconds() * 1000
+            # # this line literally break zsh; wat?
+            # logger.debug("%s(%s, %s) %s -> [%f ms]", func.__name__, args, kwargs, self,
+            #              command_took)
             if fmt_str:
                 pretty_message = fmt_str.format(object_type=getattr(self, "pretty_object_type", ""),
                                                 object_short_name=getattr(self, "short_name", ""))
@@ -209,6 +207,7 @@ class DockerObject:
         if isinstance(self, DockerContainer):
             try:
                 response = self.inspect().response
+                # FIXME: make these attributes
                 started = datetime.datetime.strptime(
                     response["State"]["StartedAt"][:-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
                 finished = datetime.datetime.strptime(
@@ -222,7 +221,7 @@ class DockerObject:
                 # container might not be started yet so values are missing
                 pass
 
-        return datetime.datetime.fromtimestamp(0)
+        return self.created
 
     def __eq__(self, other):
         return type(self) == type(other) and self._id == other._id
@@ -671,6 +670,9 @@ class DockerBackend:
                     raise NotifyError("Unable to fetch realtime updates from docker engine.")
                 continue
             logger.debug("RT event: %s", event)
+            yield event
+            continue
+            # FIXME: this needs rewrite
 
             try:
                 # 1.10+
@@ -726,5 +728,5 @@ class DockerBackend:
             images_o = self.get_images(cached=cached)
             content += images_o.response
         if sort_by_created:
-            content.sort(key=lambda x: x.created, reverse=True)
+            content.sort(key=attrgetter("natural_sort_value"), reverse=True)
         return content, containers_o, images_o

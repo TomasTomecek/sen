@@ -214,7 +214,7 @@ class SearchCommand(SameThreadCommand, LogTracebackMixin):
 
 
 @register_command
-class SearchPreviousCommand(SameThreadCommand):
+class RefreshCurrentBufferCommand(SameThreadCommand):
     name = "refresh-current-buffer"
 
     def run(self):
