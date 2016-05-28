@@ -5,6 +5,7 @@ import urwid
 
 from sen.tui.constants import MAIN_LIST_FOCUS
 from sen.tui.widgets.responsive_column import ResponsiveColumns
+from sen.tui.widgets.util import SelectableText, get_map
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +38,6 @@ def get_operation_notify_widget(operation, notif_level="info", display_always=Tr
     else:
         return
     return urwid.AttrMap(urwid.Text(text_list), attr)
-
-
-def get_map(defult="main_list_dg"):
-    return {"normal": defult, "focus": MAIN_LIST_FOCUS}
 
 
 def get_time_attr_map(t):
@@ -79,6 +76,11 @@ class UnselectableRowWidget(urwid.AttrMap):
 class RowWidget(UnselectableRowWidget):
     def selectable(self):
         return True
+
+
+class SingleTextRow(RowWidget):
+    def __init__(self, text_markup, maps=None):
+        super().__init__([SelectableText(text_markup, maps=maps)])
 
 
 class ResponsiveRowWidget(RowWidget):
