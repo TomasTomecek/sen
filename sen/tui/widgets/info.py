@@ -8,6 +8,7 @@ import threading
 
 import urwid
 import urwidtrees
+
 from sen.tui.widgets.list.base import WidgetBase
 from urwid.decoration import BoxAdapter
 
@@ -395,7 +396,15 @@ class ContainerInfoWidget(WidgetBase):
 
         @log_traceback
         def realtime_updates():
-            for update in self.docker_container.stats().response:
+            g = self.docker_container.stats().response
+            while True:
+                try:
+                    update = next(g)
+                except Exception as ex:
+                    logger.warning("exception when reading stats: %r", ex)
+                    g = self.docker_container.stats().response
+                    continue
+
                 if self.stop.is_set():
                     break
                 logger.debug(update)
