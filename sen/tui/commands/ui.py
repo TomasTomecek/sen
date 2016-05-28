@@ -107,7 +107,7 @@ class DisplayHelpCommand(DisplayBufferCommand):
     name = "help"
 
     def run(self):
-        self.arguments.set_argument("buffer", HelpBuffer(self.ui))
+        self.arguments.set_argument("buffer", HelpBuffer(self.ui, self.buffer))
         super().run()
 
 

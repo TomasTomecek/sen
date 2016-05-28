@@ -4,10 +4,14 @@ import threading
 import urwid
 
 from sen.docker_backend import RootImage
-from sen.tui.widgets.list.util import get_map
+from sen.tui.constants import MAIN_LIST_FOCUS
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_map(defult="main_list_dg"):
+    return {"normal": defult, "focus": MAIN_LIST_FOCUS}
 
 
 class AdHocAttrMap(urwid.AttrMap):

@@ -1,5 +1,7 @@
 """
 commands related to displaying stuff
+
+FIXME: some of these commands duplicate stuff in ui
 """
 
 import logging
@@ -27,7 +29,7 @@ class DisplayHelpCommand(FrontendCommand):
     name = "display-help"
 
     def run(self):
-        self.ui.add_and_display_buffer(HelpBuffer(self.ui))
+        self.ui.add_and_display_buffer(HelpBuffer(self.ui, self.buffer))
 
 
 @register_command

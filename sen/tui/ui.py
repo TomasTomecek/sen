@@ -173,8 +173,8 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         # TODO: display current active worker threads
         for idx, buffer in enumerate(self.buffers):
             #  #1 [I] fedora #2 [L]
-            fmt = "#{idx} [{tag}] {name}"
-            markup = fmt.format(idx=idx, tag=buffer.tag, name=buffer.display_name)
+            fmt = "#{idx} [{name}]"
+            markup = fmt.format(idx=idx, name=buffer.display_name)
             text_list.append((
                 "status_box_focus" if buffer == self.current_buffer else "status_box",
                 markup,

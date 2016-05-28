@@ -2,8 +2,8 @@ import logging
 
 from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
-from sen.tui.constants import HELP_TEXT
-from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget, ProcessTree
+from sen.tui.views.help import HelpView
+from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget
 from sen.tui.widgets.list.main import MainListBox
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
@@ -18,12 +18,12 @@ class Buffer:
     base buffer class
     """
     name = None  # unique identifier
+    description = None  # for help
     display_name = None  # display in status bar
     widget = None  # display this in main frame
-    tag = None  # single char, for status
 
     # global keybinds which will be available in every buffer
-    global_keybinds = {  # FIXME: half of these needs to be available on tree buffer
+    global_keybinds = {
         # navigation
         "gg": "navigate-top",
         "G": "navigate-bottom",
@@ -53,6 +53,7 @@ class Buffer:
     def __init__(self):
         logger.debug("creating buffer %r", self)
         self._keybinds = None  # cache
+        self.refresh()
 
     def __repr__(self):
         return "{}(name={!r}, widget={!r})".format(
@@ -103,10 +104,10 @@ class Buffer:
 
 
 class ImageInfoBuffer(Buffer):
-    tag = "I"
+    description = "Dashboard for information about selected image."
     keybinds = {
         "enter": "display-info",
-        "d": "rm",  # TODO: verify this works on image names
+        "d": "rm",
         "i": "inspect",
     }
 
@@ -123,7 +124,7 @@ class ImageInfoBuffer(Buffer):
 
 
 class ContainerInfoBuffer(Buffer):
-    tag = "I"
+    description = "Detailed info about selected container presented in a slick dashboard."
     keybinds = {
         "enter": "display-info",
         "i": "inspect",
@@ -140,19 +141,17 @@ class ContainerInfoBuffer(Buffer):
 
 
 class TreeBuffer(Buffer):
-    display_name = "Tree"
-    tag = "T"
+    display_name = "Layers"
+    description = "Tree view of all layers available on your docker engine."
 
     def __init__(self, ui, docker_backend):
-        """
-        """
         self.widget = ImageTree(ui, docker_backend)
         super().__init__()
 
 
 class MainListBuffer(Buffer):
     display_name = "Listing"
-    tag = "M"
+    description = "List of all known docker images and containers display in a single list"
     keybinds = {
         "d": "rm",  # TODO: do also rmi
         "s": "start",
@@ -181,15 +180,16 @@ class MainListBuffer(Buffer):
 
 
 class LogsBuffer(Buffer):
+    description = "Display logs of selected container."
+    display_name = "Logs "
 
     def __init__(self, ui, docker_object, follow=False):
         """
 
         :param docker_object: container to display logs
-        :param ui: ui object so we refresh
+        :param ui: ui object so we can refresh
         """
-        self.tag = "F" if follow else "L"
-        self.display_name = docker_object.short_name
+        self.display_name += "({})".format(docker_object.short_name)
         if isinstance(docker_object, DockerContainer):
             try:
                 pre_message = "Getting logs for container {}...".format(docker_object.short_name)
@@ -214,26 +214,30 @@ class LogsBuffer(Buffer):
 
 
 class InspectBuffer(Buffer):
-    tag = "I"
+    display_name = "Inspect "
+    description = "Display all the information docker knows about selected object: " + \
+                  "same output as `docker inspect`."
 
     def __init__(self, ui, docker_object):
         """
 
         :param docker_object: object to inspect
         """
-        self.display_name = docker_object.short_name
         inspect_data = docker_object.display_inspect()
         self.widget = ScrollableListBox(ui, inspect_data)
-        self.display_name = docker_object.short_name
+        self.display_name += docker_object.short_name
         super().__init__()
 
 
 class HelpBuffer(Buffer):
-    tag = "H"
-    display_name = ""
+    # TODO: apply this interface to other buffers: create views
+    description = "Show information about currently displayed buffer and " + \
+                  "what keybindings are available there"
+    display_name = "Help"
 
-    def __init__(self, ui):
-        """
-        """
-        self.widget = ScrollableListBox(ui, HELP_TEXT, focus_bottom=False)
+    def __init__(self, ui, buffer):
+        self.ui = ui
+        self.display_name += "({})".format(buffer.display_name)
+        self.widget = HelpView(ui, buffer, self.global_keybinds)
+
         super().__init__()

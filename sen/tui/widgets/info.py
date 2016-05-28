@@ -41,12 +41,6 @@ class ImageInfoWidget(WidgetBase):
 
         self.docker_image = docker_image
 
-        # self.widgets = []
-
-        self.refresh()
-
-        self.set_focus(0)  # or assemble list first and then stuff it into walker
-
     def refresh(self):
         # TODO: refresh when something changes
         self._basic_data()
@@ -54,6 +48,7 @@ class ImageInfoWidget(WidgetBase):
         self._image_names()
         self._layers()
         self._labels()
+        self.set_focus(0)
 
     @property
     def focused_docker_object(self):
@@ -282,10 +277,6 @@ class ContainerInfoWidget(WidgetBase):
 
         self.stop = threading.Event()
 
-        self.refresh()
-
-        self.set_focus(0)  # or assemble list first and then stuff it into walker
-
     def refresh(self):
         self._basic_data()
         self._net()
@@ -294,6 +285,7 @@ class ContainerInfoWidget(WidgetBase):
         self._resources()
         self._labels()
         self._logs()
+        self.set_focus(0)
 
     @property
     def focused_docker_object(self):
