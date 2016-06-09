@@ -288,6 +288,7 @@ class Commander:
                 return
             else:
                 logger.info("no such keybind: %r", inp)
+                self.modifier_keys_pressed.clear()
                 raise KeyNotMapped("No such keybind: %r." % inp)
         else:
             self.modifier_keys_pressed.clear()

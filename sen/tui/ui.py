@@ -323,11 +323,13 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
                 docker_object=focused_docker_object,
                 size=size
             )
-        except KeyNotMapped:
+        except KeyNotMapped as ex:
             super_class = ThreadSafeFrame
             logger.debug("calling: %s.keypress(%s, %s)", super_class, size, key)
             # TODO: up/down doesn't do anything if len(lines) < screen height - confusing
             key = super_class.keypress(self, size, key)
+            if key:
+                self.notify_message(str(ex), level="error")
             logger.debug("was key handled? %s", "yes" if key is None else "no")
             return key
         return
