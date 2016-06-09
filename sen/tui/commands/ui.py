@@ -33,16 +33,17 @@ class LogTracebackMixin:
 @register_command
 class QuitCommand(SameThreadCommand):
     name = "quit"
+    # TODO: make this configurable by asking whether to quit or not
+    description = "Quit sen. No questions asked."
 
     def run(self):
-        self.ui.worker.shutdown(wait=False)
-        self.ui.ui_worker.shutdown(wait=False)
-        raise urwid.ExitMainLoop()
+        self.ui.quit()
 
 
 @register_command
 class KillBufferCommand(SameThreadCommand):
-    name = "kill-buffer"  # this could be named better
+    name = "kill-buffer"  # TODO: merge with rm-buffer
+    description = "Remove currently displayed buffer."
 
     def __init__(self, close_if_no_buffer=True, **kwargs):
         super().__init__(**kwargs)
@@ -59,6 +60,7 @@ class KillBufferCommand(SameThreadCommand):
 @register_command
 class RemoveBufferCommand(KillBufferCommand):
     name = "remove-buffer"
+    description = "Remove currently displayed buffer."
 
     def __init__(self, **kwargs):
         super().__init__(close_if_no_buffer=False, **kwargs)
@@ -67,6 +69,7 @@ class RemoveBufferCommand(KillBufferCommand):
 @register_command
 class SelectBufferCommand(SameThreadCommand):
     name = "select-buffer"
+    description = "Display buffer with selected index."
     option_definitions = [
         Option("index", "Index of buffer to display", default=1, action=int)
     ]
@@ -78,6 +81,7 @@ class SelectBufferCommand(SameThreadCommand):
 @register_command
 class SelectNextBufferCommand(SelectBufferCommand):
     name = "select-next-buffer"
+    description = "Display next buffer."
 
     def run(self):
         self.arguments.set_argument("index", self.ui.current_buffer_index + 1)
@@ -87,6 +91,7 @@ class SelectNextBufferCommand(SelectBufferCommand):
 @register_command
 class SelectPreviousBufferCommand(SelectBufferCommand):
     name = "select-previous-buffer"
+    description = "Display previous buffer."
 
     def run(self):
         self.arguments.set_argument("index", self.ui.current_buffer_index - 1)
@@ -95,25 +100,41 @@ class SelectPreviousBufferCommand(SelectBufferCommand):
 
 @register_command
 class DisplayBufferCommand(SameThreadCommand):
-    name = "display-buffer"
-    option_definitions = [Option("buffer", "Name of buffer to show")]
+    name = "display-buffer"  # TODO: make this a universal display function
+
+    option_definitions = [Option("buffer", "Buffer instance to show.")]
+    description = "This is an internal command and doesn't work from command line."
 
     def run(self):
+        # TODO: doesn't work!, the method expects buffer class, not string
         self.ui.add_and_display_buffer(self.arguments.buffer)
 
 
 @register_command
-class DisplayHelpCommand(DisplayBufferCommand):
+class DisplayHelpCommand(SameThreadCommand):
     name = "help"
+    description = "Display help about buffer or command. When 'query' is not specified " + \
+        "help for current buffer is being displayed."
+    option_definitions = [Option("query", "input string: command, buffer name")]
 
     def run(self):
-        self.arguments.set_argument("buffer", HelpBuffer(self.ui, self.buffer))
-        super().run()
+        if self.arguments.query is None:
+            self.ui.add_and_display_buffer(HelpBuffer(self.ui, self.buffer))
+            return
+        try:
+            command = self.ui.commander.get_command(self.arguments.query)
+        except NoSuchCommand:
+            self.ui.notify_message("There is no such command: %r" % self.arguments.query)
+        else:
+            self.ui.add_and_display_buffer(HelpBuffer(self.ui, command))
+            return
+        # TODO: help view for commands could be displayed in footer
 
 
 @register_command
 class DisplayLayersCommand(DisplayBufferCommand):
     name = "layers"
+    description = "open a tree view of all image layers (`docker images --tree` equivalent)"
 
     def run(self):
         self.arguments.set_argument("buffer", TreeBuffer(self.ui, self.docker_backend))
@@ -123,8 +144,12 @@ class DisplayLayersCommand(DisplayBufferCommand):
 @log_traceback
 def run_command_callback(ui, edit_widget, text_input):
     logger.debug("%r %r", edit_widget, text_input)
-    if text_input.endswith("\n"):
+    if "\n" in text_input:
         inp = text_input.strip()
+        inp = inp.replace("\n", "")
+        # first restore statusbar and then run the command
+        ui.prompt_bar = None
+        ui.set_focus("body")
         try:
             ui.run_command(inp)
         except NoSuchCommand as ex:
@@ -136,14 +161,13 @@ def run_command_callback(ui, edit_widget, text_input):
                 inp, ex
             ), level="error")
             log_last_traceback()
-        ui.prompt_bar = None
-        ui.set_focus("body")
         ui.reload_footer()
 
 
 @register_command
 class PromptCommand(SameThreadCommand):
     name = "prompt"
+    description = "Customize and pre-populate prompt with initial data."
     argument_definitions = [
         Argument("prompt-text", "Text forming the actual prompt", default=":"),
         Argument("initial-text", "Prepopulated text", default="")
@@ -172,7 +196,8 @@ class PromptCommand(SameThreadCommand):
 
 @register_command
 class SearchCommand(SameThreadCommand, LogTracebackMixin):
-    name = "search"
+    name = "search"  # TODO alias '/' would be awesome
+    description = "search and highlight (provide empty string to disable searching)"
     option_definitions = [
         Option("query", "Input string to search for")
     ]
@@ -188,6 +213,7 @@ class SearchCommand(SameThreadCommand, LogTracebackMixin):
 @register_command
 class SearchNextCommand(SameThreadCommand, LogTracebackMixin):
     name = "search-next"
+    description = "next search occurrence"
 
     def run(self):
         self.do(self.ui.current_buffer.find_next)
@@ -196,6 +222,7 @@ class SearchNextCommand(SameThreadCommand, LogTracebackMixin):
 @register_command
 class SearchPreviousCommand(SameThreadCommand, LogTracebackMixin):
     name = "search-previous"
+    description = "previous search occurrence"
 
     def run(self):
         self.do(self.ui.current_buffer.find_previous)
@@ -204,8 +231,21 @@ class SearchPreviousCommand(SameThreadCommand, LogTracebackMixin):
 @register_command
 class SearchCommand(SameThreadCommand, LogTracebackMixin):
     name = "filter"
+    description = """\
+Display only lines matching provided query (provide empty query to clear filtering)
+
+In main listing, you may specify more precise query with these space-separated filters:
+* t[ype]=c[ontainer[s]]
+* t[ype]=i[mage[s]]
+* s[tate]=r[unning])
+
+Examples
+* "type=container" - show only containers (short equivalent is "t=c")
+* "type=image fedora" - show images with string "fedora" in name (equivalent "t=i fedora")\
+"""
+
     option_definitions = [
-        Option("query", "Filter objects which container provided input string", default="")
+        Option("query", "Input query string", default="")
     ]
 
     def run(self):
@@ -216,6 +256,7 @@ class SearchCommand(SameThreadCommand, LogTracebackMixin):
 @register_command
 class RefreshCurrentBufferCommand(SameThreadCommand):
     name = "refresh-current-buffer"
+    description = "Refresh current buffer."
 
     def run(self):
         self.ui.current_buffer.refresh()
@@ -224,7 +265,19 @@ class RefreshCurrentBufferCommand(SameThreadCommand):
 @register_command
 class SearchPreviousCommand(SameThreadCommand):
     name = "toggle-live-updates"
+    description = "Toggle realtime updates of the interface (this is useful when you are " + \
+                  "removing multiple objects and don't want the listing change during " + \
+                  "the process so you accidentally remove something)."
 
     def run(self):
         self.ui.current_buffer.widget.toggle_realtime_events()
 
+
+@register_command
+class RedrawUI(SameThreadCommand):
+    name = "redraw"
+    description = "Redraw user interface."
+
+    def run(self):
+        self.ui.loop.screen.clear()
+        self.ui.refresh()

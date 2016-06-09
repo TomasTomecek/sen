@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 @register_command
 class NavigateTopCommand(SameThreadCommand):
     name = "navigate-top"
+    description = "go to first line"
 
     def run(self):
         # FIXME: refactor
@@ -25,6 +26,7 @@ class NavigateTopCommand(SameThreadCommand):
 @register_command
 class NavigateBottomCommand(SameThreadCommand):
     name = "navigate-bottom"
+    description = "go to last line"
 
     def run(self):
         # FIXME: refactor
@@ -38,6 +40,7 @@ class NavigateBottomCommand(SameThreadCommand):
 @register_command
 class NavigateUpCommand(SameThreadCommand):
     name = "navigate-up"
+    description = "go one line up"
 
     def run(self):
         return super(self.buffer.widget.__class__, self.buffer.widget).keypress(self.size, "up")
@@ -46,6 +49,7 @@ class NavigateUpCommand(SameThreadCommand):
 @register_command
 class NavigateDownCommand(SameThreadCommand):
     name = "navigate-down"
+    description = "go one line down"
 
     def run(self):
         return super(self.buffer.widget.__class__, self.buffer.widget).keypress(self.size, "down")
@@ -54,6 +58,7 @@ class NavigateDownCommand(SameThreadCommand):
 @register_command
 class NavigateUpwardsCommand(SameThreadCommand):
     name = "navigate-upwards"
+    description = "go 10 lines up"
 
     def run(self):
         if isinstance(self.buffer.widget, urwidtrees.TreeBox):
@@ -70,6 +75,7 @@ class NavigateUpwardsCommand(SameThreadCommand):
 @register_command
 class NavigateDownwardsCommand(SameThreadCommand):
     name = "navigate-downwards"
+    description = "go 10 lines down"
 
     def run(self):
         if isinstance(self.buffer.widget, urwidtrees.TreeBox):

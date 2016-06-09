@@ -77,6 +77,16 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
     def refresh(self):
         self.loop.refresh()
 
+    def quit(self):
+        """
+        This could be called from another thread, so let's do this via alarm
+        """
+        def q(*args):
+            raise urwid.ExitMainLoop()
+        self.worker.shutdown(wait=False)
+        self.ui_worker.shutdown(wait=False)
+        self.loop.set_alarm_in(0, q)
+
     # FIXME: move these to separate mixin
     def _set_main_widget(self, widget, redraw):
         """
@@ -164,6 +174,9 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
 
     def build_statusbar(self):
         """construct and return statusbar widget"""
+        if self.prompt_bar:
+            logger.info("prompt is active, won't build status bar")
+            return
         try:
             left_widgets = self.current_buffer.build_status_bar() or []
         except AttributeError:
@@ -273,6 +286,7 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         elif isinstance(command.priority, BackendPriority):
             self.run_in_background(command.run)
         elif isinstance(command.priority, SameThreadPriority):
+            logger.info("running command %s", command)
             try:
                 command.run()
             except NotifyError as ex:
@@ -294,6 +308,8 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         if key is None:
             logger.info("key was consumed by frame components")
             return
+
+        logger.info("key was not consumed by frame components")
 
         # FIXME: sen tracebacks when current buffer is not initialized and you try to run commmands
         #   repro: run sen and hit "?" asap

@@ -2,7 +2,8 @@ import logging
 
 from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
-from sen.tui.views.help import HelpView
+from sen.tui.commands.base import Command
+from sen.tui.views.help import HelpBufferView, HelpCommandView
 from sen.tui.views.main import MainListBox
 from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
@@ -231,9 +232,19 @@ class HelpBuffer(Buffer):
                   "what keybindings are available there"
     display_name = "Help"
 
-    def __init__(self, ui, buffer):
+    def __init__(self, ui, inp):
+        """
+        display buffer with more info about object 'inp'
+
+        :param ui: UI instance
+        :param inp: Buffer, Command instance
+        """
         self.ui = ui
-        self.display_name += "({})".format(buffer.display_name)
-        self.widget = HelpView(ui, buffer, self.global_keybinds)
+        if isinstance(inp, Buffer):
+            self.display_name += "({})".format(inp.display_name)
+            self.widget = HelpBufferView(ui, inp, self.global_keybinds)
+        elif isinstance(inp, Command):
+            self.display_name += "({})".format(inp.name)
+            self.widget = HelpCommandView(ui, inp)
 
         super().__init__()

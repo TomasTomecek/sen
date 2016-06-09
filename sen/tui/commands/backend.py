@@ -48,7 +48,9 @@ class MatchingOperationCommand(OperationCommand):
 @register_command
 class RemoveCommand(OperationCommand):
     name = "rm"
+    description = "remove provided object, image or container"
 
+    # FIXME: split this into rm and rmi
     def run(self):
         self.do("remove",
                 pre_message="Removing {} {}...".format(
@@ -60,42 +62,49 @@ class RemoveCommand(OperationCommand):
 @register_command
 class StartContainerCommand(MatchingOperationCommand):
     name = "start"
+    description = "start a container"
     pre_info_message = "Starting container {container_name}..."
 
 
 @register_command
 class StopContainerCommand(MatchingOperationCommand):
     name = "stop"
+    description = "stop a container"
     pre_info_message = "Stopping container {container_name}..."
 
 
 @register_command
 class RestartContainerCommand(MatchingOperationCommand):
     name = "restart"
+    description = "restart a container"
     pre_info_message = "Restarting container {container_name}..."
 
 
 @register_command
 class KillContainerCommand(MatchingOperationCommand):
     name = "kill"
+    description = "kill a container"
     pre_info_message = "Killing container {container_name}..."
 
 
 @register_command
 class PauseContainerCommand(MatchingOperationCommand):
     name = "pause"
+    description = "pause a container"
     pre_info_message = "Pausing container {container_name}..."
 
 
 @register_command
 class UnpauseContainerCommand(MatchingOperationCommand):
     name = "unpause"
+    description = "unpause a container"
     pre_info_message = "Unpausing container {container_name}..."
 
 
 @register_command
 class LogsCommand(BackendCommand):
     name = "logs"
+    description = "display logs of a container"
     argument_definitions = [Argument("follow", "Follow logs.", default=False, aliases=["-f", "f"])]
 
     def run(self):
@@ -106,6 +115,7 @@ class LogsCommand(BackendCommand):
 @register_command
 class InspectCommand(BackendCommand):
     name = "inspect"
+    description = "inspect provided object, a container or an image"
 
     def run(self):
         if not self.docker_object:
@@ -117,6 +127,7 @@ class InspectCommand(BackendCommand):
 @register_command
 class OpenPortsInBrowser(BackendCommand):
     name = "open-browser"
+    description = "open exposed port in a browser"
 
     def run(self):
         if not self.docker_object or not isinstance(self.docker_object, DockerContainer):
