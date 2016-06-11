@@ -119,6 +119,9 @@ class ImageInfoBuffer(Buffer):
         """
         if isinstance(docker_image, RootImage):
             raise NotifyError("Image \"scratch\" doesn't provide any more information.")
+        if docker_image.image_id == "<missing>":
+            raise NotifyError("This image (layer) is not available due to changes in docker-1.10 "
+                              "image representation.")
         self.display_name = docker_image.short_name
         self.widget = ImageInfoWidget(ui, docker_image)
         super().__init__()

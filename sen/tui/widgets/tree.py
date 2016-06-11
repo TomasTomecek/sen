@@ -17,6 +17,8 @@ class TreeNodeWidget(SelectableText):
 
 
 class TreeBackend(urwidtrees.Tree):
+    # FIXME: rewrite to use SimpleTree instead (for sake of docker-1.10 changes: how does one
+    #        index an image with id <missing>
     def __init__(self, docker_backend, ui):
         super().__init__()
         self.ui = ui

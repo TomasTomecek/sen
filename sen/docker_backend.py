@@ -278,6 +278,33 @@ class DockerImage(DockerObject):
             return self.docker_backend.scratch_image
 
     @property
+    def layers(self):
+        """
+        similar as parent images, except that it uses /history API endpoint
+        :return:
+        """
+        # sample output:
+        # {
+        #     "Created": 1457116802,
+        #     "Id": "sha256:507cb13a216097710f0d234668bf64a4c92949c573ba15eba13d05aad392fe04",
+        #     "Size": 204692029,
+        #     "Tags": [
+        #         "docker.io/fedora:latest"
+        #     ],
+        #     "Comment": "",
+        #     "CreatedBy": "/bin/sh -c #(nop) ADD file:bcb5e5c... in /"
+        # }
+        response = self.d.history(self.image_id)
+        layers = []
+        for l in response:
+            layer_id = l["Id"]
+            if layer_id == "<missing>":
+                layers.append(DockerImage(l, self.docker_backend))
+            else:
+                layers.append(self.docker_backend.get_image_by_id(layer_id))
+        return layers
+
+    @property
     def children(self):
         return self.docker_backend.get_images_for_parent(self)
 
@@ -311,6 +338,10 @@ class DockerImage(DockerObject):
 
     @property
     def container_command(self):
+        # history item
+        created_by = graceful_chain_get(self.data, "CreatedBy")
+        if created_by:
+            return created_by
         inspect = self.inspect(cached=True).response
         cmd = graceful_chain_get(inspect, "ContainerConfig", "Cmd")
         if cmd:
@@ -324,7 +355,7 @@ class DockerImage(DockerObject):
 
         :return: int
         """
-        return self.data["VirtualSize"]
+        return self.data.get("VirtualSize", 0)
 
     @property
     def names(self):
@@ -332,7 +363,8 @@ class DockerImage(DockerObject):
             self._names = []
             if self.data is None:
                 return self._names
-            for t in self.data["RepoTags"]:
+            # RepoTags = image, Tags = output from `history` command, Tags can be None
+            for t in self.data.get("RepoTags", self.data.get("Tags")) or []:
                 image_name = ImageNameStruct.parse(t)
                 if image_name.to_str():
                     self._names.append(image_name)

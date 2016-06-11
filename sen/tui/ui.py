@@ -317,6 +317,7 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         selected_widget = getattr(self.current_buffer, "widget", None)
         if selected_widget:
             focused_docker_object = getattr(self.current_buffer.widget, "focused_docker_object", None)
+            logger.debug("focused docker object is %s", focused_docker_object)
         try:
             self.run_command_by_key(
                 key,

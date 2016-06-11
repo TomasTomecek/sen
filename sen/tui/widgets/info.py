@@ -9,6 +9,7 @@ import threading
 import urwid
 import urwidtrees
 
+from sen.docker_backend import RootImage
 from sen.tui.widgets.list.base import WidgetBase
 from urwid.decoration import BoxAdapter
 
@@ -89,16 +90,26 @@ class ImageInfoWidget(WidgetBase):
         self.walker.append(RowWidget([SelectableText("Layers", maps=get_map("main_list_white"))]))
 
         i = self.docker_image
+        parent = i.parent_image
+        layers = self.docker_image.layers
         index = 0
-        self.walker.append(RowWidget([LayerWidget(self.ui, self.docker_image, index=index)]))
-        while True:
-            index += 1
-            parent = i.parent_image
-            if parent:
-                self.walker.append(RowWidget([LayerWidget(self.ui, parent, index=index)]))
-                i = parent
-            else:
-                break
+
+        if isinstance(parent, RootImage) and len(layers) > 0:  # pulled image, docker 1.10+
+            for image in layers:
+                self.walker.append(
+                    RowWidget([LayerWidget(self.ui, image, index=index)])
+                )
+                index += 1
+        else:
+            self.walker.append(RowWidget([LayerWidget(self.ui, self.docker_image, index=index)]))
+            while True:
+                index += 1
+                parent = i.parent_image
+                if parent:
+                    self.walker.append(RowWidget([LayerWidget(self.ui, parent, index=index)]))
+                    i = parent
+                else:
+                    break
 
     def _labels(self):
         if not self.docker_image.labels:
