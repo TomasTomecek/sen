@@ -1,7 +1,6 @@
 import logging
 
 import urwidtrees
-from sen.tui.widgets.list.base import WidgetBase
 
 from sen.tui.widgets.list.util import RowWidget
 from sen.tui.widgets.util import get_basic_image_markup, SelectableText
@@ -15,13 +14,6 @@ class TreeNodeWidget(SelectableText):
         self.ui = ui
         self.docker_image = docker_image
         super().__init__(get_basic_image_markup(docker_image))
-
-    def keypress(self, size, key):
-        logger.debug("%s %s %s", self.__class__, key, size)
-        if key == "enter":
-            self.ui.display_info(self.docker_image)
-            return
-        return key
 
 
 class TreeBackend(urwidtrees.Tree):
@@ -73,6 +65,12 @@ class ImageTree(urwidtrees.TreeBox):
             indent=2,
         )
         super().__init__(t)
+
+    @property
+    def focused_docker_object(self):
+        image = self.get_focus()[1]
+        logger.debug("focused image is %s", image)
+        return image
 
     def focus_first(self):
         self.set_focus(self._tree.root)

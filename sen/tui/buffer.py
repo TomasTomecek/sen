@@ -144,6 +144,9 @@ class ContainerInfoBuffer(Buffer):
 class TreeBuffer(Buffer):
     display_name = "Layers"
     description = "Tree view of all layers available on your docker engine."
+    keybinds = {
+        "enter": "display-info",
+    }
 
     def __init__(self, ui, docker_backend):
         self.widget = ImageTree(ui, docker_backend)
