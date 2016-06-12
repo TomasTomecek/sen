@@ -6,6 +6,7 @@ import datetime
 import traceback
 from operator import attrgetter
 
+from sen.constants import ISO_DATETIME_PARSE_STRING
 from sen.exceptions import TerminateApplication, NotifyError
 
 import docker
@@ -204,23 +205,6 @@ class DockerObject:
 
     @property
     def natural_sort_value(self):
-        if isinstance(self, DockerContainer):
-            try:
-                response = self.inspect().response
-                # FIXME: make these attributes
-                started = datetime.datetime.strptime(
-                    response["State"]["StartedAt"][:-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                finished = datetime.datetime.strptime(
-                    response["State"]["FinishedAt"][:-1].split(".")[0], "%Y-%m-%dT%H:%M:%S")
-                if started > finished:
-                    return started
-                # currently we only sort running containers and pushing them on top of the list
-
-            except KeyError:
-                logger.info(self.data)
-                # container might not be started yet so values are missing
-                pass
-
         return self.created
 
     def __eq__(self, other):
@@ -552,6 +536,31 @@ class DockerContainer(DockerObject):
         }
         """
         return NetData(self.inspect(cached=True).response)
+
+    @property
+    def started_at(self):
+        r = self.inspect(cached=True).response
+        # python expects 6 digits in milliseconds, docker returns 9
+        s = r["State"]["StartedAt"][:26]
+        if s == "0001-01-01T00:00:00Z":
+            return datetime.datetime.fromordinal(1)
+        started_at = datetime.datetime.strptime(s, ISO_DATETIME_PARSE_STRING)
+        logger.debug("started at %s", started_at)
+        return started_at
+
+    @property
+    def finished_at(self):
+        r = self.inspect(cached=True).response
+        f = r["State"]["FinishedAt"][:26]
+        if f == "0001-01-01T00:00:00Z":
+            return datetime.datetime.fromordinal(1)
+        finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
+        logger.debug("finished at %s", finished_at)
+        return finished_at
+
+    @property
+    def natural_sort_value(self):
+        return max(self.started_at, self.finished_at, super().natural_sort_value)
 
     # methods
 
