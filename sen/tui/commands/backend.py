@@ -127,36 +127,31 @@ class InspectCommand(BackendCommand):
 @register_command
 class OpenPortsInBrowser(BackendCommand):
     name = "open-browser"
+    # TODO: user should be able to specify port and ip: by hitting keybind in container info view
     description = "open exposed port in a browser"
 
     def run(self):
-        if not self.docker_object or not isinstance(self.docker_object, DockerContainer):
+        if not isinstance(self.docker_object, DockerContainer):
             self.ui.notify_message("No docker container specified.", level="error")
             return
 
         if not self.docker_object.running:
-            self.ui.notify_message("Container is not running - no ports are available.", level="error")
-            return
-
-        ports = self.docker_object.net.ports.values()
-        logger.info(ports)
-        if not ports or len(ports) < 1:
-            # order of this calls is not logical but looks graphically better and I found out that's asynchronous so it
-            # isn't controllable which would be first
-            self.ui.notify_message("Hint: To find unmapped ports go to the detailed scope by hitting Enter.", level="info")
-            self.ui.notify_message("There are no mapped ports available for '%s" % self.docker_object.short_name, level="error")
-            return
-
-        success = False
-        for value in ports:
-            if value:
-                success = True
-                url = "http://127.0.0.1:" + value
-                logger.info(value)
-                webbrowser.open(url)
-
-        if not success:
-            self.ui.notify_message("Hint: To find unmapped ports go to the detailed scope by hitting Enter.", level="info")
-            self.ui.notify_message("There are no mapped ports available for '%s" % self.docker_object.short_name,
+            self.ui.notify_message("Container is not running - no ports are available.",
                                    level="error")
+            return
 
+        ports = list(self.docker_object.net.ports.keys())
+        ips = self.docker_object.net.ips
+
+        logger.debug("ports = %s, ips = %s", ports, ips)
+
+        if not ports:
+            self.ui.notify_message(
+                "Container %r doesn't expose any ports." % self.docker_object.short_name,
+                level="error"
+            )
+            return
+
+        url = "http://{}:{}".format(ips[list(ips.keys())[0]]["ip_address4"], ports[0])
+        logger.info("opening %s in browser", url)
+        webbrowser.open(url)

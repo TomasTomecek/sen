@@ -38,8 +38,8 @@ class NetData:
     def ports(self):
         """
         :return: dict
-            "port_mapping": {
-                # host -> container
+            {
+                # container -> host
                 "1234": "2345"
             }
         """
@@ -50,6 +50,11 @@ class NetData:
                 for key, value in self.net_settings["Ports"].items():
                     cleaned_port = key.split("/")[0]
                     self._ports[cleaned_port] = graceful_chain_get(value, 0, "HostPort")
+            # in case of --net=host, there's nothing in network settings, let's get it from "Config"
+            if self.inspect_data["Config"]["ExposedPorts"]:
+                for key, value in self.inspect_data["Config"]["ExposedPorts"].items():
+                    cleaned_port = key.split("/")[0]
+                    self._ports[cleaned_port] = None  # extremely docker specific
         return self._ports
 
     @property
