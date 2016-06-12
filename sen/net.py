@@ -51,8 +51,9 @@ class NetData:
                     cleaned_port = key.split("/")[0]
                     self._ports[cleaned_port] = graceful_chain_get(value, 0, "HostPort")
             # in case of --net=host, there's nothing in network settings, let's get it from "Config"
-            if self.inspect_data["Config"]["ExposedPorts"]:
-                for key, value in self.inspect_data["Config"]["ExposedPorts"].items():
+            exposed_ports_section = graceful_chain_get(self.inspect_data, "Config", "ExposedPorts")
+            if exposed_ports_section:
+                for key, value in exposed_ports_section.items():
                     cleaned_port = key.split("/")[0]
                     self._ports[cleaned_port] = None  # extremely docker specific
         return self._ports
@@ -76,7 +77,10 @@ class NetData:
             default_net = extract_data_from_inspect("default", self.net_settings)
             if default_net:
                 self._ips["default"] = default_net
-            for network_name, network_data in self.inspect_data["NetworkSettings"]["Networks"].items():
-                self._ips[network_name] = extract_data_from_inspect(network_name, network_data)
+            # this can be None
+            networks = self.inspect_data["NetworkSettings"]["Networks"]
+            if networks:
+                for network_name, network_data in networks.items():
+                    self._ips[network_name] = extract_data_from_inspect(network_name, network_data)
 
         return self._ips
