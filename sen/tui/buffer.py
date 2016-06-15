@@ -26,9 +26,13 @@ class Buffer:
     # global keybinds which will be available in every buffer
     global_keybinds = {
         # navigation
+        "home": "navigate-top",
         "gg": "navigate-top",
+        "end": "navigate-bottom",
         "G": "navigate-bottom",
+        "down": "navigate-down",
         "j": "navigate-down",
+        "up": "navigate-up",
         "k": "navigate-up",
         "ctrl d": "navigate-downwards",
         "ctrl u": "navigate-upwards",
