@@ -401,8 +401,7 @@ class DockerImage(DockerObject):
         return self.d.remove_image(str(tag))
 
     def matches_search(self, s):
-        return s in self.image_id or \
-            s in self.short_name
+        return s in self.image_id or any([s in str(x) for x in self.names])
 
     def __str__(self):
         if self.names:
