@@ -4,7 +4,7 @@ import threading
 
 import urwid
 
-from sen.exceptions import NotifyError
+from sen.exceptions import NotifyError, NotAvailableAnymore
 from sen.tui.chunks.elemental import get_row
 from sen.tui.widgets.list.util import (
     get_operation_notify_widget, ResponsiveRowWidget
@@ -180,7 +180,10 @@ class MainListBox(ResponsiveTable):
         query, c_op, i_op = self.d.filter(**backend_query)
 
         for o in query:
-            line = MainLineWidget(o)
+            try:
+                line = MainLineWidget(o)
+            except NotAvailableAnymore:
+                continue
             widgets.append(line)
         if unprocessed:
             new_query = " ".join(unprocessed)

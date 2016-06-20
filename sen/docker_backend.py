@@ -7,7 +7,7 @@ import traceback
 from operator import attrgetter
 
 from sen.constants import ISO_DATETIME_PARSE_STRING
-from sen.exceptions import TerminateApplication, NotifyError
+from sen.exceptions import TerminateApplication, NotifyError, NotAvailableAnymore
 
 import docker
 
@@ -192,7 +192,7 @@ class DockerObject:
         # http://tools.ietf.org/html/rfc2822.html#section-3.3
         return self.created.strftime("%d %b %Y, %H:%M:%S")
 
-    def inspect(self):
+    def inspect(self, cached=True):
         raise NotImplementedError()
 
     def display_inspect(self):
@@ -206,6 +206,20 @@ class DockerObject:
     @property
     def natural_sort_value(self):
         return self.created
+
+    def metadata_get(self, path, cached=True):
+        """
+        get metadata from inspect, specified by path
+
+        :param path: list of str
+        :param cached: bool, use cached version of inspect if available
+        """
+        try:
+            value = graceful_chain_get(self.inspect(cached=cached).response, *path)
+        except docker.errors.NotFound:
+            logger.warning("object %s is not available anymore", self)
+            raise NotAvailableAnymore()
+        return value
 
     def __eq__(self, other):
         return type(self) == type(other) and self._id == other._id
@@ -241,8 +255,7 @@ class DockerImage(DockerObject):
         if self.data:
             return self.data.get("ParentId", None)
         else:
-            inspect_operation = self.inspect(cached=True)
-            return inspect_operation.response.get("Parent", None)
+            return self.metadata_get(["Parent"])
 
     @property
     def pretty_object_type(self):
@@ -315,7 +328,7 @@ class DockerImage(DockerObject):
 
     @property
     def command(self):
-        cmd = graceful_chain_get(self.inspect(cached=True).response, "Config", "Cmd")
+        cmd = self.metadata_get(["Config", "Cmd"])
         if cmd:
             return " ".join(cmd)
         return ""
@@ -326,8 +339,7 @@ class DockerImage(DockerObject):
         created_by = graceful_chain_get(self.data, "CreatedBy")
         if created_by:
             return created_by
-        inspect = self.inspect(cached=True).response
-        cmd = graceful_chain_get(inspect, "ContainerConfig", "Cmd")
+        cmd = self.metadata_get(["ContainerConfig", "Cmd"])
         if cmd:
             return " ".join(cmd)
         return ""
@@ -511,7 +523,7 @@ class DockerContainer(DockerObject):
             image_id = self.data["ImageID"]
         except KeyError:
             # docker <= 1.8
-            image_id = self.inspect(cached=True).response["Image"]
+            image_id = self.metadata_get(["Image"])
         return image_id
 
     @property
@@ -521,7 +533,7 @@ class DockerContainer(DockerObject):
     @property
     def ip_address(self):
         # docker == 1.10
-        ip_address = self.inspect(cached=True).response["NetworkSettings"]["IPAddress"]
+        ip_address = self.metadata_get(["NetworkSettings", "IPAddress"])
         return ip_address
 
     @property
@@ -538,24 +550,26 @@ class DockerContainer(DockerObject):
 
     @property
     def started_at(self):
-        r = self.inspect(cached=True).response
-        # python expects 6 digits in milliseconds, docker returns 9
-        s = r["State"]["StartedAt"][:26]
-        if s == "0001-01-01T00:00:00Z":
-            return datetime.datetime.fromordinal(1)
-        started_at = datetime.datetime.strptime(s, ISO_DATETIME_PARSE_STRING)
-        logger.debug("started at %s", started_at)
-        return started_at
+        s = self.metadata_get(["State", "StartedAt"])
+        if s:
+            # python expects 6 digits in milliseconds, docker returns 9
+            s = s[:26]
+            if s == "0001-01-01T00:00:00Z":
+                return datetime.datetime.fromordinal(1)
+            started_at = datetime.datetime.strptime(s, ISO_DATETIME_PARSE_STRING)
+            logger.debug("started at %s", started_at)
+            return started_at
 
     @property
     def finished_at(self):
-        r = self.inspect(cached=True).response
-        f = r["State"]["FinishedAt"][:26]
-        if f == "0001-01-01T00:00:00Z":
-            return datetime.datetime.fromordinal(1)
-        finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
-        logger.debug("finished at %s", finished_at)
-        return finished_at
+        f = self.metadata_get(["State", "FinishedAt"])
+        if f:
+            f = f[:26]
+            if f == "0001-01-01T00:00:00Z":
+                return datetime.datetime.fromordinal(1)
+            finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
+            logger.debug("finished at %s", finished_at)
+            return finished_at
 
     @property
     def natural_sort_value(self):
