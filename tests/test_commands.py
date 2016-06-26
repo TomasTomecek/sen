@@ -13,6 +13,7 @@ class MyCommand(Command):
     options_definitions = [
         Option("test-opt", "test-opt desc", aliases=["x"])
     ]
+    aliases = ["mango"]
 
     def run(self):
         return 42
@@ -78,5 +79,12 @@ def test_opt():
 def test_commander():
     com = Commander(None, None)
     c = com.get_command("test test-opt")
+    assert c.arguments.test_opt is True
+    assert c.run() == 42
+
+
+def test_command_aliases():
+    com = Commander(None, None)
+    c = com.get_command("mango x")
     assert c.arguments.test_opt is True
     assert c.run() == 42

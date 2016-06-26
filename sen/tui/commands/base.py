@@ -29,6 +29,8 @@ class NoSuchOptionOrArgument(Exception):
 # class decorator to register commands
 def register_command(kls):
     commands_mapping[kls.name] = kls
+    for a in kls.aliases:
+        commands_mapping[a] = kls
     return kls
 
 
@@ -188,6 +190,8 @@ class Command:
     options_definitions = []
     # define arguments
     arguments_definitions = []
+    # command is available under these aliases
+    aliases = []
 
     def __init__(self, ui=None, docker_backend=None, docker_object=None, buffer=None, size=None):
         """
@@ -221,11 +225,6 @@ class Command:
 
     def run(self):
         raise NotImplementedError()
-
-
-# TODO: implement
-class CommandAlias(Command):
-    pass
 
 
 class FrontendCommand(Command):
@@ -266,9 +265,13 @@ class Commander:
             # noop, don't do anything
             return
 
-        command_input_list = shlex.split(command_input)
-        command_name = command_input_list[0]
-        unparsed_command_args = command_input_list[1:]
+        if command_input[0] in ["/"]:  # we could add here !, @, ...
+            command_name = command_input[0]
+            unparsed_command_args = shlex.split(command_input[1:])
+        else:
+            command_input_list = shlex.split(command_input)
+            command_name = command_input_list[0]
+            unparsed_command_args = command_input_list[1:]
 
         try:
             CommandClass = commands_mapping[command_name]

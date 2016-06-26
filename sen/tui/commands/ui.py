@@ -196,11 +196,12 @@ class PromptCommand(SameThreadCommand):
 
 @register_command
 class SearchCommand(SameThreadCommand, LogTracebackMixin):
-    name = "search"  # TODO alias '/' would be awesome
+    name = "search"
     description = "search and highlight (provide empty string to disable searching)"
     arguments_definitions = [
         Argument("query", "Input string to search for")
     ]
+    aliases = ["/"]
 
     def run(self):
         # TODO: implement incsearch

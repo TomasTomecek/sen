@@ -39,7 +39,7 @@ class Buffer:
 
         # UI
         ":": "prompt",
-        "/": "prompt initial-text=\"search \"",
+        "/": "prompt prompt-text=\"\" initial-text=\"/\"",
         "n": "search-next",
         "N": "search-previous",
         "f4": "prompt initial-text=\"filter \"",
