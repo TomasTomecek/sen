@@ -3,15 +3,15 @@
 
 import pytest
 
-from sen.tui.commands.base import Command, Argument, Commander, register_command, Option
+from sen.tui.commands.base import Command, Option, Commander, register_command, Argument
 
 
 @register_command
 class MyCommand(Command):
     name = "test"
     description = "test desc"
-    argument_definitions = [
-        Argument("test-arg", "test-arg desc", aliases=["x"])
+    options_definitions = [
+        Option("test-opt", "test-opt desc", aliases=["x"])
     ]
 
     def run(self):
@@ -22,16 +22,16 @@ class MyCommand(Command):
 class MyCommand2(Command):
     name = "test2"
     description = "test desc 2"
-    argument_definitions = [
-        Argument("test-arg", "test-arg desc", aliases=["x"]),
-        Argument("test-arg2", "test-arg2 desc", default="banana"),
+    options_definitions = [
+        Option("test-opt", "test-opt desc", aliases=["x"]),
+        Option("test-opt2", "test-opt2 desc", default="banana"),
     ]
-    option_definitions = [
-        Option("test-opt", "test-opt desc")
+    arguments_definitions = [
+        Argument("test-arg", "test-arg desc")
     ]
 
     def run(self):
-        return 42
+        return 43
 
 
 def test_command_class():
@@ -48,35 +48,35 @@ def test_command_class():
 def test_custom_command():
     c = MyCommand()
     c.process_args(["x"])
-    assert c.arguments.test_arg is True
+    assert c.arguments.test_opt is True
     assert c.run() == 42
 
 
 def test_arg_and_opt():
     c = MyCommand2()
     c.process_args(["x", "y"])
-    assert c.arguments.test_arg is True
-    assert c.arguments.test_opt == "y"
-    assert c.run() == 42
+    assert c.arguments.test_opt is True
+    assert c.arguments.test_arg == "y"
+    assert c.run() == 43
 
 
 def test_default_arg():
     c = MyCommand2()
     c.process_args([])
-    assert c.arguments.test_arg2 == "banana"
-    assert c.run() == 42
+    assert c.arguments.test_opt2 == "banana"
+    assert c.run() == 43
 
 
 def test_opt():
     c = MyCommand2()
     c.process_args(["y"])
-    assert c.arguments.test_arg is None
-    assert c.arguments.test_opt == "y"
-    assert c.run() == 42
+    assert c.arguments.test_opt is None
+    assert c.arguments.test_arg == "y"
+    assert c.run() == 43
 
 
 def test_commander():
     com = Commander(None, None)
-    c = com.get_command("test test-arg")
-    assert c.arguments.test_arg is True
+    c = com.get_command("test test-opt")
+    assert c.arguments.test_opt is True
     assert c.run() == 42

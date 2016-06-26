@@ -6,7 +6,7 @@ import logging
 import webbrowser
 
 from sen.tui.buffer import LogsBuffer, InspectBuffer
-from sen.tui.commands.base import BackendCommand, register_command, Argument
+from sen.tui.commands.base import BackendCommand, register_command, Option
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.docker_backend import DockerContainer
 
@@ -105,7 +105,7 @@ class UnpauseContainerCommand(MatchingOperationCommand):
 class LogsCommand(BackendCommand):
     name = "logs"
     description = "display logs of a container"
-    argument_definitions = [Argument("follow", "Follow logs.", default=False, aliases=["-f", "f"])]
+    options_definitions = [Option("follow", "Follow logs.", default=False, aliases=["-f", "f"])]
 
     def run(self):
         self.ui.add_and_display_buffer(

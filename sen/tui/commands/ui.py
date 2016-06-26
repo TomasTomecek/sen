@@ -8,7 +8,7 @@ import urwid
 
 from sen.exceptions import NotifyError
 from sen.tui.buffer import HelpBuffer, TreeBuffer
-from sen.tui.commands.base import register_command, SameThreadCommand, Argument, Option, \
+from sen.tui.commands.base import register_command, SameThreadCommand, Option, Argument, \
     NoSuchCommand
 from sen.util import log_traceback, log_last_traceback
 
@@ -70,8 +70,8 @@ class RemoveBufferCommand(KillBufferCommand):
 class SelectBufferCommand(SameThreadCommand):
     name = "select-buffer"
     description = "Display buffer with selected index."
-    option_definitions = [
-        Option("index", "Index of buffer to display", default=1, action=int)
+    arguments_definitions = [
+        Argument("index", "Index of buffer to display", default=1, action=int)
     ]
 
     def run(self):
@@ -102,7 +102,7 @@ class SelectPreviousBufferCommand(SelectBufferCommand):
 class DisplayBufferCommand(SameThreadCommand):
     name = "display-buffer"  # TODO: make this a universal display function
 
-    option_definitions = [Option("buffer", "Buffer instance to show.")]
+    arguments_definitions = [Argument("buffer", "Buffer instance to show.")]
     description = "This is an internal command and doesn't work from command line."
 
     def run(self):
@@ -115,7 +115,7 @@ class DisplayHelpCommand(SameThreadCommand):
     name = "help"
     description = "Display help about buffer or command. When 'query' is not specified " + \
         "help for current buffer is being displayed."
-    option_definitions = [Option("query", "input string: command, buffer name")]
+    arguments_definitions = [Argument("query", "input string: command, buffer name")]
 
     def run(self):
         if self.arguments.query is None:
@@ -168,9 +168,9 @@ def run_command_callback(ui, edit_widget, text_input):
 class PromptCommand(SameThreadCommand):
     name = "prompt"
     description = "Customize and pre-populate prompt with initial data."
-    argument_definitions = [
-        Argument("prompt-text", "Text forming the actual prompt", default=":"),
-        Argument("initial-text", "Prepopulated text", default="")
+    options_definitions = [
+        Option("prompt-text", "Text forming the actual prompt", default=":"),
+        Option("initial-text", "Prepopulated text", default="")
     ]
 
     def run(self):
@@ -198,8 +198,8 @@ class PromptCommand(SameThreadCommand):
 class SearchCommand(SameThreadCommand, LogTracebackMixin):
     name = "search"  # TODO alias '/' would be awesome
     description = "search and highlight (provide empty string to disable searching)"
-    option_definitions = [
-        Option("query", "Input string to search for")
+    arguments_definitions = [
+        Argument("query", "Input string to search for")
     ]
 
     def run(self):
@@ -244,8 +244,8 @@ Examples
 * "type=image fedora" - show images with string "fedora" in name (equivalent "t=i fedora")\
 """
 
-    option_definitions = [
-        Option("query", "Input query string", default="")
+    arguments_definitions = [
+        Argument("query", "Input query string", default="")
     ]
 
     def run(self):

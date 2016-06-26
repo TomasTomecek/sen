@@ -55,6 +55,9 @@ def true_action(val=None):
 
 
 class ArgumentBase:
+    """
+    Base class for arguments and options
+    """
     def __init__(self, name, description, action=true_action, default=None):
         self.name = name
         self.description = description
@@ -62,7 +65,10 @@ class ArgumentBase:
         self.action = action
 
 
-class Argument(ArgumentBase):
+class Option(ArgumentBase):
+    """
+    options alter behavior, are not positional
+    """
     def __init__(self, name, description, action=true_action, aliases=None, default=None):
         super().__init__(name, description, action=action, default=default)
         self.aliases = aliases or []
@@ -76,34 +82,38 @@ class Argument(ArgumentBase):
         return self.__str__()
 
 
-class Option(ArgumentBase):
+class Argument(ArgumentBase):
+    """
+    arguments are positional
+    """
     pass
 
 
 def normalize_arg_name(name):
-    return name.replace("-", "_")  # so we access names-with-dashes
+    return name.replace("-", "_")  # so we can access names-with-dashes
 
 
 class ArgumentProcessor:
     """
     responsible for parsing given list of arguments
     """
-    def __init__(self, arguments, options):
+    def __init__(self, options, arguments):
         """
-        :param arguments: list of arguments
         :param options: list of options
+        :param arguments: list of arguments
         """
         self.given_arguments = {}
-        self.arguments = {}
-        for a in arguments:
-            self.arguments[a.name] = a
+        self.options = {}
+        for a in options:
+            self.options[a.name] = a
             self.given_arguments[normalize_arg_name(a.name)] = a.default
             for alias in a.aliases:
-                self.arguments[alias] = a
-        for o in options:
+                self.options[alias] = a
+        for o in arguments:
             self.given_arguments[normalize_arg_name(o.name)] = o.default
-        self.options = options
+        self.arguments = arguments
         logger.info("arguments = %s", arguments)
+        logger.info("options = %s", options)
 
     def process(self, argument_list):
         """
@@ -111,32 +121,32 @@ class ArgumentProcessor:
         :return: dict:
             {"cleaned_arg_name": "value"}
         """
-        option_index = 0
+        arg_index = 0
         for a in argument_list:
-            arg_and_val = a.split("=", 1)
-            arg_first = arg_and_val[0]
+            opt_and_val = a.split("=", 1)
+            opt_name = opt_and_val[0]
             try:
-                # argument
-                argument = self.arguments[arg_first]
+                # option
+                argument = self.options[opt_name]
             except KeyError:
-                # options
+                # argument
                 try:
-                    argument = self.options[option_index]
+                    argument = self.arguments[arg_index]
                 except IndexError:
                     logger.error("option/argument %r not specified", a)
-                    raise NoSuchOptionOrArgument("No such option or argument: %r" % arg_first)
+                    raise NoSuchOptionOrArgument("No such option or argument: %r" % opt_name)
             logger.info("argument found: %s", argument)
 
             safe_arg_name = normalize_arg_name(argument.name)  # so we can access names-with-dashes
 
             logger.info("argument is available under name %r", safe_arg_name)
 
-            if isinstance(argument, Option):
-                option_index += 1
+            if isinstance(argument, Argument):
+                arg_index += 1
                 value = (a, )
             else:
                 try:
-                    value = (arg_and_val[1], )
+                    value = (opt_and_val[1], )
                 except IndexError:
                     value = tuple()
 
@@ -174,10 +184,10 @@ class Command:
     priority = None
     # used in help message
     description = ""
-    # define arguments
-    argument_definitions = []
     # define options
-    option_definitions = []
+    options_definitions = []
+    # define arguments
+    arguments_definitions = []
 
     def __init__(self, ui=None, docker_backend=None, docker_object=None, buffer=None, size=None):
         """
@@ -195,8 +205,8 @@ class Command:
         self.docker_object = docker_object
         self.buffer = buffer
         self.size = size
-        self.argument_processor = ArgumentProcessor(self.argument_definitions,
-                                                    self.option_definitions)
+        self.argument_processor = ArgumentProcessor(self.options_definitions,
+                                                    self.arguments_definitions)
         self.arguments = None
 
     def process_args(self, arguments):
