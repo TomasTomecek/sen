@@ -1,3 +1,4 @@
 urwid
 docker-py
-urwidtrees
+# this is 1.0.2, pazz doesn't maintain urwidtrees on PyPI
+-e git://github.com/pazz/urwidtrees.git@b8159036521100c60ecaefdfe0bed4c50dc3ef23#egg=urwidtrees

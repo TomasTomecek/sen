@@ -4,17 +4,11 @@ import os
 
 from setuptools import setup, find_packages
 
-
-def get_requirements():
-    this_dir = os.path.abspath(os.path.dirname(__file__))
-    path = os.path.join(this_dir, 'requirements.txt')
-    try:
-        with open(path) as f:
-            packages = f.read().splitlines()
-    except (IOError, OSError) as ex:
-        raise RuntimeError("Can't open file with requirements: %r", ex)
-    return packages
-
+requirements = [
+    "urwid",
+    "urwidtrees",
+    "docker-py"
+]
 
 setup(
     name='sen',
@@ -28,7 +22,7 @@ setup(
         'console_scripts': ['sen=sen.cli:main'],
     },
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    install_requires=get_requirements(),
+    install_requires=requirements,
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Intended Audience :: Developers',
                  'Intended Audience :: System Administrators',
