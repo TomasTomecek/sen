@@ -1,3 +1,7 @@
+"""
+widget specific commands
+"""
+
 import logging
 
 from sen.tui.commands.base import register_command, SameThreadCommand

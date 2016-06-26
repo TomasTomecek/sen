@@ -42,28 +42,18 @@ class QuitCommand(SameThreadCommand):
 
 @register_command
 class KillBufferCommand(SameThreadCommand):
-    name = "kill-buffer"  # TODO: merge with rm-buffer
+    name = "kill-buffer"
     description = "Remove currently displayed buffer."
-
-    def __init__(self, close_if_no_buffer=True, **kwargs):
-        super().__init__(**kwargs)
-        self.close_if_no_buffer = close_if_no_buffer
+    options_definitions = [
+        Option("quit-if-no-buffer", "Quit when there's no buffer left", default=False)
+    ]
 
     def run(self):
-        buffers_left = self.ui.remove_current_buffer(close_if_no_buffer=self.close_if_no_buffer)
+        buffers_left = self.ui.remove_current_buffer(close_if_no_buffer=self.arguments.quit_if_no_buffer)
         if buffers_left is None:
             self.ui.notify_message("Last buffer will not be removed.")
         elif buffers_left == 0:
             self.ui.run_command(QuitCommand.name)
-
-
-@register_command
-class RemoveBufferCommand(KillBufferCommand):
-    name = "remove-buffer"
-    description = "Remove currently displayed buffer."
-
-    def __init__(self, **kwargs):
-        super().__init__(close_if_no_buffer=False, **kwargs)
 
 
 @register_command
