@@ -139,6 +139,4 @@ class ResponsiveTable(WidgetBase):
                 for idx, (w, (_, _, is_box)) in enumerate(row.contents)
             ]
 
-        logger.debug("min column lengths = %s", min_col_lengths)
-
         return super().render(size, focus=focus)
