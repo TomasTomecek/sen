@@ -24,8 +24,7 @@ import logging
 from sen import set_logging
 from sen.exceptions import TerminateApplication
 from sen.tui.init import Application
-from sen.util import get_log_file_path, log_vars_from_tback, setup_dirs
-
+from sen.util import get_log_file_path, log_last_traceback
 
 logger = logging.getLogger("sen")
 
@@ -64,7 +63,7 @@ def main():
         #     # # continue
     #    return 2
     except Exception as ex:  # pylint: disable=broad-except
-        log_vars_from_tback(process_frames=3 if args.debug else 0)  # show complete stack trace
+        log_last_traceback()
         if args.debug:
             raise
         else:

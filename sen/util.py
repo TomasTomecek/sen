@@ -111,46 +111,48 @@ def humanize_time(value):
                           months=int(delta.days // 30))
 
 
-def log_vars_from_tback(process_frames=5):
-    for th in threading.enumerate():
-        try:
-            thread_frames = sys._current_frames()[th.ident]
-        except KeyError:
-            continue
-        logger.debug(''.join(traceback.format_stack(thread_frames)))
-
-    logger.error(traceback.format_exc())
-    if process_frames <= 0:
-        return
-    tb = sys.exc_info()[2]
-    while 1:
-        if not tb.tb_next:
-            break
-        tb = tb.tb_next
-    stack = []
-    f = tb.tb_frame
-    while f:
-        stack.append(f)
-        f = f.f_back
-    for frame in stack[:process_frames]:
-        logger.debug("frame %s:%s", frame.f_code.co_filename, frame.f_lineno)
-        for key, value in frame.f_locals.items():
-            try:
-                logger.debug("%20s = %s", key, value)
-            except Exception:
-                logger.debug("%20s = CANNOT PRINT VALUE", key)
-
-            # self_instance = frame.f_locals.get("self", None)
-            # if not self_instance:
-            #     continue
-            # for key in dir(self_instance):
-            #     if key.startswith("__"):
-            #         continue
-            #     try:
-            #         value = getattr(self_instance, key, None)
-            #         logger.debug("%20s = %s", "self." + key, value)
-            #     except Exception:
-            #         logger.debug("%20s = CANNOT PRINT VALUE", "self." + key)
+# # This function is able to crash python b/c it may write monster-amount of data.
+# #   Use it only for debugging, do not ship it!
+# def log_vars_from_tback(process_frames=5):
+#     for th in threading.enumerate():
+#         try:
+#             thread_frames = sys._current_frames()[th.ident]
+#         except KeyError:
+#             continue
+#         logger.debug(''.join(traceback.format_stack(thread_frames)))
+#
+#     logger.error(traceback.format_exc())
+#     if process_frames <= 0:
+#         return
+#     tb = sys.exc_info()[2]
+#     while 1:
+#         if not tb.tb_next:
+#             break
+#         tb = tb.tb_next
+#     stack = []
+#     f = tb.tb_frame
+#     while f:
+#         stack.append(f)
+#         f = f.f_back
+#     for frame in stack[:process_frames]:
+#         logger.debug("frame %s:%s", frame.f_code.co_filename, frame.f_lineno)
+#         for key, value in frame.f_locals.items():
+#             try:
+#                 logger.debug("%20s = %s", key, value)
+#             except Exception:
+#                 logger.debug("%20s = CANNOT PRINT VALUE", key)
+#
+#             # self_instance = frame.f_locals.get("self", None)
+#             # if not self_instance:
+#             #     continue
+#             # for key in dir(self_instance):
+#             #     if key.startswith("__"):
+#             #         continue
+#             #     try:
+#             #         value = getattr(self_instance, key, None)
+#             #         logger.debug("%20s = %s", "self." + key, value)
+#             #     except Exception:
+#             #         logger.debug("%20s = CANNOT PRINT VALUE", "self." + key)
 
 
 # this is taken directly from docker client:
@@ -235,7 +237,7 @@ def repeater(call, args=None, kwargs=None, retries=4):
             logger.error("query #%d: docker returned an error: %r", x, ex)
         except Exception as ex:
             # this may be pretty bad
-            log_vars_from_tback(0)
+            log_last_traceback()
             logger.error("query #%d: generic error: %r", x, ex)
         t *= 2
         time.sleep(t)
