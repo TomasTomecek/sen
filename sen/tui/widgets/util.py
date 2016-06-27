@@ -51,7 +51,7 @@ def get_basic_image_markup(docker_image):
         text_markup.append(("main_list_lg", docker_image.names[0].to_str()))
 
     text_markup.append(" ")
-    text_markup.append(("main_list_ddg", docker_image.container_command))
+    text_markup.append(("main_list_ddg", docker_image.container_command or docker_image.comment))
 
     return text_markup
 

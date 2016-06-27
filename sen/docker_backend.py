@@ -349,8 +349,11 @@ class DockerImage(DockerObject):
         else:
             if cmd:
                 return " ".join(cmd)
-        # explicit return, may be changed to return ""
-        return None
+        return ""
+
+    @property
+    def comment(self):
+        return self.metadata_get(["Comment"])
 
     @property
     def size(self):
