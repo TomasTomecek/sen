@@ -196,7 +196,10 @@ class DockerObject:
         raise NotImplementedError()
 
     def display_inspect(self):
-        return json.dumps(self.inspect().response, indent=2)
+        try:
+            return json.dumps(self.inspect().response, indent=2)
+        except docker.errors.NotFound:
+            raise NotAvailableAnymore()
 
     @property
     def labels(self):
@@ -339,10 +342,15 @@ class DockerImage(DockerObject):
         created_by = graceful_chain_get(self.data, "CreatedBy")
         if created_by:
             return created_by
-        cmd = self.metadata_get(["ContainerConfig", "Cmd"])
-        if cmd:
-            return " ".join(cmd)
-        return ""
+        try:
+            cmd = self.metadata_get(["ContainerConfig", "Cmd"])
+        except NotAvailableAnymore:
+            pass
+        else:
+            if cmd:
+                return " ".join(cmd)
+        # explicit return, may be changed to return ""
+        return None
 
     @property
     def size(self):
@@ -416,10 +424,9 @@ class DockerImage(DockerObject):
         return s in self.image_id or any([s in str(x) for x in self.names])
 
     def __str__(self):
-        if self.names:
-            return "{} ({}) {}".format(self.short_id, ", ".join([x.to_str() for x in self.names]), self.container_command)
-        else:
-            return "{} {}".format(self.short_id, self.container_command)
+        # it's dangerous to put many stuff here b/c most of the values are loaded dynamically
+        # and it's trivial to go into nested exception madness
+        return "image {}".format(self.short_id)
 
     def __repr__(self):
         return self.__str__()
@@ -546,7 +553,10 @@ class DockerContainer(DockerObject):
             "host_port": "container_port"
         }
         """
-        return NetData(self.inspect(cached=True).response)
+        try:
+            return NetData(self.inspect(cached=True).response)
+        except docker.errors.NotFound:
+            raise NotAvailableAnymore()
 
     @property
     def started_at(self):

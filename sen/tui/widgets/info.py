@@ -10,6 +10,7 @@ import urwid
 import urwidtrees
 
 from sen.docker_backend import RootImage
+from sen.exceptions import NotAvailableAnymore, NotifyError
 from sen.tui.widgets.list.base import WidgetBase
 from urwid.decoration import BoxAdapter
 
@@ -326,7 +327,11 @@ class ContainerInfoWidget(WidgetBase):
         self.walker.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _net(self):
-        ports = self.docker_container.net.ports
+        try:
+            net = self.docker_container.net
+        except NotAvailableAnymore:
+            raise NotifyError("Container %s is not available anymore" % self.docker_container)
+        ports = net.ports
         data = []
         if ports:
             data.extend([[SelectableText("")], [
@@ -339,7 +344,7 @@ class ContainerInfoWidget(WidgetBase):
                         SelectableText(host_port), SelectableText(container_port)
                     ])
 
-        ips = self.docker_container.net.ips
+        ips = net.ips
         logger.debug(ips)
         if ips:
             data.extend([[SelectableText("")], [
