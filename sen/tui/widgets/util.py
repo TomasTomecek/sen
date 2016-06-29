@@ -3,9 +3,7 @@ import threading
 
 import urwid
 
-from sen.docker_backend import RootImage
 from sen.tui.constants import MAIN_LIST_FOCUS
-
 
 logger = logging.getLogger(__name__)
 
@@ -38,47 +36,6 @@ class AdHocAttrMap(urwid.AttrMap):
                 for a in self.attrs:
                     attr_map[a] = self.maps["focus"]
         self.set_attr_map(attr_map)
-
-
-def get_basic_image_markup(docker_image):
-    if isinstance(docker_image, RootImage):
-        return [str(docker_image)]
-
-    text_markup = [docker_image.short_id]
-
-    if docker_image.names:
-        text_markup.append(" ")
-        text_markup.append(("main_list_lg", docker_image.names[0].to_str()))
-
-    text_markup.append(" ")
-    text_markup.append(("main_list_ddg", docker_image.container_command or docker_image.comment))
-
-    return text_markup
-
-
-def get_container_status_markup(docker_container):
-    if docker_container.running:
-        attr_map = get_map("main_list_green")
-    elif docker_container.exited_well:
-        attr_map = get_map("main_list_orange")
-    elif docker_container.status_created:
-        attr_map = get_map("main_list_yellow")
-    else:
-        attr_map = get_map("main_list_red")
-    return docker_container.status, attr_map
-
-
-def get_basic_container_markup(docker_container):
-    text_markup = [docker_container.short_id, " "]
-
-    markup, attr = get_container_status_markup(docker_container)
-    text_markup.append((attr["normal"], markup))
-
-    if docker_container.names:
-        text_markup.append(" ")
-        text_markup.append(("main_list_lg", docker_container.names[0]))
-
-    return text_markup
 
 
 class ColorTextMixin:

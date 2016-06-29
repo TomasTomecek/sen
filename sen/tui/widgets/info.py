@@ -8,18 +8,19 @@ import threading
 
 import urwid
 import urwidtrees
+from urwid.decoration import BoxAdapter
 
 from sen.docker_backend import RootImage
 from sen.exceptions import NotAvailableAnymore, NotifyError
 from sen.tui.widgets.list.base import WidgetBase
-from urwid.decoration import BoxAdapter
-
-from sen.tui.chunks.elemental import LayerWidget, ContainerStatusWidget, ContainerOneLinerWidget
+from sen.tui.chunks.container import ContainerStatusWidget, ContainerOneLinerWidget
+from sen.tui.chunks.image import LayerWidget
 from sen.tui.widgets.graph import ContainerInfoGraph
 from sen.tui.widgets.list.util import get_map, RowWidget, UnselectableRowWidget
 from sen.tui.widgets.table import assemble_rows
 from sen.tui.widgets.util import SelectableText, ColorText, UnselectableListBox
 from sen.util import humanize_bytes, log_traceback
+
 
 logger = logging.getLogger(__name__)
 

@@ -3,8 +3,8 @@ import threading
 import traceback
 
 import urwid
-from sen.tui.widgets.list.base import WidgetBase
 
+from sen.tui.widgets.list.base import WidgetBase
 from sen.util import _ensure_unicode
 
 

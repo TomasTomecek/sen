@@ -3,8 +3,8 @@ import logging
 import urwidtrees
 
 from sen.tui.widgets.list.util import RowWidget
-from sen.tui.widgets.util import get_basic_image_markup, SelectableText
-
+from sen.tui.widgets.util import SelectableText
+from sen.tui.chunks.image import get_basic_image_markup
 
 logger = logging.getLogger(__name__)
 

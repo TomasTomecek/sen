@@ -5,7 +5,7 @@ import threading
 import urwid
 
 from sen.exceptions import NotifyError, NotAvailableAnymore
-from sen.tui.chunks.elemental import get_row
+from sen.tui.chunks.misc import get_row
 from sen.tui.widgets.list.util import (
     get_operation_notify_widget, ResponsiveRowWidget
 )

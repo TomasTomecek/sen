@@ -1,12 +1,12 @@
+"""
+Image specific chunks.
+"""
+
 import logging
 
-from sen.docker_backend import DockerImage, DockerContainer
+from sen.docker_backend import RootImage
 from sen.tui.widgets.list.util import get_time_attr_map
-
-from sen.tui.widgets.util import (
-    SelectableText, get_basic_image_markup, get_container_status_markup,
-    get_basic_container_markup, get_map
-)
+from sen.tui.widgets.util import SelectableText, get_map
 
 
 logger = logging.getLogger(__name__)
@@ -24,19 +24,6 @@ class LayerWidget(SelectableText):
             else:
                 label = [2 * index * " " + separator]
         super().__init__(label + get_basic_image_markup(docker_image))
-
-
-class ContainerStatusWidget(SelectableText):
-    def __init__(self, docker_container):
-        markup, attr = get_container_status_markup(docker_container)
-        super().__init__(markup, attr)
-
-
-class ContainerOneLinerWidget(SelectableText):
-    def __init__(self, ui, docker_container):
-        self.ui = ui
-        self.docker_container = docker_container
-        super().__init__(get_basic_container_markup(docker_container))
 
 
 def get_detailed_image_row(docker_image):
@@ -89,29 +76,17 @@ def get_image_names_markup(docker_image):
     return text_markup
 
 
-def get_detailed_container_row(docker_container):
-    row = []
-    container_id = SelectableText(docker_container.short_id)
-    row.append(container_id)
+def get_basic_image_markup(docker_image):
+    if isinstance(docker_image, RootImage):
+        return [str(docker_image)]
 
-    command = SelectableText(docker_container.command, get_map(defult="main_list_ddg"))
-    row.append(command)
+    text_markup = [docker_image.short_id]
 
-    image = SelectableText(docker_container.image_name())
-    row.append(image)
+    if docker_image.names:
+        text_markup.append(" ")
+        text_markup.append(("main_list_lg", docker_image.names[0].to_str()))
 
-    row.append(ContainerStatusWidget(docker_container))
+    text_markup.append(" ")
+    text_markup.append(("main_list_ddg", docker_image.container_command or docker_image.comment))
 
-    name = SelectableText(docker_container.short_name)
-    row.append(name)
-
-    return row
-
-
-def get_row(docker_object):
-    if isinstance(docker_object, DockerImage):
-        return get_detailed_image_row(docker_object)
-    elif isinstance(docker_object, DockerContainer):
-        return get_detailed_container_row(docker_object)
-    else:
-        raise Exception("what ")
+    return text_markup
