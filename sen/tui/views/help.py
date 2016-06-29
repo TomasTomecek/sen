@@ -31,19 +31,10 @@ class HelpBufferView(WidgetBase, View):
             SingleTextRow(self.buffer.description,
                           maps={"normal": "main_list_dg", "focus": MAIN_LIST_FOCUS}),
             SingleTextRow(""),
-            SingleTextRow("Global Keybindings",
-                          maps={"normal": "main_list_white", "focus": MAIN_LIST_FOCUS}),
-            SingleTextRow(""),
         ]
 
-        template.extend(assemble_rows(
-            [[SelectableText(key, maps=get_map("main_list_yellow")),
-              SelectableText(command, maps=get_map("main_list_lg"))]
-             for key, command in self.global_keybinds.items()],
-            ignore_columns=[1], dividechars=3))
         if self.buffer.keybinds:
             template += [
-                SingleTextRow(""),
                 SingleTextRow("Buffer-specific Keybindings",
                               maps={"normal": "main_list_white", "focus": MAIN_LIST_FOCUS}),
                 SingleTextRow(""),
@@ -53,6 +44,18 @@ class HelpBufferView(WidgetBase, View):
                   SelectableText(command, maps=get_map("main_list_lg"))]
                  for key, command in self.buffer.keybinds.items()],
                 ignore_columns=[1], dividechars=3))
+
+        template += [
+            SingleTextRow(""),
+            SingleTextRow("Global Keybindings",
+                          maps={"normal": "main_list_white", "focus": MAIN_LIST_FOCUS}),
+            SingleTextRow("")
+        ]
+        template.extend(assemble_rows(
+            [[SelectableText(key, maps=get_map("main_list_yellow")),
+              SelectableText(command, maps=get_map("main_list_lg"))]
+             for key, command in self.global_keybinds.items()],
+            ignore_columns=[1], dividechars=3))
 
         self.set_body(template)
         self.set_focus(0)
