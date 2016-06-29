@@ -417,9 +417,13 @@ class ContainerInfoWidget(WidgetBase):
                 try:
                     update = next(g)
                 except Exception as ex:
-                    logger.warning("exception when reading stats: %r", ex)
-                    g = self.docker_container.stats().response
-                    continue
+                    if "Timeout" in ex.__class__.__name__:
+                        logger.info("timeout when reading stats: %r", ex)
+                        g = self.docker_container.stats().response
+                        continue
+                    logger.error("error while getting stats: %r", ex)
+                    self.ui.notify_message("Error while getting stats: %s" % ex, level="error")
+                    break
 
                 if self.stop.is_set():
                     break

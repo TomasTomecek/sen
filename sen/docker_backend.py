@@ -693,6 +693,7 @@ class DockerBackend:
         self._images = None  # displayed images
         self._all_images = None  # docker images -a
         kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
+        # kwargs["timeout"] = 1  # when debugging timeouts
         try:
             self.client = docker.AutoVersionClient(**kwargs)
         except docker.errors.DockerException as ex:
