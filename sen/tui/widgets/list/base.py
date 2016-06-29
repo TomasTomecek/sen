@@ -60,7 +60,11 @@ class WidgetBase(urwid.ListBox):
             if hasattr(obj, "matches_search"):
                 condition = obj.matches_search(self.search_string)
             else:
-                condition = self.search_string in obj.original_widget.text
+                if hasattr(obj, "original_widget"):
+                    text = obj.original_widget.text
+                else:
+                    text = obj.text
+                condition = self.search_string in text
             if condition:
                 self.set_focus(pos)
                 self.reload_widget()
@@ -81,7 +85,11 @@ class WidgetBase(urwid.ListBox):
             if hasattr(obj, "matches_search"):
                 condition = obj.matches_search(s)
             else:
-                condition = s in obj.original_widget.text
+                if hasattr(obj, "original_widget"):
+                    text = obj.original_widget.text
+                else:
+                    text = obj.text
+                condition = s in text
 
             if condition:
                 widgets.append(obj)
