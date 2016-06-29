@@ -1,6 +1,36 @@
 # Changelog
 
 
+## 0.4.0
+
+
+### Changes
+
+ * `q` keybind was altered slightly: it removes current buffer; if there's no buffer to remove, it closes the application
+  * This change was requested over here: [#21](https://github.com/TomasTomecek/sen/issues/21)
+ * Main listing is now sorted by date when the object was changed [#89](https://github.com/TomasTomecek/sen/pulls/89) (thanks to [@**f-cap**](https://github.com/f-cap))
+  * This should move e.g. running containers to the top of the list
+
+
+### Features
+
+ * There's a new command system being introduced
+  * Can be activated with `:`
+  * You can use `help` command for getting more info about commands
+   * calling `help` shows help buffer for current buffer
+   * calling `help command` displays help for the selected command
+  * Using keybind `?` now displays name of commands sen actually uses
+  * The command system is **experimental** and subject to change (some commands will be changed or removed in future)
+ * New listing command: open in browser [#94](https://github.com/TomasTomecek/sen/pulls/94) (thanks to [@**f-cap**](https://github.com/f-cap))
+  * You no longer need to copy-paste IP address of a container to browser, just hit `b` in main listing buffer and sen will open the `http://{ip_address}:{port}` of the particular container in your browser
+ * Understand new image format introduced in 1.10
+  * Layers are displayed in image info buffer
+
+### Bug fixes
+
+ * sen is able to start even when there are no images nor containers [#86](https://github.com/TomasTomecek/sen/pulls/86) (thanks to [@**f-cap**](https://github.com/f-cap))
+ * Persist filters and searching when changing buffers [#85](https://github.com/TomasTomecek/sen/issues/85)
+
 ## 0.3.0
 
 
