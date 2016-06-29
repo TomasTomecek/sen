@@ -33,15 +33,6 @@ class DisplayHelpCommand(FrontendCommand):
 
 
 @register_command
-class RefreshBufferCommand(FrontendCommand):
-    name = "refresh-buffer"
-
-    def run(self):
-        self.buffer.refresh()
-        self.ui.loop.refresh()
-
-
-@register_command
 class DisplayInfoBufferCommand(FrontendCommand):
     name = "display-info"
 

@@ -246,7 +246,7 @@ Examples
 
 @register_command
 class RefreshCurrentBufferCommand(SameThreadCommand):
-    name = "refresh-current-buffer"
+    name = "refresh"
     description = "Refresh current buffer."
 
     def run(self):

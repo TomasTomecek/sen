@@ -1,5 +1,5 @@
 from sen.docker_backend import DockerBackend, DockerContainer
-from sen.tui.widgets.info import ProcessList
+from sen.tui.views.container_info import ProcessList
 from tests.real import mock
 
 

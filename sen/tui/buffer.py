@@ -5,7 +5,8 @@ from sen.exceptions import NotifyError
 from sen.tui.commands.base import Command
 from sen.tui.views.help import HelpBufferView, HelpCommandView
 from sen.tui.views.main import MainListBox
-from sen.tui.widgets.info import ImageInfoWidget, ContainerInfoWidget
+from sen.tui.views.image_info import ImageInfoWidget
+from sen.tui.views.container_info import ContainerInfoView
 from sen.tui.widgets.list.common import AsyncScrollableListBox, ScrollableListBox
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.tui.widgets.tree import ImageTree
@@ -114,6 +115,7 @@ class ImageInfoBuffer(Buffer):
         "enter": "display-info",
         "d": "rm",
         "i": "inspect",
+        "@": "refresh",
     }
 
     def __init__(self, docker_image, ui):
@@ -135,6 +137,7 @@ class ContainerInfoBuffer(Buffer):
     description = "Detailed info about selected container presented in a slick dashboard."
     keybinds = {
         "enter": "display-info",
+        "@": "refresh",
         "i": "inspect",
     }
 
@@ -144,7 +147,7 @@ class ContainerInfoBuffer(Buffer):
         :param ui: ui object so we refresh
         """
         self.display_name = docker_container.short_name
-        self.widget = ContainerInfoWidget(ui, docker_container)
+        self.widget = ContainerInfoView(ui, docker_container)
         super().__init__()
 
 
@@ -177,7 +180,7 @@ class MainListBuffer(Buffer):
         "f": "logs -f",
         "i": "inspect",
         "!": "toggle-live-updates",  # TODO: rfe: move to global so this affects every buffer
-        "@": "refresh-current-buffer",  # FIXME: move to global and refactor & rewrite
+        "@": "refresh",  # FIXME: move to global and refactor & rewrite
     }
 
     def __init__(self, ui, docker_backend):

@@ -17,6 +17,7 @@ class LayerWidget(SelectableText):
         self.ui = ui
         self.docker_image = docker_image
         label = []
+        logger.debug("creating layer widget for %s", docker_image)
         if index is not None:
             separator = "└─"
             if index == 0:

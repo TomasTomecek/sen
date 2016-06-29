@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class ContainerStatusWidget(SelectableText):
-    def __init__(self, docker_container):
-        markup, attr = get_container_status_markup(docker_container)
+    def __init__(self, docker_container, nice_status=True):
+        markup, attr = get_container_status_markup(docker_container, nice_status=nice_status)
         super().__init__(markup, attr)
 
 
@@ -42,16 +42,19 @@ def get_detailed_container_row(docker_container):
     return row
 
 
-def get_container_status_markup(docker_container):
+def get_container_status_markup(docker_container, nice_status=True):
     if docker_container.running:
         attr_map = get_map("main_list_green")
-    elif docker_container.exited_well:
-        attr_map = get_map("main_list_orange")
     elif docker_container.status_created:
         attr_map = get_map("main_list_yellow")
+    elif docker_container.exited_well:
+        attr_map = get_map("main_list_orange")
     else:
         attr_map = get_map("main_list_red")
-    return docker_container.status, attr_map
+    if nice_status:
+        return docker_container.nice_status, attr_map
+    else:
+        return docker_container.simple_status_cap, attr_map
 
 
 def get_basic_container_markup(docker_container):

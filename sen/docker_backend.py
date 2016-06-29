@@ -18,6 +18,9 @@ from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_net
 logger = logging.getLogger(__name__)
 
 
+DINOSAUR_TIME = datetime.datetime.fromordinal(1)
+
+
 class ImageNameStruct(object):
     """
     stolen from atomic-reactor; thanks @mmilata!
@@ -223,6 +226,10 @@ class DockerObject:
             logger.warning("object %s is not available anymore", self)
             raise NotAvailableAnymore()
         return value
+
+    def refresh(self):
+        """ refresh metadata """
+        self.inspect(cached=False)
 
     def __eq__(self, other):
         return type(self) == type(other) and self._id == other._id
@@ -499,20 +506,32 @@ class DockerContainer(DockerObject):
         return self.data["Command"]
 
     @property
-    def status(self):
+    def nice_status(self):
         return self.data["Status"]
 
     @property
+    def simple_status(self):
+        return self.metadata_get(["State", "Status"])
+
+    @property
+    def simple_status_cap(self):
+        return self.simple_status.capitalize()
+
+    @property
     def running(self):
-        return self.status.startswith("Up")
+        return self.metadata_get(["State", "Running"])
 
     @property
     def status_created(self):
-        return self.status.startswith("Created")
+        return self.simple_status == "created"
+
+    @property
+    def exit_code(self):
+        return self.metadata_get(["State", "ExitCode"])
 
     @property
     def exited_well(self):
-        return self.status.startswith("Exited (0)")
+        return self.exit_code == 0
 
     @property
     def short_name(self):
@@ -568,7 +587,7 @@ class DockerContainer(DockerObject):
             # python expects 6 digits in milliseconds, docker returns 9
             s = s[:26]
             if s == "0001-01-01T00:00:00Z":
-                return datetime.datetime.fromordinal(1)
+                return DINOSAUR_TIME
             started_at = datetime.datetime.strptime(s, ISO_DATETIME_PARSE_STRING)
             return started_at
 
@@ -578,7 +597,7 @@ class DockerContainer(DockerObject):
         if f:
             f = f[:26]
             if f == "0001-01-01T00:00:00Z":
-                return datetime.datetime.fromordinal(1)
+                return DINOSAUR_TIME
             finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
             return finished_at
 
@@ -628,13 +647,15 @@ class DockerContainer(DockerObject):
 
         :return: None or list of dicts
         """
-        if not self.running:
-            return []
         # let's get resources from .stats()
         ps_args = "-eo pid,ppid,wchan,args"
         # returns {"Processes": [values], "Titles": [values]}
         # it's easier to play with list of dicts: [{"pid": 1, "ppid": 0}]
-        response = self.d.top(self.container_id, ps_args=ps_args)
+        try:
+            response = self.d.top(self.container_id, ps_args=ps_args)
+        except docker.errors.APIError as ex:
+            logger.warning("error getting processes: %r", ex)
+            return []
         # TODO: sort?
         logger.debug(json.dumps(response, indent=2))
         return [dict(zip(response["Titles"], process))

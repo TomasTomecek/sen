@@ -1,11 +1,10 @@
 import urwid
 
-from . import View
+from sen.tui.views.base import View
 from sen.tui.widgets.list.util import SingleTextRow
 from sen.tui.widgets.table import assemble_rows
 from sen.tui.constants import MAIN_LIST_FOCUS
 from sen.tui.widgets.util import SelectableText, get_map
-
 from sen.tui.widgets.list.base import WidgetBase
 
 
