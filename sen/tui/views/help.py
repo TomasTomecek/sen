@@ -71,8 +71,8 @@ class HelpCommandView(WidgetBase, View):
         super().__init__(ui, self.walker)
 
     def refresh(self):
-        invocation = ["[{}=value]".format(a.name) for a in self.command.argument_definitions] + \
-                     ["<{}>".format(o.name) for o in self.command.option_definitions]
+        invocation = ["[{}=value]".format(a.name) for a in self.command.options_definitions] + \
+                     ["<{}>".format(o.name) for o in self.command.arguments_definitions]
         template = [
             SingleTextRow("Command: {} {}".format(self.command.name, " ".join(invocation)),
                           maps={"normal": "main_list_white", "focus": MAIN_LIST_FOCUS}),
@@ -82,7 +82,7 @@ class HelpCommandView(WidgetBase, View):
                      for s in self.command.description.split("\n")]
         template += [SingleTextRow("")]
 
-        if self.command.option_definitions:
+        if self.command.arguments_definitions:
             template += [
                 SingleTextRow(""),
                 SingleTextRow("Arguments",
@@ -90,12 +90,12 @@ class HelpCommandView(WidgetBase, View):
                 SingleTextRow(""),
             ]
             template.extend(assemble_rows(
-                [[SelectableText(option.name, maps=get_map("main_list_yellow")),
-                  SelectableText(option.description, maps=get_map("main_list_lg"))]
-                 for option in self.command.option_definitions],
+                [[SelectableText(argument.name, maps=get_map("main_list_yellow")),
+                  SelectableText(argument.description, maps=get_map("main_list_lg"))]
+                 for argument in self.command.arguments_definitions],
                 ignore_columns=[1], dividechars=3))
 
-        if self.command.argument_definitions:
+        if self.command.options_definitions:
             template += [
                 SingleTextRow(""),
                 SingleTextRow("Options",
@@ -103,9 +103,9 @@ class HelpCommandView(WidgetBase, View):
                 SingleTextRow(""),
             ]
             template.extend(assemble_rows(
-                [[SelectableText(argument.name, maps=get_map("main_list_yellow")),
-                  SelectableText(argument.description, maps=get_map("main_list_lg"))]
-                 for argument in self.command.argument_definitions],
+                [[SelectableText(option.name, maps=get_map("main_list_yellow")),
+                  SelectableText(option.description, maps=get_map("main_list_lg"))]
+                 for option in self.command.options_definitions],
                 ignore_columns=[1], dividechars=3))
 
         self.set_body(template)
