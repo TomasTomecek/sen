@@ -9,7 +9,7 @@
  * there is a "dashboard" view for containers and images
  * you are able to inspect containers and images
  * sen can fetch logs of containers and even stream logs real-time
- * buffers support searching and filtering
+ * some buffers support searching and filtering
  * sen receives real-time updates from docker when anything changes
   * e.g. if you pull a container in another terminal, sen will pick it up
  * sen notifies you whenever something happens (and reports slow queries)
@@ -111,71 +111,64 @@ Since I am heavy `vim` user, these keybindings are trying to stay close to vim.
 ## Global
 
 ```
-/      search (provide empty query to disable searching)
-n      next search occurrence
-N      previous search occurrence
-f4     display only lines matching provided query (provide empty query to clear filtering)
-        * main listing provides additional filtering (for more info, check Listing Section)
-        * example query: "fed" - display lines containing string "fed"
-f5     open a tree view of all images (`docker images --tree` equivalent)
-ctrl o next buffer
-ctrl i previous buffer
-x      remove buffer
-ctrl l redraw user interface
-h, ?   show help
+/         search (provide empty query to disable searching)
+n         next search occurrence
+N         previous search occurrence
+f4        display only lines matching provided query (provide empty query to clear filtering)
+f5        open a tree view of all images (`docker images --tree` equivalent)
+ctrl o    navigate to next buffer
+ctrl i    navigate to previous buffer
+x         remove buffer
+q         remove buffer, quit if no buffer is left
+ctrl l    redraw user interface
+h, ?      show help
+:         open command prompt
 ```
 
 ## Movement
 
 ```
-gg     go to first item
-G      go to last item
-j      go one line down
-k      go one line up
+gg, home  go to first item
+G, end    go to last item
+j         go one line down
+k         go one line up
 pg up
-ctrl u go 10 lines up
+ctrl u    go 10 lines up
 pg down
-ctrl d go 10 lines down
+ctrl d    go 10 lines down
 ```
 
 ## Listing
 
 ```
-@      refresh listing
-f4     display only lines matching provided query (provide empty query to clear filtering)
-        * space-separated list of query strings, currently supported filters are:
-           * t[ype]=c[ontainer[s]]
-           * t[ype]=i[mage[s]]
-           * s[tate]=r[unning])
-          example query may be:
-           * "type=container" - show only containers (short equivalent is "t=c")
-           * "type=image fedora" - show images with string "fedora" in name (equivalent "t=i fedora")
+@         refresh listing
+f4        filtering, for more info run `help filter` in sen
 ```
 
 ## Image commands in listing
 
 ```
-i      inspect image
-d      remove image (irreversible!)
-enter  display detailed info about image (when layer is focused)
+i         inspect image
+d         remove image (irreversible!)
+enter     display detailed info about image (when layer is focused)
 ```
 
 ## Container commands in listing
 
 ```
-i      inspect container
-l      display logs of container
-f      follow logs of container
-d      remove container (irreversible!)
-t      stop container
-s      start container
-r      restart container
-p      pause container
-u      unpause container
-b      open container's mapped ports in a web-browser
-X      kill container
-!      toggle realtime updates of the interface (this is useful when you are removing multiple
-       objects and don't want the listing change during that so you accidentally remove something)
+i         inspect container
+l         display logs of container
+f         follow logs of container
+d         remove container (irreversible!)
+t         stop container
+s         start container
+r         restart container
+p         pause container
+u         unpause container
+b         open container's mapped ports in a web-browser
+X         kill container
+!         toggle realtime updates of the interface (this is useful when you are removing multiple
+          objects and don't want the listing change during that so you accidentally remove something)
 ```
 
 ## Tree buffer
@@ -187,9 +180,16 @@ enter  display detailed info about image (opens image info buffer)
 ## Image info buffer
 
 ```
-d      remove image tag (when image name is focused)
-enter  display detailed info about image (when layer is focused)
-i      inspect image (when layer is focused)
+enter     display detailed info about image (when an image is focused)
+i         inspect image or container, whatever is focused
+```
+
+
+## Container info buffer
+
+```
+enter     display detailed info about image (when image of the container is focued)
+i         inspect image (when image of the container is focued)
 ```
 
 
