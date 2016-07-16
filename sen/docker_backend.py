@@ -570,7 +570,6 @@ class DockerContainer(DockerObject):
             if s == "0001-01-01T00:00:00Z":
                 return datetime.datetime.fromordinal(1)
             started_at = datetime.datetime.strptime(s, ISO_DATETIME_PARSE_STRING)
-            logger.debug("started at %s", started_at)
             return started_at
 
     @property
@@ -581,7 +580,6 @@ class DockerContainer(DockerObject):
             if f == "0001-01-01T00:00:00Z":
                 return datetime.datetime.fromordinal(1)
             finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
-            logger.debug("finished at %s", finished_at)
             return finished_at
 
     @property
