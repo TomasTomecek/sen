@@ -56,12 +56,6 @@ def main():
     except KeyboardInterrupt:
         print("Quitting on user request.")
         return 1
-    # except AssertionError as ex:
-        # if ex.args[0] == "rows, render mismatch":
-        #     logger.error("race condition happened")
-        #     # restart the ui
-        #     # # continue
-    #    return 2
     except Exception as ex:  # pylint: disable=broad-except
         log_last_traceback()
         if args.debug:
