@@ -276,16 +276,18 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
 
         return widget
 
-    def run_command(self, command_input, **kwargs):
+    def run_command(self, command_input, queue=None, **kwargs):
         kwargs["buffer"] = self.current_buffer
         command = self.commander.get_command(command_input, **kwargs)
         if command is None:
             return
-        if isinstance(command.priority, FrontendPriority):
+        if queue is None:
+            queue = command.priority
+        if isinstance(queue, FrontendPriority):
             self.run_quickly_in_background(command.run)
-        elif isinstance(command.priority, BackendPriority):
+        elif isinstance(queue, BackendPriority):
             self.run_in_background(command.run)
-        elif isinstance(command.priority, SameThreadPriority):
+        elif isinstance(queue, SameThreadPriority):
             logger.info("running command %s", command)
             try:
                 command.run()
@@ -311,8 +313,6 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
 
         logger.info("key was not consumed by frame components")
 
-        # FIXME: sen tracebacks when current buffer is not initialized and you try to run commmands
-        #   repro: run sen and hit "?" asap
         focused_docker_object = None
         selected_widget = getattr(self.current_buffer, "widget", None)
         if selected_widget:

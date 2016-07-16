@@ -4,7 +4,7 @@ Application specific code.
 
 import logging
 
-from sen.tui.commands.base import Commander
+from sen.tui.commands.base import Commander, SameThreadPriority
 from sen.tui.commands.display import DisplayListingCommand
 from sen.tui.ui import get_app_in_loop
 from sen.tui.constants import PALLETE
@@ -23,5 +23,5 @@ class Application:
         self.ui.commander = Commander(self.ui, self.d)
 
     def run(self):
-        self.ui.run_command(DisplayListingCommand.name)
+        self.ui.run_command(DisplayListingCommand.name, queue=SameThreadPriority())
         self.loop.run()
