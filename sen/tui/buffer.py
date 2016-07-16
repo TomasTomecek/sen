@@ -108,6 +108,10 @@ class Buffer:
             logger.info("refreshing widget %s", self.widget)
             refresh_func()
 
+    def process_realtime_event(self, event):
+        logging.info("buffer %s doesn't process realtime events", self)
+        return
+
 
 class ImageInfoBuffer(Buffer):
     description = "Dashboard for information about selected image."
@@ -187,6 +191,9 @@ class MainListBuffer(Buffer):
         self.ui = ui
         self.widget = MainListBox(ui, docker_backend)
         super().__init__()
+
+    def process_realtime_event(self, event):
+        self.widget.process_realtime_event(event)
 
 
 class LogsBuffer(Buffer):

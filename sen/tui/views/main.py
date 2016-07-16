@@ -41,9 +41,7 @@ class MainListBox(ResponsiveTable):
         # realtime lock
         self.realtime_lock = threading.Lock()
 
-        self.thread = None
         self.stop_realtime_events = threading.Event()
-        self.toggle_realtime_events(initial_start=True)
 
     def refresh(self, query=None):
         """
@@ -60,44 +58,21 @@ class MainListBox(ResponsiveTable):
             except IndexError:
                 pass
 
+    def process_realtime_event(self, event):
+        with self.realtime_lock:
+            if self.stop_realtime_events.is_set():
+                logger.info("received docker event when this functionality is disabled")
+                return
+        self.refresh(query=self.filter_query)
+
     def filter(self, s, widgets_to_filter=None):
         self.refresh(query=s)
 
-    def realtime_updates(self):
-        """
-        update listing realtime as events come from docker
-
-        :return:
-        """
-        # TODO: make this available for every buffer
-        logger.info("starting receiving events from docker")
-        it = self.d.realtime_updates()
-        while True:
-            try:
-                next(it)
-            except NotifyError as ex:
-                self.ui.notify_message(ex.args[0], level="error")
-                return
-            with self.realtime_lock:
-                if self.stop_realtime_events.is_set():
-                    logger.info("received docker event when this functionality is disabled")
-                    return
-            self.refresh(query=self.filter_query)
-
-    def toggle_realtime_events(self, initial_start=None):
-        if initial_start:
-            self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
-            self.thread.start()
-            return
-
+    def toggle_realtime_events(self):
         with self.realtime_lock:
             if self.stop_realtime_events.is_set():
                 self.stop_realtime_events.clear()
                 self.ui.notify_message("Enabling live updates from docker.")
-                if not self.thread.is_alive():
-                    logger.info("starting events thread: it wasn't active")
-                    self.thread = threading.Thread(target=self.realtime_updates, daemon=True)
-                    self.thread.start()
             else:
                 self.stop_realtime_events.set()
                 self.ui.notify_message("Disabling live updates from docker.")

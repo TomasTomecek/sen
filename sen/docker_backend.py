@@ -751,38 +751,40 @@ class DockerBackend:
         return list(self._containers.values())
 
     def realtime_updates(self):
-        it = repeater(self.client.events, kwargs={"decode": True}, retries=5)
+        event = it = None
         while True:
-            event = repeater(next, args=(it, ), retries=2)  # likely an engine restart
-            if not event:
+            if not it or not event:
                 it = repeater(self.client.events, kwargs={"decode": True}, retries=5)
                 if not it:
                     raise NotifyError("Unable to fetch realtime updates from docker engine.")
-                continue
-            logger.debug("RT event: %s", event)
-            yield event
-            continue
-            # FIXME: this needs rewrite
 
-            try:
-                # 1.10+
-                is_container = event["Type"] == "container"
-            except KeyError:
-                # event["from'] means it's a container
-                is_container = "from" in event
-            if is_container:
-                # inspect doesn't contain info about status and you can't query just one
-                # container with containers()
-                # let's do full-blown containers() query; it's not that expensive
-                self.get_containers(cached=False)
-            else:
-                # similar as ^
-                # images() doesn't support query by ID
-                # inspect doesn't contain info about repositories
-                self.get_images(cached=False)
-            content, _, _ = self.filter(containers=True, images=True, stopped=True,
-                                        cached=True, sort_by_created=True)
-            yield content
+            event = repeater(next, args=(it, ), retries=2)  # likely an engine restart
+            if not event:
+                continue
+
+            logger.debug("RT event: %s", event)
+
+            yield event
+
+            # try:
+            #     # 1.10+
+            #     is_container = event["Type"] == "container"
+            # except KeyError:
+            #     # event["from'] means it's a container
+            #     is_container = "from" in event
+            # if is_container:
+            #     # inspect doesn't contain info about status and you can't query just one
+            #     # container with containers()
+            #     # let's do full-blown containers() query; it's not that expensive
+            #     self.get_containers(cached=False)
+            # else:
+            #     # similar as ^
+            #     # images() doesn't support query by ID
+            #     # inspect doesn't contain info about repositories
+            #     self.get_images(cached=False)
+            # content, _, _ = self.filter(containers=True, images=True, stopped=True,
+            #                             cached=True, sort_by_created=True)
+            # yield content
 
     # service methods
 
