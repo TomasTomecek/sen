@@ -327,7 +327,7 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
         except KeyNotMapped as ex:
             super_class = ThreadSafeFrame
             logger.debug("calling: %s.keypress(%s, %s)", super_class, size, key)
-            # TODO: up/down doesn't do anything if len(lines) < screen height - confusing
+            # TODO: up/down doesn't do anything if len(lines) < screen height, that's confusing
             key = super_class.keypress(self, size, key)
             if key:
                 self.notify_message(str(ex), level="error")
