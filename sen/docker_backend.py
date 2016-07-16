@@ -10,6 +10,7 @@ from sen.constants import ISO_DATETIME_PARSE_STRING
 from sen.exceptions import TerminateApplication, NotifyError, NotAvailableAnymore
 
 import docker
+import docker.errors
 
 from sen.net import NetData
 from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes, repeater, \
@@ -178,6 +179,12 @@ class DockerObject:
                 raise RuntimeError("initial data not specified")
 
     @property
+    def object_id(self):
+        if self._id is None:
+            self.set_id()
+        return self._id
+
+    @property
     def short_id(self):
         if self._short_id is None:
             self.set_id()
@@ -256,9 +263,7 @@ def graceful_chain_get(d, *args):
 class DockerImage(DockerObject):
     @property
     def image_id(self):
-        if self._id is None:
-            self.set_id()
-        return self._id
+        return self.object_id
 
     @property
     def parent_id(self):
@@ -487,9 +492,7 @@ class DockerContainer(DockerObject):
 
     @property
     def container_id(self):
-        if self._id is None:
-            self.set_id()
-        return self._id
+        return self.object_id
 
     @property
     def names(self):

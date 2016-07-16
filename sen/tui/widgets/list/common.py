@@ -13,18 +13,23 @@ logger = logging.getLogger(__name__)
 
 class ScrollableListBox(WidgetBase):
     def __init__(self, ui, text, focus_bottom=True):
-        text = _ensure_unicode(text)
-        list_of_texts = text.split("\n")
-        self.walker = urwid.SimpleFocusListWalker([
-            urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
-            for t in list_of_texts
-        ])
+        self.walker = urwid.SimpleFocusListWalker([])
         super().__init__(ui, self.walker)
+        self.set_text(text)
         if focus_bottom:
             try:
                 self.set_focus(len(self.walker) - 2)
             except IndexError:
                 pass
+
+    def set_text(self, text):
+        self.walker.clear()
+        text = _ensure_unicode(text)
+        list_of_texts = text.split("\n")
+        self.walker[:] = [
+            urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
+            for t in list_of_texts
+        ]
 
 
 class AsyncScrollableListBox(WidgetBase):

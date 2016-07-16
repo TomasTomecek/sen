@@ -132,9 +132,14 @@ class ImageInfoBuffer(Buffer):
         if docker_image.image_id == "<missing>":
             raise NotifyError("This image (layer) is not available due to changes in docker-1.10 "
                               "image representation.")
+        self.docker_image = docker_image
         self.display_name = docker_image.short_name
         self.widget = ImageInfoWidget(ui, docker_image)
         super().__init__()
+
+    def process_realtime_event(self, event):
+        if event.get("id", None) == self.docker_image.object_id:
+            self.widget.refresh()
 
 
 class ContainerInfoBuffer(Buffer):
@@ -150,9 +155,17 @@ class ContainerInfoBuffer(Buffer):
         :param docker_container:
         :param ui: ui object so we refresh
         """
+        self.docker_container = docker_container
         self.display_name = docker_container.short_name
         self.widget = ContainerInfoView(ui, docker_container)
         super().__init__()
+
+    def process_realtime_event(self, event):
+        action = event.get("Action", None)
+        if action == "top":
+            return
+        if event.get("id", None) == self.docker_container.object_id:
+            self.widget.refresh()
 
 
 class TreeBuffer(Buffer):
@@ -240,10 +253,22 @@ class InspectBuffer(Buffer):
 
         :param docker_object: object to inspect
         """
-        inspect_data = docker_object.display_inspect()
-        self.widget = ScrollableListBox(ui, inspect_data)
+        self.docker_object = docker_object
+        self.ui = ui
+        self.widget = None
         self.display_name += docker_object.short_name
         super().__init__()
+
+    def refresh(self):
+        inspect_data = self.docker_object.display_inspect()
+        self.widget = ScrollableListBox(self.ui, inspect_data)
+
+    def process_realtime_event(self, event):
+        if event.get("id", None) == self.docker_object.object_id:
+            self.ui.notify_message("Docker object changed, refreshing.")
+            focus = self.widget.get_focus()[1]
+            self.widget.set_text(self.docker_object.display_inspect())
+            self.widget.set_focus(focus)
 
 
 class HelpBuffer(Buffer):

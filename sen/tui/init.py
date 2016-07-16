@@ -48,4 +48,5 @@ class Application:
                                        level="error")
                 return
             for buffer in self.ui.buffers:
+                logger.debug("pass event to buffer %s", buffer)
                 buffer.process_realtime_event(event)
