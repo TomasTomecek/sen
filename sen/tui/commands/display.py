@@ -71,5 +71,4 @@ class DisplayListingCommand(FrontendCommand):
 
     def run(self):
         b = MainListBuffer(self.ui, self.docker_backend)
-        b.refresh()
         self.ui.add_and_display_buffer(b, redraw=True)
