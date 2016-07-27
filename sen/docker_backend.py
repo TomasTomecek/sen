@@ -609,7 +609,10 @@ class DockerContainer(DockerObject):
         # docker acts weird: 'created' is provided as ordinal and is local time
         # 'started' and 'finished' are UTC as timestamp; it would be awesome to unite those b/c
         # atm these inconsistencies mess ordering
-        return max(self.started_at, self.finished_at, super().natural_sort_value)
+        try:
+            return max(self.started_at, self.finished_at, super().natural_sort_value)
+        except NotAvailableAnymore:
+            return super().natural_sort_value
 
     # methods
 
