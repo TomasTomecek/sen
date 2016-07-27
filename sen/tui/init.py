@@ -47,6 +47,7 @@ class Application:
                 self.ui.notify_message("error when receiving realtime events from docker: %s" % ex,
                                        level="error")
                 return
-            for buffer in self.ui.buffers:
-                logger.debug("pass event to buffer %s", buffer)
-                buffer.process_realtime_event(event)
+            # we could pass to all buffers, but the buffers can't be rendered since they are not displayed
+            # and hence traceback like this: ListBoxError("Listbox contents too short! ...
+            logger.debug("pass event to current buffer %s", self.ui.current_buffer)
+            self.ui.current_buffer.process_realtime_event(event)
