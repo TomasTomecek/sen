@@ -26,8 +26,7 @@ def test_containers_call():
     assert containers_response[0].short_name == container_data["Names"][0]
     assert containers_response[0].created_int == container_data["Created"]
     assert containers_response[0].command == container_data["Command"]
-    assert containers_response[0].status == container_data["Status"]
-    assert containers_response[0].running is False
+    assert containers_response[0].nice_status == container_data["Status"]
     assert containers_response[0].image_id == container_data["ImageID"]
     # assert containers_response[0].image_name()
 
