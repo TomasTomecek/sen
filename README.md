@@ -79,6 +79,7 @@ $ sen
 ```
 $ git clone https://github.com/TomasTomecek/sen
 $ cd sen
+$ pip3 install --user -r ./requirements.txt
 $ ./setup.py install
 $ sen
 ```
@@ -88,7 +89,14 @@ Or even run `sen` straight from git:
 ```
 $ git clone https://github.com/TomasTomecek/sen
 $ cd sen
+$ pip3 install --user -r ./requirements.txt
 $ PYTHONPATH="$PWD:$PYTHONPATH" ./sen/cli.py
+```
+
+If `pip3` executable is not available on your system, you can run pip like this:
+
+```
+$ python3 -m pip install sen
 ```
 
 
