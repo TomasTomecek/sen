@@ -1,7 +1,8 @@
 # sen
 
-[![Code Issues](https://www.quantifiedcode.com/api/v1/project/5282fc57c1094698b39071d98c76cdb6/badge.svg)](https://www.quantifiedcode.com/app/project/5282fc57c1094698b39071d98c76cdb6)
 [![Circle CI](https://circleci.com/gh/TomasTomecek/sen.svg?style=svg)](https://circleci.com/gh/TomasTomecek/sen)
+[![](https://images.microbadger.com/badges/image/tomastomecek/sen.svg)](https://microbadger.com/images/tomastomecek/sen "Get your own image badge on microbadger.com")
+
 
 `sen` is a terminal user interface for docker engine:
  * it can interactively manage your containers and images:
