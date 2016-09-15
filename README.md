@@ -208,3 +208,4 @@ Since I started using docker, I always dreamed of having a docker TUI. Something
 
 So I realized that if I want make my dream come true, I need to do it myself. That's where I started working on *sen* (*dream* in Slovak).
 
+But! As the time went, [someone](https://github.com/moncho) else had the same idea as I did: [dry](https://github.com/moncho/dry).
