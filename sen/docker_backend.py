@@ -676,8 +676,13 @@ class DockerContainer(DockerObject):
     @operation("Logs of container {object_short_name} received.")
     def logs(self, follow=False, lines="all"):
         # when tail is set to all, it takes ages to populate widget
-        logs_data = self.d.logs(self.container_id, stream=follow, tail=lines)
-        return logs_data
+        # docker-py does `inspect` in the background
+        try:
+            logs_data = self.d.logs(self.container_id, stream=follow, tail=lines)
+        except docker.errors.NotFound:
+            return None
+        else:
+            return logs_data
 
     @operation("{object_type} {object_short_name} removed!")
     def remove(self):
