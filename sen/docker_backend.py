@@ -423,7 +423,10 @@ class DockerImage(DockerObject):
     @operation("Inspect image {object_short_name}.")
     def inspect(self, cached=False):
         if self._inspect is None or cached is False:
-            self._inspect = self.d.inspect_image(self.image_id)
+            try:
+                self._inspect = self.d.inspect_image(self.image_id)
+            except docker.errors.NotFound:
+                self._inspect = self._inspect or {}
         return self._inspect
 
     @operation("{object_type} {object_short_name} removed!")
@@ -670,7 +673,10 @@ class DockerContainer(DockerObject):
     @operation("Inspect container {object_short_name}.")
     def inspect(self, cached=False):
         if cached is False or self._inspect is None:
-            self._inspect = self.d.inspect_container(self.container_id)
+            try:
+                self._inspect = self.d.inspect_container(self.container_id)
+            except docker.errors.NotFound:
+                self._inspect = self._inspect or {}
         return self._inspect
 
     @operation("Logs of container {object_short_name} received.")
