@@ -613,7 +613,10 @@ class DockerContainer(DockerObject):
         # 'started' and 'finished' are UTC as timestamp; it would be awesome to unite those b/c
         # atm these inconsistencies mess ordering
         try:
-            return max(self.started_at, self.finished_at, super().natural_sort_value)
+            # Nones are unsortable
+            return max([x for x in
+                        [self.started_at, self.finished_at, super().natural_sort_value]
+                        if x)
         except NotAvailableAnymore:
             return super().natural_sort_value
 
