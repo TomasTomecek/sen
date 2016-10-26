@@ -616,7 +616,7 @@ class DockerContainer(DockerObject):
             # Nones are unsortable
             return max([x for x in
                         [self.started_at, self.finished_at, super().natural_sort_value]
-                        if x)
+                        if x])
         except NotAvailableAnymore:
             return super().natural_sort_value
 
