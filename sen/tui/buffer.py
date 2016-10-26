@@ -109,7 +109,7 @@ class Buffer:
             refresh_func()
 
     def process_realtime_event(self, event):
-        logging.info("buffer %s doesn't process realtime events", self)
+        logger.info("buffer %s doesn't process realtime events", self)
         return
 
 

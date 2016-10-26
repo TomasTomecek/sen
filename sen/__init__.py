@@ -7,6 +7,9 @@ __version__ = "0.3.1-dev"
 
 def set_logging(name="sen", level=logging.DEBUG, path=FALLBACK_LOG_PATH):
     logger = logging.getLogger(name)
+    # do not propagate logs from logger 'sen' to root logger (as they could be accidentally
+    # displayed in terminal)
+    logger.propagate = False
     logger.setLevel(level)
 
     handler = logging.FileHandler(path)

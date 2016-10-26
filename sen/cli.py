@@ -38,6 +38,9 @@ def main():
 
     args = parser.parse_args()
 
+    # !IMPORTANT! make sure that sen does NOT log via `logging.info` b/c it sets up root logger
+    # and adds StreamHandler which causes to display logs on stdout which is definitely what we
+    # don't want in a terminal app (thanks to Slavek Kabrda for explanation)
     if args.debug:
         set_logging(level=logging.DEBUG, path=get_log_file_path())
     else:
