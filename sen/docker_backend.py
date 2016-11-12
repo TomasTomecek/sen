@@ -306,7 +306,11 @@ class DockerImage(DockerObject):
         #     "Comment": "",
         #     "CreatedBy": "/bin/sh -c #(nop) ADD file:bcb5e5c... in /"
         # }
-        response = self.d.history(self.image_id)
+        try:
+            response = self.d.history(self.image_id)
+        except docker.errors.NotFound:
+            raise NotAvailableAnymore()
+
         layers = []
         for l in response:
             layer_id = l["Id"]

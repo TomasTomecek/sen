@@ -47,7 +47,12 @@ class Application:
                 self.ui.notify_message("error when receiving realtime events from docker: %s" % ex,
                                        level="error")
                 return
-            # we could pass to all buffers, but the buffers can't be rendered since they are not displayed
+            # FIXME: we should pass events to all buffers
+            # ATM the buffers can't be rendered since they are not displayed
             # and hence traceback like this: ListBoxError("Listbox contents too short! ...
             logger.debug("pass event to current buffer %s", self.ui.current_buffer)
-            self.ui.current_buffer.process_realtime_event(event)
+            try:
+                self.ui.current_buffer.process_realtime_event(event)
+            except Exception as ex:
+                # swallow any exc
+                logger.error("error while processing runtime event: %r", ex)
