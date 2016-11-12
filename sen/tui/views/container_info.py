@@ -180,9 +180,12 @@ class ContainerInfoView(WidgetBase, View):
 
         self.stop = threading.Event()
 
+        self.view_widgets = []
+
     def refresh(self):
+        self.view_widgets.clear()
         self.docker_container.refresh()
-        self.walker.clear()
+
         self._basic_data()
         self._net()
         self._image()
@@ -190,6 +193,9 @@ class ContainerInfoView(WidgetBase, View):
         self._resources()
         self._labels()
         self._logs()
+
+        # we'll update listwalker in one step: changing it periodically can be race-y
+        self.set_body(self.view_widgets)
         self.set_focus(0)
 
     @property
@@ -217,7 +223,7 @@ class ContainerInfoView(WidgetBase, View):
                 [SelectableText("Name", maps=get_map("main_list_green")),
                  SelectableText("".join(self.docker_container.names))],
             )
-        self.walker.extend(assemble_rows(data, ignore_columns=[1]))
+        self.view_widgets.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _net(self):
         try:
@@ -255,16 +261,16 @@ class ContainerInfoView(WidgetBase, View):
                         SelectableText(net_name), SelectableText(a6)
                     ])
         if data:
-            self.walker.extend(assemble_rows(data, dividechars=3, ignore_columns=[1]))
+            self.view_widgets.extend(assemble_rows(data, dividechars=3, ignore_columns=[1]))
 
     def _image(self):
-        self.walker.append(RowWidget([SelectableText("")]))
-        self.walker.append(RowWidget([SelectableText("Image", maps=get_map("main_list_white"))]))
-        self.walker.append(RowWidget([LayerWidget(self.ui, self.docker_container.image)]))
+        self.view_widgets.append(RowWidget([SelectableText("")]))
+        self.view_widgets.append(RowWidget([SelectableText("Image", maps=get_map("main_list_white"))]))
+        self.view_widgets.append(RowWidget([LayerWidget(self.ui, self.docker_container.image)]))
 
     def _resources(self):
-        self.walker.append(RowWidget([SelectableText("")]))
-        self.walker.append(RowWidget([SelectableText("Resource Usage",
+        self.view_widgets.append(RowWidget([SelectableText("")]))
+        self.view_widgets.append(RowWidget([SelectableText("Resource Usage",
                                                      maps=get_map("main_list_white"))]))
         cpu_g = ContainerInfoGraph("graph_lines_cpu_tips", "graph_lines_cpu")
         mem_g = ContainerInfoGraph("graph_lines_mem_tips", "graph_lines_mem")
@@ -285,7 +291,7 @@ class ContainerInfoView(WidgetBase, View):
         net_r_value = ColorText("0 B", "graph_lines_net_r_legend")
         net_w_label = ColorText("Net Tx ", "graph_lines_net_w_legend")
         net_w_value = ColorText("0 B", "graph_lines_net_w_legend")
-        self.walker.append(urwid.Columns([
+        self.view_widgets.append(urwid.Columns([
             BoxAdapter(cpu_g, 12),
             BoxAdapter(mem_g, 12),
             ("weight", 0.5, BoxAdapter(blk_r_g, 12)),
@@ -301,7 +307,7 @@ class ContainerInfoView(WidgetBase, View):
                 UnselectableRowWidget([(12, net_w_label), net_w_value]),
             ])), 12),
         ]))
-        self.walker.append(RowWidget([SelectableText("")]))
+        self.view_widgets.append(RowWidget([SelectableText("")]))
 
         @log_traceback
         def realtime_updates():
@@ -355,28 +361,28 @@ class ContainerInfoView(WidgetBase, View):
         if not self.docker_container.labels:
             return []
         data = []
-        self.walker.append(RowWidget([SelectableText("Labels", maps=get_map("main_list_white"))]))
+        self.view_widgets.append(RowWidget([SelectableText("Labels", maps=get_map("main_list_white"))]))
         for label_key, label_value in self.docker_container.labels.items():
             data.append([SelectableText(label_key, maps=get_map("main_list_green")), SelectableText(label_value)])
-        self.walker.extend(assemble_rows(data, ignore_columns=[1]))
+        self.view_widgets.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _process_tree(self):
         top = self.docker_container.top().response
         logger.debug(top)
         if top:
-            self.walker.append(RowWidget([SelectableText("")]))
-            self.walker.append(RowWidget([SelectableText("Process Tree",
+            self.view_widgets.append(RowWidget([SelectableText("")]))
+            self.view_widgets.append(RowWidget([SelectableText("Process Tree",
                                                          maps=get_map("main_list_white"))]))
-            self.walker.append(BoxAdapter(ProcessTree(top), len(top)))
+            self.view_widgets.append(BoxAdapter(ProcessTree(top), len(top)))
 
     def _logs(self):
         operation = self.docker_container.logs(follow=False, lines=10)
         if operation.response:
-            self.walker.append(RowWidget([SelectableText("")]))
-            self.walker.append(RowWidget([SelectableText("Logs",
-                                                         maps=get_map("main_list_white"))]))
-            for x in operation.response.splitlines():
-                self.walker.append(RowWidget([SelectableText(x)]))
+            l = []
+            l.append(RowWidget([SelectableText("")]))
+            l.append(RowWidget([SelectableText("Logs", maps=get_map("main_list_white"))]))
+            l.extend([RowWidget([SelectableText(x)]) for x in operation.response.splitlines()])
+            self.view_widgets.extend(l)
 
     def destroy(self):
         self.stop.set()
