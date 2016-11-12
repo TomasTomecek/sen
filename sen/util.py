@@ -1,16 +1,14 @@
 import os
-import sys
 import logging
 import functools
-import threading
 import traceback
-
 import time
 from datetime import datetime
 
 from docker.errors import APIError
 
 from sen.constants import PROJECT_NAME, LOG_FILE_NAME
+
 
 logger = logging.getLogger(__name__)
 
