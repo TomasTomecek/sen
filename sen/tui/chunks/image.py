@@ -4,6 +4,8 @@ Image specific chunks.
 
 import logging
 
+from sen.util import humanize_bytes
+
 from sen.docker_backend import RootImage
 from sen.tui.widgets.list.util import get_time_attr_map
 from sen.tui.widgets.util import SelectableText, get_map
@@ -24,7 +26,7 @@ class LayerWidget(SelectableText):
                 label = [separator]
             else:
                 label = [2 * index * " " + separator]
-        super().__init__(label + get_basic_image_markup(docker_image))
+        super().__init__(label + get_basic_image_markup(docker_image, with_size=True))
 
 
 def get_detailed_image_row(docker_image):
@@ -77,7 +79,7 @@ def get_image_names_markup(docker_image):
     return text_markup
 
 
-def get_basic_image_markup(docker_image):
+def get_basic_image_markup(docker_image, with_size=False):
     if isinstance(docker_image, RootImage):
         return [str(docker_image)]
 
@@ -87,7 +89,13 @@ def get_basic_image_markup(docker_image):
         text_markup.append(" ")
         text_markup.append(("main_list_lg", docker_image.names[0].to_str()))
 
-    text_markup.append(" ")
-    text_markup.append(("main_list_ddg", docker_image.container_command or docker_image.comment))
+    c = docker_image.container_command or docker_image.comment
+    if c:
+        text_markup.append(" ")
+        text_markup.append(("main_list_ddg", c))
+
+    if with_size:
+        text_markup.append(" ")
+        text_markup.append(("main_list_ddg", "(%s)" % humanize_bytes(docker_image.layer_size)))
 
     return text_markup

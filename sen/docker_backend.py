@@ -374,11 +374,20 @@ class DockerImage(DockerObject):
     @property
     def size(self):
         """
-        Size of all layers in bytes
+        Size of ALL layers in bytes
 
         :return: int
         """
         return self.data.get("VirtualSize", 0)
+
+    @property
+    def layer_size(self):
+        """
+        Size of ONLY this particular layer
+
+        :return: int
+        """
+        return self.data.get("Size", 0)
 
     @property
     def names(self):
