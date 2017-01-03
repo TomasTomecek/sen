@@ -13,7 +13,7 @@ class TreeNodeWidget(SelectableText):
     def __init__(self, ui, docker_image):
         self.ui = ui
         self.docker_image = docker_image
-        super().__init__(get_basic_image_markup(docker_image))
+        super().__init__(get_basic_image_markup(docker_image, with_size=True))
 
 
 class TreeBackend(urwidtrees.Tree):
