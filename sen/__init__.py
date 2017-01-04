@@ -2,7 +2,7 @@ import logging
 
 from sen.constants import FALLBACK_LOG_PATH
 
-__version__ = "0.3.1-dev"
+__version__ = "0.5.0"
 
 
 def set_logging(name="sen", level=logging.DEBUG, path=FALLBACK_LOG_PATH):
