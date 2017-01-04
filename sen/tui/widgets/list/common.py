@@ -1,4 +1,5 @@
 import logging
+import re
 import threading
 import traceback
 
@@ -9,6 +10,62 @@ from sen.util import _ensure_unicode
 
 
 logger = logging.getLogger(__name__)
+
+
+# def translate_asci_sequence(s):
+#     # FIXME: not finished
+#     translation_map = {
+#         "34": "dark blue"
+#     }
+#     return translation_map.get(s, "")
+
+
+def strip_from_ansi_esc_sequences(text):
+    """
+    find ANSI escape sequences in text and remove them
+
+    :param text: str
+    :return: list, should be passed to ListBox
+    """
+    # esc[ + values + control character
+    # h, l, p commands are complicated, let's ignore them
+    seq_regex = r"\x1b\[[0-9;]*[mKJusDCBAfH]"
+    regex = re.compile(seq_regex)
+    start = 0
+    response = ""
+    for match in regex.finditer(text):
+        end = match.start()
+        response += text[start:end]
+
+        start = match.end()
+    response += text[start:len(text)]
+    return response
+
+
+# def colorize_text(text):
+#     """
+#     finds ANSI color escapes in text and transforms them to urwid
+#
+#     :param text: str
+#     :return: list, should be passed to ListBox
+#     """
+#     # FIXME: not finished
+#     response = []
+#     # http://ascii-table.com/ansi-escape-sequences.php
+#     regex_pattern = r"(?:\x1b\[(\d+)?(?:;(\d+))*m)([^\x1b]+)"  # [%d;%d;...m
+#     regex = re.compile(regex_pattern, re.UNICODE)
+#     for match in regex.finditer(text):
+#         groups = match.groups()
+#         t = groups[-1]
+#         color_specs = groups[:-1]
+#         urwid_spec = translate_asci_sequence(color_specs)
+#         if urwid_spec:
+#             item = (urwid.AttrSpec(urwid_spec, "main_list_dg"), t)
+#         else:
+#             item = t
+#         item = urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
+#         response.append(item)
+#     return response
 
 
 class ScrollableListBox(WidgetBase):
@@ -25,9 +82,11 @@ class ScrollableListBox(WidgetBase):
     def set_text(self, text):
         self.walker.clear()
         text = _ensure_unicode(text)
+        # logger.debug(repr(text))
+        text = strip_from_ansi_esc_sequences(text)
         list_of_texts = text.split("\n")
         self.walker[:] = [
-            urwid.AttrMap(urwid.Text(t, align="left", wrap="any"), "main_list_dg", "main_list_white")
+            urwid.AttrMap(urwid.Text(t.strip(), align="left", wrap="any"), "main_list_dg", "main_list_white")
             for t in list_of_texts
         ]
 

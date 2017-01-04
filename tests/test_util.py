@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from flexmock import flexmock
 
+from sen.tui.widgets.list.common import strip_from_ansi_esc_sequences
 from sen.util import _ensure_unicode, log_traceback, repeater, humanize_time, \
     OrderedSet
 
@@ -121,3 +122,35 @@ def test_ordered_set():
     assert s == [1, 2]
     s.append(1)
     assert s == [2, 1]
+
+
+# @pytest.mark.parametrize("inp,expected", [
+#     ("aaa", ["aaa"]),
+#     (
+#         "qwe [01;34m asd [01;33mbnm",
+#         ["qwe ", " asd ", "bnm"]
+#     )
+# ])
+# def test_colorize_text(inp, expected):
+#     got = colorize_text(inp)
+#     for idx, c in enumerate(got):
+#         if isinstance(c, str):
+#             assert expected[idx] == c
+#         else:
+#             assert expected[idx] == c[1]
+
+
+@pytest.mark.parametrize("inp,expected", [
+    ("aaa", "aaa"),
+    (
+        "root:x:0:0:root:/root:/bin/b\x1b[01;31m\x1b[Ka\x1b[m\x1b[Ksh",
+        "root:x:0:0:root:/root:/bin/bash"
+    ),
+    (
+        "\x1b[0m\x1b[01;36mbin\x1b[0m\r\n\x1b[01;34mboot\x1b[0m\r\n\x1b[01;34mdev\x1b[0m\r\n",
+        "bin\r\nboot\r\ndev\r\n"
+    )
+])
+def test_strip_from_ansi_seqs(inp, expected):
+    got = strip_from_ansi_esc_sequences(inp)
+    assert got == expected
