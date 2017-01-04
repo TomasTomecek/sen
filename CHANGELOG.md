@@ -1,6 +1,22 @@
 # Changelog
 
 
+## 0.5.0
+
+
+### Features
+
+ * Realtime events from docker daemon refresh container info and image info buffers.
+ * Layer size is now displayed in layer tree view. [#115](https://github.com/TomasTomecek/sen/issues/115)
+ * ANSI escape sequences are now stripped from container logs. [#67](https://github.com/TomasTomecek/sen/issues/67)
+
+
+### Bug fixes
+
+ * Viewing container logs should no longer break sen's interface. [#112](https://github.com/TomasTomecek/sen/issues/112)
+ * Various issues, race conditions, code quality and performance was either fixed or improved.
+
+
 ## 0.4.0
 
 
