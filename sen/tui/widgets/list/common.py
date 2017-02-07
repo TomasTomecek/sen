@@ -86,7 +86,7 @@ class ScrollableListBox(WidgetBase):
         text = strip_from_ansi_esc_sequences(text)
         list_of_texts = text.split("\n")
         self.walker[:] = [
-            urwid.AttrMap(urwid.Text(t.strip(), align="left", wrap="any"), "main_list_dg", "main_list_white")
+            urwid.AttrMap(urwid.Text(t.rstrip(), align="left", wrap="any"), "main_list_dg", "main_list_white")
             for t in list_of_texts
         ]
 
