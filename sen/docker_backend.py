@@ -744,12 +744,20 @@ class DockerBackend:
         self._containers = None
         self._images = None  # displayed images
         self._all_images = None  # docker images -a
-        kwargs = docker.utils.kwargs_from_env(assert_hostname=False)
-        # kwargs["timeout"] = 1  # when debugging timeouts
+
+        kwargs = {"version": "auto"}
+        kwargs.update(docker.utils.kwargs_from_env(assert_hostname=False))
+
         try:
-            self.client = docker.AutoVersionClient(**kwargs)
+            APIClientClass = docker.Client  # 1.x
+        except AttributeError:
+            APIClientClass = docker.APIClient  # 2.x
+
+        try:
+            self.client = APIClientClass(**kwargs)
         except docker.errors.DockerException as ex:
             raise TerminateApplication("can't establish connection to docker daemon: {0}".format(str(ex)))
+
         self.scratch_image = RootImage(self)
 
     # backend queries
