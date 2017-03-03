@@ -479,9 +479,14 @@ def stats_response(*args, **kwargs):
 
 
 def mock():
-    flexmock(docker.Client, images=images_response)
-    flexmock(docker.Client, containers=containers_response)
-    flexmock(docker.Client, version=lambda *args, **kwargs: version_data)
-    flexmock(docker.Client, top=lambda *args, **kwargs: top_data)
-    flexmock(docker.Client, stats=stats_response)
-    flexmock(docker.Client, inspect_image=lambda *args, **kwargs: inspect_image_data)
+    try:
+        client_class = docker.Client     # 1.x
+    except AttributeError:
+        client_class = docker.APIClient  # 2.x
+
+    flexmock(client_class, images=images_response)
+    flexmock(client_class, containers=containers_response)
+    flexmock(client_class, version=lambda *args, **kwargs: version_data)
+    flexmock(client_class, top=lambda *args, **kwargs: top_data)
+    flexmock(client_class, stats=stats_response)
+    flexmock(client_class, inspect_image=lambda *args, **kwargs: inspect_image_data)
