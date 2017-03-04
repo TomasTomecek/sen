@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 requirements = [
     "urwid",
     "urwidtrees",
-    "docker-py"
+    "docker"
 ]
 
 setup(
