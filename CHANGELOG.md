@@ -1,6 +1,19 @@
 # Changelog
 
 
+## 0.5.1
+
+
+### Features
+
+ * Support both `docker-py` `1.x` and `2.x`.
+
+### Bug Fixes
+
+ * Don't strip leading whitespace when displaying logs, or when inspecting.
+
+
+
 ## 0.5.0
 
 
