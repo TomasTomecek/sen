@@ -11,7 +11,7 @@
 ### Bug Fixes
 
  * Don't strip leading whitespace when displaying logs, or when inspecting.
-
+ * Fix an error when sen wasn't able to parse date in some rare cases.
 
 
 ## 0.5.0
