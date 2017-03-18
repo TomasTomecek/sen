@@ -5,4 +5,5 @@
 3. do **NOT** create feature branch with same name as tag
 4. prepare changelog (`CHANGELOG.md` and release notes)
 5. when tagged with release, verify that release was successful on travis
+6. bump version in setup.py to `x.y.z-dev`
 
