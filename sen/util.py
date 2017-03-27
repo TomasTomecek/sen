@@ -40,6 +40,10 @@ def log_traceback(func):
 
 
 def setup_dirs():
+    """Make required directories to hold logfile.
+
+    :returns: str
+    """
     try:
         top_dir = os.path.abspath(os.path.expanduser(os.environ["XDG_CACHE_HOME"]))
     except KeyError:
