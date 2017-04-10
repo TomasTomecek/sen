@@ -34,7 +34,10 @@ def main():
         description="Terminal User Interface for Docker Engine"
     )
     exclusive_group = parser.add_mutually_exclusive_group()
-    exclusive_group.add_argument("--debug", action="store_true", default=None)
+    exclusive_group.add_argument(
+            "--debug", action="store_true", default=None,
+            help="Set logging level to debug"
+            )
 
     args = parser.parse_args()
 
