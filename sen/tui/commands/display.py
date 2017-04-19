@@ -8,8 +8,11 @@ import logging
 
 from sen.docker_backend import DockerImage, DockerContainer
 from sen.exceptions import NotifyError
-from sen.tui.buffer import TreeBuffer, HelpBuffer, ImageInfoBuffer, ContainerInfoBuffer, \
+from sen.tui.buffer import (
+    TreeBuffer, HelpBuffer,
+    ImageInfoBuffer, ContainerInfoBuffer,
     MainListBuffer
+)
 from sen.tui.commands.base import FrontendCommand, register_command
 
 
