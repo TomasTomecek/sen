@@ -10,8 +10,10 @@ from concurrent.futures.thread import ThreadPoolExecutor
 import urwid
 
 from sen.exceptions import NotifyError
-from sen.tui.commands.base import FrontendPriority, BackendPriority, SameThreadPriority, \
-    KeyNotMapped
+from sen.tui.commands.base import (
+    FrontendPriority, BackendPriority,
+    SameThreadPriority, KeyNotMapped
+)
 from sen.tui.constants import CLEAR_NOTIF_BAR_MESSAGE_IN
 from sen.tui.widgets.util import ThreadSafeFrame
 from sen.util import log_traceback, OrderedSet

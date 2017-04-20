@@ -8,8 +8,11 @@ import urwid
 
 from sen.exceptions import NotifyError
 from sen.tui.buffer import HelpBuffer, TreeBuffer
-from sen.tui.commands.base import register_command, SameThreadCommand, Option, Argument, \
+from sen.tui.commands.base import (
+    register_command, SameThreadCommand,
+    Option, Argument,
     NoSuchCommand
+)
 from sen.util import log_traceback, log_last_traceback
 
 

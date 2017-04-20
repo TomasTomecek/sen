@@ -14,7 +14,10 @@ from sen.tui.widgets.graph import ContainerInfoGraph
 from sen.tui.widgets.list.base import WidgetBase
 from sen.tui.widgets.list.util import RowWidget, UnselectableRowWidget
 from sen.tui.widgets.table import assemble_rows
-from sen.tui.widgets.util import SelectableText, get_map, ColorText, UnselectableListBox
+from sen.tui.widgets.util import (
+    SelectableText, get_map,
+    ColorText, UnselectableListBox
+)
 from sen.util import log_traceback, humanize_bytes
 
 

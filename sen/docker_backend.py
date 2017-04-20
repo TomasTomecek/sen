@@ -7,14 +7,19 @@ import traceback
 from operator import attrgetter
 
 from sen.constants import ISO_DATETIME_PARSE_STRING
-from sen.exceptions import TerminateApplication, NotifyError, NotAvailableAnymore
+from sen.exceptions import (
+    TerminateApplication, NotifyError, NotAvailableAnymore
+)
 
 import docker
 import docker.errors
 
 from sen.net import NetData
-from sen.util import calculate_cpu_percent, calculate_blkio_bytes, calculate_network_bytes, repeater, \
+from sen.util import (
+    calculate_cpu_percent, calculate_blkio_bytes,
+    calculate_network_bytes, repeater,
     humanize_time
+)
 
 logger = logging.getLogger(__name__)
 
