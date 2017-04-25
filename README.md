@@ -55,6 +55,15 @@ $ docker run -v /var/run/docker.sock:/run/docker.sock -ti -e TERM $USER/sen
 
 ## PyPI
 
+`sen` is using [`urwidtrees`](https://github.com/pazz/urwidtrees) as a dependency. Unfortunately, the upstream
+maintainer doesn't maintain it on PyPI so we need to install it directly from
+git, before installing sen (the forked PyPI version has a [bug](https://github.com/TomasTomecek/sen/issues/128) in
+installation process):
+
+```
+$ pip3 install git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev
+```
+
 `sen` releases are available on PyPI:
 
 ```

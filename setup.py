@@ -4,10 +4,15 @@ import os
 
 from setuptools import setup, find_packages
 
+# vcs+proto://host/path@revision#egg=project-version
+# this is latest upstream commit (April 2017)
+# upstream maintainer of urwidtrees doesn't maintain PyPI urwidtrees
+urwidtrees_source = "git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev"
+
 requirements = [
     "urwid",
-    "urwidtrees",
-    "docker"
+    "docker",
+    "urwidtrees"
 ]
 
 setup(
@@ -23,6 +28,7 @@ setup(
     },
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=requirements,
+    dependency_links=[urwidtrees_source],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Intended Audience :: Developers',
                  'Intended Audience :: System Administrators',

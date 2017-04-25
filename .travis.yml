@@ -4,7 +4,7 @@ python:
 - '3.4'
 - '3.5'
 install:
-- pip install urwid  # because urwidtrees is using urwid in setup.py
+- pip3 install git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev
 - pip install -r requirements.txt
 - pip install -r requirements-test.txt
 script: py.test -vv tests

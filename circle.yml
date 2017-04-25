@@ -6,7 +6,7 @@ machine:
 
 dependencies:
   pre:
-    - "pip3 install urwid"  # urwidtrees can't be installed via pip
+    - "pip3 install git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev"
     - "pip3 install -r requirements-test.txt"
 
 test:
