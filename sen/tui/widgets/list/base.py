@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class WidgetBase(urwid.ListBox):
     """
-    common class fot widgets
+    common class for widgets
     """
 
     def __init__(self, ui, *args, **kwargs):
