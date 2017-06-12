@@ -267,9 +267,10 @@ class ContainerInfoView(WidgetBase, View):
             self.view_widgets.extend(assemble_rows(data, dividechars=3, ignore_columns=[1]))
 
     def _image(self):
-        self.view_widgets.append(RowWidget([SelectableText("")]))
-        self.view_widgets.append(RowWidget([SelectableText("Image", maps=get_map("main_list_white"))]))
-        self.view_widgets.append(RowWidget([LayerWidget(self.ui, self.docker_container.image)]))
+        if self.docker_container.image:
+            self.view_widgets.append(RowWidget([SelectableText("")]))
+            self.view_widgets.append(RowWidget([SelectableText("Image", maps=get_map("main_list_white"))]))
+            self.view_widgets.append(RowWidget([LayerWidget(self.ui, self.docker_container.image)]))
 
     def _resources(self):
         self.view_widgets.append(RowWidget([SelectableText("")]))
