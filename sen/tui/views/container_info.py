@@ -326,6 +326,7 @@ class ContainerInfoView(WidgetBase, View):
                         continue
                     logger.error("error while getting stats: %r", ex)
                     self.ui.notify_message("Error while getting stats: %s" % ex, level="error")
+                    # TODO: if debug raise
                     break
 
                 if self.stop.is_set():

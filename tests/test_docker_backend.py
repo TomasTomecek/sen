@@ -1,4 +1,5 @@
 from sen.docker_backend import DockerBackend
+from sen.util import calculate_cpu_percent2, calculate_cpu_percent
 from .real import image_data, mock, container_data
 
 
@@ -51,3 +52,12 @@ def test_stats():
     operation = c0.stats()
     stats_stream = operation.response
     assert next(stats_stream)
+
+    for x in c0.d.stats('x', decode=True, stream=True):
+        calculate_cpu_percent(x)
+
+    t = 0.0
+    s = 0.0
+    for x in c0.d.stats('x', decode=True, stream=True):
+        calculate_cpu_percent(x)
+        _, s, t = calculate_cpu_percent2(x, t, s)
