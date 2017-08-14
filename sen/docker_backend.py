@@ -16,7 +16,7 @@ import docker.errors
 
 from sen.net import NetData
 from sen.util import (
-    calculate_cpu_percent, calculate_blkio_bytes,
+    calculate_cpu_percent, calculate_cpu_percent2, calculate_blkio_bytes,
     calculate_network_bytes, repeater,
     humanize_time
 )
@@ -658,13 +658,22 @@ class DockerContainer(DockerObject):
 
     @operation("Get resources statistics.")
     def stats(self):
+        cpu_total = 0.0
+        cpu_system = 0.0
+        cpu_percent = 0.0
         for x in self.d.stats(self.container_id, decode=True, stream=True):
             blk_read, blk_write = calculate_blkio_bytes(x)
             net_r, net_w = calculate_network_bytes(x)
             mem_current = x["memory_stats"]["usage"]
             mem_total = x["memory_stats"]["limit"]
+
+            try:
+                cpu_percent, cpu_system, cpu_total = calculate_cpu_percent2(x, cpu_total, cpu_system)
+            except KeyError:
+                cpu_percent = calculate_cpu_percent(x)
+
             r = {
-                "cpu_percent": calculate_cpu_percent(x),
+                "cpu_percent": cpu_percent,
                 "mem_current": mem_current,
                 "mem_total": x["memory_stats"]["limit"],
                 "mem_percent": (mem_current / mem_total) * 100.0,

@@ -170,6 +170,23 @@ def calculate_cpu_percent(d):
         cpu_percent = cpu_delta / system_delta * 100.0 * cpu_count
     return cpu_percent
 
+# again taken directly from docker:
+#   https://github.com/docker/cli/blob/2bfac7fcdafeafbd2f450abb6d1bb3106e4f3ccb/cli/command/container/stats_helpers.go#L168
+# precpu_stats in 1.13+ is completely broken, doesn't contain any values
+def calculate_cpu_percent2(d, previous_cpu, previous_system):
+    # import json
+    # du = json.dumps(d, indent=2)
+    # logger.debug("XXX: %s", du)
+    cpu_percent = 0.0
+    cpu_total = float(d["cpu_stats"]["cpu_usage"]["total_usage"])
+    cpu_delta = cpu_total - previous_cpu
+    cpu_system = float(d["cpu_stats"]["system_cpu_usage"])
+    system_delta = cpu_system - previous_system
+    online_cpus = d["cpu_stats"].get("online_cpus", len(d["cpu_stats"]["cpu_usage"]["percpu_usage"]))
+    if system_delta > 0.0:
+        cpu_percent = (cpu_delta / system_delta) * online_cpus * 100.0
+    return cpu_percent, cpu_system, cpu_total
+
 
 def calculate_blkio_bytes(d):
     """
