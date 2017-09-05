@@ -226,6 +226,15 @@ class ContainerInfoView(WidgetBase, View):
                 [SelectableText("Name", maps=get_map("main_list_green")),
                  SelectableText("".join(self.docker_container.names))],
             )
+
+        data.append(
+            [SelectableText("FS-type", maps=get_map("main_list_white")),
+             SelectableText("size", maps=get_map("main_list_white"))])
+        data.append(
+            [SelectableText("root"), SelectableText(humanize_bytes(self.docker_container.size_root_fs))])
+        data.append(
+            [SelectableText("rw"), SelectableText(humanize_bytes(self.docker_container.size_rw_fs))])
+
         self.view_widgets.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _net(self):

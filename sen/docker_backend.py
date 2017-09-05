@@ -18,7 +18,7 @@ from sen.net import NetData
 from sen.util import (
     calculate_cpu_percent, calculate_cpu_percent2, calculate_blkio_bytes,
     calculate_network_bytes, repeater,
-    humanize_time
+    humanize_time, find_item_by_attribute
 )
 
 logger = logging.getLogger(__name__)
@@ -506,6 +506,11 @@ class DockerContainer(DockerObject):
     Container related logic
     """
 
+    def __init__(self, data, docker_backend, object_id=None):
+        super(DockerContainer, self).__init__(data, docker_backend, object_id)
+        self.size_root_fs = -1
+        self.size_rw_fs = -1
+
     def __str__(self):
         return "{} ({})".format(self.container_id, self.short_name)
 
@@ -806,6 +811,20 @@ class DockerBackend:
             for c in containers_reponse:
                 container = DockerContainer(c, self)
                 self._containers[container.container_id] = container
+
+            if 'df' in dir(self.client):
+                # since DOCKER API-1.25 (v.1.13.0)
+                df = self.client.df()
+                if 'Containers' in df:
+                    df_containers = df['Containers']
+                    for (c_id, container) in self._containers.items():
+                        df_item = find_item_by_attribute(df_containers, c_id, 'Id')
+                        if df_item:
+                            size_root_fs = df_item['SizeRootFs']
+                            size_rw_fs = df_item['SizeRw'] if 'SizeRw' in df_item else 0
+                            container.size_root_fs = size_root_fs
+                            container.size_rw_fs = size_rw_fs
+
         if not stopped:
             return [x for x in list(self._containers.values()) if x.running]
         return list(self._containers.values())
