@@ -1,4 +1,3 @@
-import copy
 import functools
 import json
 import logging
@@ -18,7 +17,8 @@ from sen.net import NetData
 from sen.util import (
     calculate_cpu_percent, calculate_cpu_percent2, calculate_blkio_bytes,
     calculate_network_bytes, repeater,
-    humanize_time, find_item_by_attribute
+    humanize_time,
+    graceful_chain_get
 )
 
 logger = logging.getLogger(__name__)
@@ -253,19 +253,14 @@ class DockerObject:
         return hash(self._id)
 
 
-def graceful_chain_get(d, *args):
-    if not d:
-        return None
-    t = copy.deepcopy(d)
-    for arg in args:
-        try:
-            t = t[arg]
-        except (AttributeError, KeyError, TypeError):
-            return None
-    return t
-
-
 class DockerImage(DockerObject):
+    def __init__(self, data, docker_backend, object_id=None):
+        super().__init__(data, docker_backend, object_id=object_id)
+        self._unique_size = None
+        self._total_size = None
+        self._virtual_size = None
+        self._shared_size = None
+
     @property
     def image_id(self):
         return self.object_id
@@ -377,22 +372,36 @@ class DockerImage(DockerObject):
         return self.metadata_get(["Comment"])
 
     @property
-    def size(self):
+    def total_size(self):
         """
         Size of ALL layers in bytes
 
-        :return: int
+        :return: int or None
         """
-        return self.data.get("VirtualSize", 0)
+        return self._total_size or self.data.get("Size", 0)
 
     @property
-    def layer_size(self):
+    def unique_size(self):
         """
         Size of ONLY this particular layer
 
-        :return: int
+        :return: int or None
         """
-        return self.data.get("Size", 0)
+        self._virtual_size = self._virtual_size or \
+                             graceful_chain_get(self.data, "VirtualSize", default=0)
+        try:
+            return self._virtual_size - self._shared_size
+        except TypeError:
+            return 0
+
+    @property
+    def shared_size(self):
+        """
+        I guess this is size of layers which are shared with some other image
+
+        :return: int or None
+        """
+        return self._shared_size
 
     @property
     def names(self):
@@ -508,8 +517,8 @@ class DockerContainer(DockerObject):
 
     def __init__(self, data, docker_backend, object_id=None):
         super(DockerContainer, self).__init__(data, docker_backend, object_id)
-        self.size_root_fs = -1
-        self.size_rw_fs = -1
+        self.size_root_fs = None
+        self.size_rw_fs = None
 
     def __str__(self):
         return "{} ({})".format(self.container_id, self.short_name)
@@ -674,7 +683,8 @@ class DockerContainer(DockerObject):
 
             try:
                 cpu_percent, cpu_system, cpu_total = calculate_cpu_percent2(x, cpu_total, cpu_system)
-            except KeyError:
+            except KeyError as e:
+                logger.error("error while getting new CPU stats: %r, falling back")
                 cpu_percent = calculate_cpu_percent(x)
 
             r = {
@@ -768,6 +778,7 @@ class DockerBackend:
         self._containers = None
         self._images = None  # displayed images
         self._all_images = None  # docker images -a
+        self._df = None
 
         kwargs = {"version": "auto"}
         kwargs.update(docker.utils.kwargs_from_env(assert_hostname=False))
@@ -796,6 +807,7 @@ class DockerBackend:
                 img = DockerImage(i, self)
                 self._images[img.image_id] = img
             self._all_images = {}
+            # FIXME: performance: do just all=True
             all_images_response = repeater(self.client.images, kwargs={"all": True}) or []
             for i in all_images_response:
                 img = DockerImage(i, self)
@@ -811,23 +823,33 @@ class DockerBackend:
             for c in containers_reponse:
                 container = DockerContainer(c, self)
                 self._containers[container.container_id] = container
-
-            if 'df' in dir(self.client):
-                # since DOCKER API-1.25 (v.1.13.0)
-                df = self.client.df()
-                if 'Containers' in df:
-                    df_containers = df['Containers']
-                    for (c_id, container) in self._containers.items():
-                        df_item = find_item_by_attribute(df_containers, c_id, 'Id')
-                        if df_item:
-                            size_root_fs = df_item['SizeRootFs']
-                            size_rw_fs = df_item['SizeRw'] if 'SizeRw' in df_item else 0
-                            container.size_root_fs = size_root_fs
-                            container.size_rw_fs = size_rw_fs
-
         if not stopped:
             return [x for x in list(self._containers.values()) if x.running]
         return list(self._containers.values())
+
+    @operation("Get disk usage.")
+    def df(self, cached=True):
+        if cached is False or self._df is None:
+            logger.debug("getting disk-usage")
+            # TODO: wrap in try/execpt
+            self._df = self.client.df()
+            # TODO: attach these to real containers and images
+            # # since DOCKER API-1.25 (v.1.13.0)
+            # df = self.client.df()
+            # if 'Containers' in df:
+            #     df_containers = df['Containers']
+            containers_data = graceful_chain_get(self._df, "Containers")
+            for c_data in containers_data:
+                c = graceful_chain_get(self._containers, graceful_chain_get(c_data, "Id"))
+                c.size_root_fs = graceful_chain_get(c_data, "SizeRootFs")
+                c.size_rw_fs = graceful_chain_get(c_data, "SizeRw")
+            images_data = graceful_chain_get(self._df, "Images")
+            for i_data in images_data:
+                i = graceful_chain_get(self._images, graceful_chain_get(i_data, "Id"))
+                i._total_size = graceful_chain_get(i_data, "Size")
+                i._shared_size = graceful_chain_get(i_data, "SharedSize")
+                i._virtual_size = graceful_chain_get(i_data, "VirtualSize")
+        return self._df
 
     def realtime_updates(self):
         event = it = None

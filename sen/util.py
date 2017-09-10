@@ -230,7 +230,7 @@ def graceful_chain_get(d, *args, default=None):
     for a in args:
         try:
             t = t[a]
-        except (KeyError, ValueError, TypeError) as ex:
+        except (KeyError, ValueError, TypeError, AttributeError):
             logger.debug("can't get %r from %s", a, t)
             return default
     return t
@@ -260,26 +260,6 @@ def repeater(call, args=None, kwargs=None, retries=4):
             logger.error("query #%d: generic error: %r", x, ex)
         t *= 2
         time.sleep(t)
-
-
-def find_item_by_attribute(items_list, reference_value, target_attribute):
-    """
-    iterate list and return first item where target attribute equals to given value
-    :param items_list: input items
-    :param reference_value: attribute value to find
-    :param target_attribute: attribute name
-    :return: first item with attribute value equal to reference value
-    """
-    found_item = None
-    for i in items_list:
-        try:
-            if i[target_attribute] == reference_value:
-                found_item = i
-                break
-        except KeyError as ex:
-            pass
-
-    return found_item
 
 
 class OrderedSet(list):

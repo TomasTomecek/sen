@@ -65,10 +65,18 @@ class ImageInfoWidget(WidgetBase, View):
              SelectableText("{0}, {1}".format(self.docker_image.display_formal_time_created(),
                                               self.docker_image.display_time_created()))],
             [SelectableText("Size", maps=get_map("main_list_green")),
-             SelectableText(humanize_bytes(self.docker_image.size))],
-            [SelectableText("Command", maps=get_map("main_list_green")),
-             SelectableText(self.docker_image.container_command)],
+             SelectableText(humanize_bytes(self.docker_image.total_size))],
         ]
+        if self.docker_image.unique_size:
+            data.append(
+                [SelectableText("Unique Size", maps=get_map("main_list_green")),
+                 SelectableText(humanize_bytes(self.docker_image.unique_size))])
+        if self.docker_image.shared_size:
+            data.append(
+                [SelectableText("Shared Size", maps=get_map("main_list_green")),
+                 SelectableText(humanize_bytes(self.docker_image.shared_size))])
+        data.append([SelectableText("Command", maps=get_map("main_list_green")),
+                     SelectableText(self.docker_image.container_command)])
         self.walker.extend(assemble_rows(data, ignore_columns=[1]))
 
     def _image_names(self):

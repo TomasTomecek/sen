@@ -32,7 +32,7 @@ def calculate_max_cols_length(table, size):
     return max_cols_lengths
 
 
-def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1,
+def assemble_rows(data, max_allowed_lengths=None, dividechars=1,
                   ignore_columns=None):
     """
     :param data: list of lists:
@@ -40,7 +40,6 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1,
      ["row 2 column 1", "row 2 column 2"]]
     each item consists of instance of urwid.Text
 
-    :param headers: list of str, headers of table
     :param max_allowed_lengths: dict:
         {col_index: maximum_allowed_length}
     :param ignore_columns: list of ints, indexes which should not be calculated
@@ -66,15 +65,6 @@ def assemble_rows(data, headers=None, max_allowed_lengths=None, dividechars=1,
             max_lengths.setdefault(col_index, l)
             max_lengths[col_index] = max(l, max_lengths[col_index])
             col_index += 1
-
-    if headers:
-        header_widgets = []
-        for header in headers:
-            try:
-                header_widgets.append(urwid.Text(*header[0], **header[1]))
-            except IndexError:
-                header_widgets.append(urwid.Text(*header[0]))
-        rows.append(urwid.Columns(header_widgets, dividechars=1))
 
     for row in data:
         row_widgets = []
