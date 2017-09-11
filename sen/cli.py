@@ -21,6 +21,7 @@ https://github.com/TomasTomecek/sen"""
 import argparse
 import logging
 
+import sen
 from sen import set_logging
 from sen.exceptions import TerminateApplication
 from sen.tui.init import Application
@@ -46,6 +47,7 @@ def main():
     # don't want in a terminal app (thanks to Slavek Kabrda for explanation)
     if args.debug:
         set_logging(level=logging.DEBUG, path=get_log_file_path())
+        logger.debug("sen loaded from %s", sen.__file__)
     else:
         set_logging(level=logging.INFO, path=get_log_file_path())
 
