@@ -28,7 +28,11 @@ def get_detailed_container_row(docker_container):
     container_id = SelectableText(docker_container.short_id)
     row.append(container_id)
 
-    command = SelectableText(docker_container.command, get_map(defult="main_list_ddg"))
+    commands = docker_container.command.split("\n")
+    command_str = commands[0]
+    if len(commands) > 0:
+        command_str += "..."
+    command = SelectableText(command_str, get_map(defult="main_list_ddg"))
     row.append(command)
 
     image = SelectableText(docker_container.image_name())
