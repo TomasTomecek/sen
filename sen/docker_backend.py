@@ -3,6 +3,7 @@ import functools
 import json
 import logging
 import datetime
+import dateutil.parser import parse
 import traceback
 from operator import attrgetter
 
@@ -614,7 +615,7 @@ class DockerContainer(DockerObject):
                 return DINOSAUR_TIME
             s = s.replace("Z", "0")
             try:
-                started_at = datetime.datetime.strptime(s, ISO_DATETIME_PARSE_STRING)
+                started_at = parse(s)
             except ValueError as ex:
                 logger.error("unable to parse datetime %s: %s", s, ex)
                 return DINOSAUR_TIME
@@ -627,7 +628,7 @@ class DockerContainer(DockerObject):
             f = f[:26]
             if f == "0001-01-01T00:00:00Z":
                 return DINOSAUR_TIME
-            finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
+            finished_at = parse(f)
             return finished_at
 
     @property
