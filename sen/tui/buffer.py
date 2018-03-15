@@ -3,6 +3,7 @@ import logging
 from sen.docker_backend import DockerContainer, RootImage
 from sen.exceptions import NotifyError
 from sen.tui.commands.base import Command
+from sen.tui.views.disk_usage import DfBufferView
 from sen.tui.views.help import HelpBufferView, HelpCommandView
 from sen.tui.views.main import MainListBox
 from sen.tui.views.image_info import ImageInfoWidget
@@ -114,7 +115,8 @@ class Buffer:
 
 
 class ImageInfoBuffer(Buffer):
-    description = "Dashboard for information about selected image."
+    description = "Dashboard for information about selected image.\n" + \
+                  "You can run command `df` to get more detailed info about disk usage."
     keybinds = {
         "enter": "display-info",
         "d": "rm",
@@ -293,3 +295,20 @@ class HelpBuffer(Buffer):
             self.widget = HelpCommandView(ui, inp)
 
         super().__init__()
+
+
+class DfBuffer(Buffer):
+    description = "Show information about how much disk space container, images and volumes take."
+    display_name = "Disk Usage"
+
+    def __init__(self, ui):
+        """
+        :param ui: UI instance
+        """
+        self.ui = ui
+        self.widget = DfBufferView(ui, self)
+
+        super().__init__()
+
+    def refresh(self, df=None, containers=None, images=None):
+        self.widget.refresh(df=df, containers=containers, images=images)

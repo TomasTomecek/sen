@@ -230,7 +230,7 @@ def graceful_chain_get(d, *args, default=None):
     for a in args:
         try:
             t = t[a]
-        except (KeyError, ValueError, TypeError) as ex:
+        except (KeyError, ValueError, TypeError, AttributeError):
             logger.debug("can't get %r from %s", a, t)
             return default
     return t

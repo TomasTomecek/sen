@@ -96,6 +96,6 @@ def get_basic_image_markup(docker_image, with_size=False):
 
     if with_size:
         text_markup.append(" ")
-        text_markup.append(("main_list_ddg", "(%s)" % humanize_bytes(docker_image.layer_size)))
+        text_markup.append(("main_list_ddg", "(%s)" % humanize_bytes(docker_image.total_size)))
 
     return text_markup

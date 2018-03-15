@@ -5,7 +5,7 @@ docker engine)
 import logging
 import webbrowser
 
-from sen.tui.buffer import LogsBuffer, InspectBuffer
+from sen.tui.buffer import LogsBuffer, InspectBuffer, DfBuffer
 from sen.tui.commands.base import BackendCommand, register_command, Option
 from sen.tui.widgets.list.util import get_operation_notify_widget
 from sen.docker_backend import DockerContainer
@@ -122,6 +122,20 @@ class InspectCommand(BackendCommand):
             self.ui.notify_message("No docker object specified.", level="error")
             return
         self.ui.add_and_display_buffer(InspectBuffer(self.ui, self.docker_object))
+
+
+@register_command
+class DfCommand(BackendCommand):
+    name = "df"
+    description = "show disk usage"
+
+    def run(self):
+        b = DfBuffer(self.ui)
+        self.ui.add_and_display_buffer(b)
+        df = self.docker_backend.df()
+        b.refresh(df=df.response,
+                  containers=self.docker_backend.get_containers(cached=True, stopped=True).response,
+                  images=self.docker_backend.get_images(cached=True).response)
 
 
 @register_command
