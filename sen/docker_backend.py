@@ -457,8 +457,8 @@ class DockerImage(DockerObject):
         return self._inspect
 
     @operation("{object_type} {object_short_name} removed!")
-    def remove(self):
-        return self.d.remove_image(self.image_id)
+    def remove(self, force=False):
+        return self.d.remove_image(self.image_id, force=force)
 
     @operation("Tag of {object_type} {object_short_name} removed!")
     def remove_tag(self, tag):
@@ -741,8 +741,8 @@ class DockerContainer(DockerObject):
             return logs_data
 
     @operation("{object_type} {object_short_name} removed!")
-    def remove(self):
-        self.d.remove_container(self.container_id)
+    def remove(self, force=False):
+        self.d.remove_container(self.container_id, force=force)
 
     @operation("{object_type} {object_short_name} started.")
     def start(self):

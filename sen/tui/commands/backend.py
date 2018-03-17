@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class OperationCommand(BackendCommand):
-    def do(self, fn_name, pre_message=None, notif_level="info"):
+    def do(self, fn_name, pre_message=None, notif_level="info", **kwargs):
         pre_message = pre_message or self.pre_info_message.format(
             container_name=self.docker_object.short_name)
         self.ui.notify_message(pre_message)
         try:
-            operation = getattr(self.docker_object, fn_name)()
+            operation = getattr(self.docker_object, fn_name)(**kwargs)
         except AttributeError:
             log_txt = "you can't {} {}".format(fn_name, self.docker_object)
             logger.error(log_txt)
@@ -49,14 +49,20 @@ class MatchingOperationCommand(OperationCommand):
 class RemoveCommand(OperationCommand):
     name = "rm"
     description = "remove provided object, image or container"
+    options_definitions = [Option("force",
+                                  "Force removal of the selected object.",
+                                  default=False, aliases=["-f", "f"])]
 
-    # FIXME: split this into rm and rmi
     def run(self):
+        logger.debug("remove %s force=%s", self.docker_object, self.arguments.force)
+        if self.arguments.force:
+            self.ui.notify_message("Removing forcibly!", level="important")
         self.do("remove",
                 pre_message="Removing {} {}...".format(
                     self.docker_object.pretty_object_type.lower(),
                     self.docker_object.short_name),
-                notif_level="important")
+                notif_level="important",
+                force=self.arguments.force)
 
 
 @register_command

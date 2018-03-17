@@ -186,7 +186,8 @@ class MainListBuffer(Buffer):
     display_name = "Listing"
     description = "List of all known docker images and containers display in a single list"
     keybinds = {
-        "d": "rm",  # TODO: do also rmi
+        "d": "rm",
+        "D": "rm -f",
         "s": "start",
         "t": "stop",
         "r": "restart",
