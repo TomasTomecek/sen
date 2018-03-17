@@ -51,10 +51,28 @@ class RemoveCommand(OperationCommand):
     description = "remove provided object, image or container"
     options_definitions = [Option("force",
                                   "Force removal of the selected object.",
-                                  default=False, aliases=["-f", "f"])]
+                                  default=False, aliases=["-f", "f"]),
+                           Option("yes",
+                                  "Don't ask before removing.",
+                                  default=False, aliases=["-y"])]
 
     def run(self):
-        logger.debug("remove %s force=%s", self.docker_object, self.arguments.force)
+        logger.debug("remove %s force=%s yes=%s", self.docker_object, self.arguments.force,
+                     self.arguments.yes)
+        if not self.arguments.yes and not self.ui.yolo:
+            logger.debug("we need confirmation from user")
+            cmd = "rm -y" if not self.arguments.force else "rm -y -f"
+            self.ui.run_command(
+                "prompt prompt-text=\"You are about to remove %s %s, type enter to continue: \" "
+                "initial-text=\"%s\"" % (
+                    self.docker_object.pretty_object_type.lower(),
+                    self.docker_object.short_name,
+                    cmd
+                ),
+                docker_object=self.docker_object
+            )
+            return
+
         if self.arguments.force:
             self.ui.notify_message("Removing forcibly!", level="important")
         self.do("remove",

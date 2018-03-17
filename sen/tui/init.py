@@ -17,10 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 class Application:
-    def __init__(self):
+    def __init__(self, yolo=False):
         self.d = DockerBackend()
 
         self.loop, self.ui = get_app_in_loop(PALLETE)
+
+        self.ui.yolo = yolo
 
         self.ui.commander = Commander(self.ui, self.d)
 
