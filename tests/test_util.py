@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+import logging
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime, timedelta
-
-from flexmock import flexmock
 
 from sen.tui.widgets.list.common import strip_from_ansi_esc_sequences
 from sen.util import _ensure_unicode, log_traceback, repeater, humanize_time, \
@@ -26,34 +25,37 @@ def test_log_traceback(caplog):
     @log_traceback
     def f():
         raise Exception()
+    caplog.set_level(logging.DEBUG)
     f()
-    assert caplog.records()[0].message.endswith(" is about to be started")
-    assert caplog.records()[1].message.startswith("Traceback")
-    assert caplog.records()[1].message.endswith("Exception\n")
+    assert caplog.records[0].message.endswith(" is about to be started")
+    assert caplog.records[1].message.startswith("Traceback")
+    assert caplog.records[1].message.endswith("Exception\n")
 
 
 def test_log_traceback_without_tb(caplog):
     @log_traceback
     def f():
         pass
+    caplog.set_level(logging.DEBUG)
     f()
-    assert caplog.records()[0].message.endswith(" is about to be started")
-    assert caplog.records()[1].message.endswith(" finished")
+    assert caplog.records[0].message.endswith(" is about to be started")
+    assert caplog.records[1].message.endswith(" finished")
 
 
 def test_log_traceback_threaded(caplog):
     @log_traceback
     def f():
         raise Exception()
+    caplog.set_level(logging.DEBUG)
 
     e = ThreadPoolExecutor(max_workers=1)
     f = e.submit(f)
     while f.running():
         time.sleep(0.1)
 
-    assert caplog.records()[0].message.endswith(" is about to be started")
-    assert caplog.records()[1].message.startswith("Traceback")
-    assert caplog.records()[1].message.endswith("Exception\n")
+    assert caplog.records[0].message.endswith(" is about to be started")
+    assert caplog.records[1].message.startswith("Traceback")
+    assert caplog.records[1].message.endswith("Exception\n")
 
 
 # def test_log_vars_from_tback(caplog):
