@@ -135,7 +135,7 @@ class DisplayLayersCommand(DisplayBufferCommand):
 
 
 @log_traceback
-def run_command_callback(ui, edit_widget, text_input):
+def run_command_callback(ui, docker_object, edit_widget, text_input):
     logger.debug("%r %r", edit_widget, text_input)
     if "\n" in text_input:
         inp = text_input.strip()
@@ -144,7 +144,7 @@ def run_command_callback(ui, edit_widget, text_input):
         ui.prompt_bar = None
         ui.set_focus("body")
         try:
-            ui.run_command(inp)
+            ui.run_command(inp, docker_object=docker_object)
         except NoSuchCommand as ex:
             logger.info("non-existent command initiated: %r", inp)
             ui.notify_message(str(ex), level="error")
@@ -184,7 +184,8 @@ class PromptCommand(SameThreadCommand):
         self.ui.reload_footer()
         self.ui.set_focus("footer")
 
-        urwid.connect_signal(editpart, "change", run_command_callback, user_args=[self.ui])
+        urwid.connect_signal(editpart, "change", run_command_callback,
+                             user_args=[self.ui, self.docker_object])
 
 
 @register_command

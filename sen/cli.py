@@ -34,6 +34,12 @@ def main():
     parser = argparse.ArgumentParser(
         description="Terminal User Interface for Docker Engine"
     )
+    parser.add_argument(
+        "--yolo", "--skip-prompt-for-irreversible-action",
+        action="store_true",
+        default=False,
+        help="Don't prompt when performing irreversible actions, a.k.a. YOLO!"
+    )
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument(
             "--debug", action="store_true", default=None,
@@ -54,13 +60,13 @@ def main():
     logger.info("application started")
 
     try:
-        ui = Application()
+        app = Application(yolo=args.yolo)
     except TerminateApplication as ex:
         print("Error: {0}".format(str(ex)), file=sys.stderr)
         return 1
 
     try:
-        ui.run()
+        app.run()
     except KeyboardInterrupt:
         print("Quitting on user request.")
         return 1

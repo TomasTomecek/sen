@@ -1,16 +1,15 @@
-machine:
-  python:
-    version: 3.4.3
-  services:
-    - docker
-
-dependencies:
-  pre:
-    #    - "pip3 install git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev"
-    #    - "pip3 install -r requirements-test.txt"
-
-test:
-  pre:
-    - "py.test -vv ./tests/":
-       environment:
-         PYTHONPATH: $PWD
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - run: "pip3 install git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev"
+      - run: "pip3 install -r requirements-test.txt"
+      - run: "py.test -vv ./tests/"
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
