@@ -1,7 +1,5 @@
 # sen
 
-[![Circle CI](https://circleci.com/gh/TomasTomecek/sen.svg?style=svg)](https://circleci.com/gh/TomasTomecek/sen)
-[![](https://images.microbadger.com/badges/image/tomastomecek/sen.svg)](https://microbadger.com/images/tomastomecek/sen "Get your own image badge on microbadger.com")
 [![Build Status](https://travis-ci.org/TomasTomecek/sen.svg?branch=master)](https://travis-ci.org/TomasTomecek/sen)
 
 
