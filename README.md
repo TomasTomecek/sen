@@ -15,6 +15,7 @@
  * sen notifies you whenever something happens (and reports slow queries)
  * supports a lot of vim-like keybindings (`j`, `k`, `gg`, `/`, ...)
  * you can get interactive tree view of all images (equivalent of `docker images --tree`)
+ * see how much space containers, images and volumes occupy (just type `:df`)
 
 You can [see the features yourself](/docs/features.md).
 
@@ -167,6 +168,7 @@ f4        filtering, for more info run `help filter` in sen
 ```
 i         inspect image
 d         remove image (irreversible!)
+D         remove image forcibly (irreversible!)
 enter     display detailed info about image (when layer is focused)
 ```
 
@@ -177,6 +179,7 @@ i         inspect container
 l         display logs of container
 f         follow logs of container
 d         remove container (irreversible!)
+D         remove container forcibly (irreversible!)
 t         stop container
 s         start container
 r         restart container

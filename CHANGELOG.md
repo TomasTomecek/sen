@@ -1,6 +1,28 @@
 # Changelog
 
 
+## 0.6.0
+
+### Features
+
+ * There is a new view which resembles `docker system df`, initiated by [@soyo42](https://github.com/soyo42), thank you! [#135](https://github.com/TomasTomecek/sen/issues/135).
+   * This view shows how much disk space is being occupied.
+   * You can activate it by typing `:df`.
+ * sen will now display only a first line of a command in listing view.
+   * Everyone who uses k8s or OpenShift gets this.
+ * You can now forcibly remove containers and images.
+   * Pretty handy when an image has multiple names.
+ * There is a prompt presented after you try to remove anything in listing view.
+   * to prevent accidental deletion
+   * This feature can by turned off by invoking sen as `$ sen --skip-prompt-for-irreversible-action`.
+   * [reported](https://github.com/TomasTomecek/sen/issues/78) by [@jarfil](https://github.com/jarfil), thank you!
+
+### Bug Fixes
+
+ * sen is able to display CPU stats correctly for API 1.25+, reported by [@soyo42](https://github.com/soyo42) [#131](https://github.com/TomasTomecek/sen/issues/131).
+ * `--debug` option now has a description, provided by [@nagracks](https://github.com/nagracks), thank you!
+
+
 ## 0.5.1
 
 
