@@ -414,6 +414,11 @@ class DockerImage(DockerObject):
                 image_name = ImageNameStruct.parse(t)
                 if image_name.to_str():
                     self._names.append(image_name)
+            # RepoDigests can be none
+            for t in self.data.get("RepoDigests", []) or []:
+                image_name = ImageNameStruct.parse(t)
+                if image_name.to_str():
+                    self._names.append(image_name)
             # sort by name length
             self._names.sort(key=lambda x: len(x.to_str()))
         return self._names
