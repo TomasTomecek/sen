@@ -1,6 +1,6 @@
 # sen
 
-[![Build Status](https://travis-ci.org/TomasTomecek/sen.svg?branch=master)](https://travis-ci.org/TomasTomecek/sen)
+![Build Status](https://travis-ci.org/TomasTomecek/sen.svg?branch=master)
 
 
 `sen` is a terminal user interface for docker engine:
@@ -20,6 +20,17 @@
 You can [see the features yourself](/docs/features.md).
 
 ![Preview of sen](/data/sen-preview.gif)
+
+
+# Status
+
+TL;DR: maintenance mode
+
+I lost interest in working on new features for sen. I will continue providing
+support for sen as much as I can, but only bug fixes. Please don't expect any
+new features written by me. If you want some feature in sen, you need to write
+it yourself — I will gladly accept such pull request.
+
 
 # Installation and running `sen`
 
