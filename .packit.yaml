@@ -1,0 +1,16 @@
+specfile_path: sen.spec
+synced_files:
+  - sen.spec
+jobs:
+  - trigger: release
+    release_to:
+      - master
+  - trigger: pull_request
+    release_to:
+      - master
+upstream_name: sen
+package_name: sen
+dist_git_url: https://src.fedoraproject.org/rpms/sen.git
+checks:
+  - name: simple-koji-ci
+  - name: Fedora CI
