@@ -1,6 +1,7 @@
 import logging
 import re
 import threading
+import time
 
 import urwid
 
@@ -10,7 +11,7 @@ from sen.tui.widgets.list.util import (
     get_operation_notify_widget, ResponsiveRowWidget
 )
 from sen.tui.widgets.table import ResponsiveTable
-
+from sen.util import graceful_chain_get
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,13 @@ class MainListBox(ResponsiveTable):
             if self.stop_realtime_events.is_set():
                 logger.info("received docker event when this functionality is disabled")
                 return
+        delayed_events = ["pause", "unpause"]
+        ev_status = graceful_chain_get(event, "status")
+        if ev_status in delayed_events:
+            # https://github.com/TomasTomecek/sen/issues/143
+            # tl;dr dockerd does not tell us when the container is in pause/unpause state
+            # it sends the event when the container is being paused
+            time.sleep(1)
         self.refresh(query=self.filter_query)
 
     def filter(self, s, widgets_to_filter=None):
