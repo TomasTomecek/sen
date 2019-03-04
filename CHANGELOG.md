@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.6.1
+
+Sen is now in maintenance mode — I am not planning on adding new features myself.
+
+
+### New Features
+
+* Display RepoDigests if there are some in the main view.
+
+
+### Bug fixes
+
+* Fix displaying pause and unpause states in the main view.
+
+
+### Minor
+
+* Sen is being tested against python 3.5 and 3.6 in Travis CI.
+
 
 ## 0.6.0
 
