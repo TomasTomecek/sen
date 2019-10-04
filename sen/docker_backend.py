@@ -646,7 +646,12 @@ class DockerContainer(DockerObject):
             f = f[:26]
             if f == "0001-01-01T00:00:00Z":
                 return DINOSAUR_TIME
-            finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
+            f = f.replace("Z", "0")
+            try:
+                finished_at = datetime.datetime.strptime(f, ISO_DATETIME_PARSE_STRING)
+            except ValueError as ex:
+                logger.error("unable to parse datetime %s: %s", f, ex)
+                return DINOSAUR_TIME
             return finished_at
 
     @property
