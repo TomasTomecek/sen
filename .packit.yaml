@@ -2,5 +2,5 @@ specfile_path: sen.spec
 synced_files:
   - sen.spec
   - .packit.yaml
-upstream_project_name: sen
+upstream_package_name: sen
 downstream_package_name: sen
