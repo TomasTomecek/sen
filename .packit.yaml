@@ -1,15 +1,7 @@
-downstream_package_name: sen
+specfile_path: sen.spec
 jobs:
 - job: copr_build
   metadata:
     targets:
-    - fedora-29-x86_64
-    - fedora-30-x86_64
-    - fedora-31-x86_64
-    - fedora-rawhide-x86_64
+    - fedora-all
   trigger: pull_request
-specfile_path: sen.spec
-synced_files:
-- sen.spec
-- .packit.yaml
-upstream_package_name: sen
