@@ -1,7 +1,12 @@
+---
 specfile_path: sen.spec
 jobs:
 - job: copr_build
+  trigger: pull_request
   metadata:
     targets:
     - fedora-all
-  trigger: pull_request
+- job: propose_downstream
+  trigger: release
+  metadata:
+    dist_git_branches: fedora-all
