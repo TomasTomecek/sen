@@ -1,0 +1,35 @@
+= sen(1)
+:doctype: manpage
+
+== Name
+
+sen - terminal user interface for docker engine
+
+== Synopsis
+
+*sen*
+
+== Description
+
+*sen* is a terminal user interface for docker engine:
+
+* it can interactively manage your containers and images: manage? start, stop,
+  restart, kill, delete,...
+* there is a "dashboard" view for containers and images
+* you are able to inspect containers and images
+* sen can fetch logs of containers and even stream logs real-time
+* buffers support searching and filtering
+* sen receives real-time updates from docker when anything changes e.g. if you
+  pull a container in another terminal, sen will pick it up
+* sen notifies you whenever something happens (and reports slow queries)
+* supports a lot of vim-like keybindings (*j*, *k*, *gg*, */*, ...)
+* you can get interactive tree view of all images (equivalent of
+  *docker images --tree*)
+
+For more information, please see https://github.com/TomasTomecek/sen['https://github.com/TomasTomecek/sen'].
+
+== Author
+
+This manual page was written by mailto:czchen@debian.org[ChangZhuo Chen
+'<czchen@debian.org>'] for the *Debian GNU/Linux system* (but may be used by
+others).

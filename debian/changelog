@@ -1,0 +1,71 @@
+sen (0.6.1-0.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * New upstream release, bringing python3 fixes
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Fri, 08 Nov 2019 11:32:14 +0100
+
+sen (0.6.0-0.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+  * New upstream release (Closes: #881375)
+  * Drop catchlog dependency, now merged into pytest
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Tue, 03 Apr 2018 12:28:44 +0200
+
+sen (0.5.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump Standards-Version to 4.1.0.
+    * Use https in d/copyright Format field.
+  * Bump compat to 10.
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Sat, 18 Nov 2017 11:11:21 +0800
+
+sen (0.5.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Mon, 16 Jan 2017 23:39:47 +0800
+
+sen (0.4.0-3) unstable; urgency=medium
+
+  * Use asciidoc-base instead of asciidoc to reduce Build-Depends.
+    Thanks to Joseph Herlant (Closes: #850366)
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Fri, 06 Jan 2017 15:16:48 +0800
+
+sen (0.4.0-2) unstable; urgency=medium
+
+  * Use asciidoc instead of ronn to generate manpage.
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Mon, 08 Aug 2016 12:19:12 +0800
+
+sen (0.4.0-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Mon, 04 Jul 2016 21:55:36 +0800
+
+sen (0.3.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Change maintainer to Python Applications Packaging Team.
+  * Bump Standards-Version to 3.9.8.
+  * Update Vcs-* fields.
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Sat, 07 May 2016 23:59:02 +0800
+
+sen (0.2.2-2) unstable; urgency=medium
+
+  * Bump Standards-Version to 3.9.7.
+  * Add Vcs-* fields.
+  * Set locate to C.UTF-8 to prevent test fails.
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Mon, 15 Feb 2016 19:29:25 +0800
+
+sen (0.2.2-1) unstable; urgency=low
+
+  * Initial release. Closes: #809994
+
+ -- ChangZhuo Chen (陳昌倬) <czchen@debian.org>  Sat, 13 Feb 2016 17:51:55 +0800

@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+#export DH_VERBOSE = 1
+
+export LC_ALL=C.UTF-8
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_configure:
+	cat debian/*manpages | sed 's/$$/.txt/p' | xargs -n 1 a2x --doctype manpage --format manpage
+	dh_auto_configure
+
+override_dh_clean:
+	rm -rf $(CURDIR)/sen.egg-info/ $(CURDIR)/.cache
+	dh_clean
