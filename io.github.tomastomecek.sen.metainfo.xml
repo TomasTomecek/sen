@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="console-application">
   <id>io.github.tomastomecek.sen</id>
-  
+
   <name>sen</name>
   <summary>a terminal user interface for docker engine</summary>
-  
+
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
-  
+
   <description>
     <p>
       <em>    it can interactively manage your containers and images: </em>    manage? start, stop, restart, kill, delete,... <em>    there is a &quot;dashboard&quot; view for containers and images </em>    you are able to inspect containers and images <em>    sen can fetch logs of containers and even stream logs real-time </em>    some buffers support searching and filtering <em>    sen receives real-time updates from docker when anything changes </em>    e.g. if you pull a container in another terminal, sen will pick it up <em>    sen notifies you whenever something happens (and reports slow queries) </em>    supports a lot of vim-like keybindings (j, k, gg, /, ...) <em>    you can get interactive tree view of all images (equivalent of docker images --tree) </em>    see how much space containers, images and volumes occupy (just type :df)
       </p>
     </description>
-    
+
     <icon type="stock">sen</icon>
-    
+
     <categories>
       <category>Utility</category>
       <category>Adult</category>
     </categories>
-    
+
     <provides>
       <binary>sen</binary>
     </provides>

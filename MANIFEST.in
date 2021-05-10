@@ -2,5 +2,7 @@ include LICENSE
 include README.md
 include requirements.txt
 include requirements-test.txt
+include io.github.tomastomecek.sen.metainfo.xml
+include sen.svg
 recursive-include tests *
 recursive-include docs *
