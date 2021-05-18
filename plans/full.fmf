@@ -1,0 +1,6 @@
+summary: Unit, integration & functional tests.
+discover:
+  how: fmf
+  filter: tier:1
+execute:
+  how: tmt
