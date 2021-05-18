@@ -1,0 +1,17 @@
+require:
+- python3-urwid
+- python3-urwidtrees
+- python3-docker
+- python3-pytest
+- python3-pytest-capturelog
+- python3-flexmock
+- python3-urwid
+- python3-urwidtrees
+- python3-docker
+component:
+- sen
+tier: 1
+tag:
+  - basic
+test: pytest-3 -vv .
+duration: 30m

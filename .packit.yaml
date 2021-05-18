@@ -6,6 +6,11 @@ jobs:
   metadata:
     targets:
     - fedora-all
+- job: tests
+  trigger: pull_request
+  metadata:
+    targets:
+    - fedora-all
 - job: propose_downstream
   trigger: release
   metadata:
