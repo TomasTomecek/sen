@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2
+
+* Sen now has an icon! Thanks to [@Vitexus](https://github.com/Vitexus), [#161](https://github.com/TomasTomecek/sen/pull/161).
+* `finished_at` is now being parsed gracefully, the same as `started_at`, by [@TomasTomecek](https://github.com/TomasTomecek), [#149](https://github.com/TomasTomecek/sen/pull/149);
+  thanks for report [@soyo42](https://github.com/soyo42), [#148](https://github.com/TomasTomecek/sen/pull/148)
+
+
 ## 0.6.1
 
 Sen is now in maintenance mode — I am not planning on adding new features myself.
