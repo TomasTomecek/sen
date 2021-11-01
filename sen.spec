@@ -7,7 +7,7 @@
 
 
 Name:           %{srcname}
-Version:        0.6.1
+Version:        0.6.2
 Release:        1%{?dist}
 Summary:        %{sum}
 
@@ -76,6 +76,9 @@ py.test-%{python3_version} -vv tests || :
 
 
 %changelog
+* Mon Nov 01 2021 Tomas Tomecek <ttomecek@redhat.com> - 0.6.2-1
+- 0.6.2 upstream release
+
 * Mon Mar 04 2019 Tomas Tomecek <ttomecek@redhat.com> - 0.6.1-1
 - New upstream release 0.6.1
 
