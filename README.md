@@ -3,9 +3,9 @@
 ![Build Status](https://travis-ci.org/TomasTomecek/sen.svg?branch=master)
 
 
-`sen` is a terminal user interface for docker engine:
+`sen` is a terminal user interface for containers:
  * it can interactively manage your containers and images:
-  * manage? start, stop, restart, kill, delete,...
+  * start, stop, restart, kill, delete,...
  * there is a "dashboard" view for containers and images
  * you are able to inspect containers and images
  * sen can fetch logs of containers and even stream logs real-time
@@ -24,7 +24,7 @@ You can [see the features yourself](/docs/features.md).
 
 # Status
 
-TL;DR: maintenance mode
+**maintenance mode**
 
 I lost interest in working on new features for sen. I will continue providing
 support for sen as much as I can, but only bug fixes. Please don't expect any
@@ -68,7 +68,7 @@ $ docker run -v /var/run/docker.sock:/run/docker.sock -ti -e TERM $USER/sen
 `sen` is using [`urwidtrees`](https://github.com/pazz/urwidtrees) as a dependency. Unfortunately, the upstream
 maintainer doesn't maintain it on PyPI so we need to install it directly from
 git, before installing sen (the forked PyPI version has a [bug](https://github.com/TomasTomecek/sen/issues/128) in
-installation process):
+the installation process):
 
 ```
 $ pip3 install git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees-1.0.3.dev
@@ -114,22 +114,42 @@ $ pip3 install --user -r ./requirements.txt
 $ PYTHONPATH="$PWD:$PYTHONPATH" ./sen/cli.py
 ```
 
-If `pip3` executable is not available on your system, you can run pip like this:
-
-```
-$ python3 -m pip install sen
-```
-
 
 # Prerequisite
 
 Either:
 
-* The unix socket for docker engine needs to be accessible. By default it's located at `/run/docker.sock`.
+* The unix socket with the API for docker engine needs to be accessible. By default it's located at `/run/docker.sock`.
 
 Or:
 
-* Have the `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, and `DOCKER_CERT_PATH` set properly.  If you're using `docker-machine` or `boot2docker` you're all set!
+* Have the `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, and `DOCKER_CERT_PATH` set properly.
+
+
+# Podman
+
+Starting Podman v2.0, there is a [Docker-compatible
+API](https://docs.podman.io/en/latest/_static/api.html) provided by Podman.
+`sen` works well while talking to Podman over this API.
+
+
+## Connecting to Podman
+
+Run Podman as:
+```
+$ podman system service -t 0
+```
+
+Let's discover the unix socket path now:
+```
+$ podman info --format={{".Host.RemoteSocket.Path"}}
+/run/user/1000/podman/podman.sock
+```
+
+And finally tell `sen` to connect to it:
+```
+$ DOCKER_HOST=unix://$(podman info --format={{".Host.RemoteSocket.Path"}}) sen
+```
 
 
 # Keybindings
@@ -231,8 +251,16 @@ You can enter it by typing command `df`.
 
 # Why I started sen?
 
-Since I started using docker, I always dreamed of having a docker TUI. Something like [tig](https://github.com/jonas/tig), [htop](http://hisham.hm/htop/) or [alot](https://github.com/pazz/alot). Some appeared over time. Such as [docker-mon](https://github.com/icecrime/docker-mon) or [ctop](https://github.com/yadutaf/ctop). Unfortunately, those are not proper docker TUIs. They are meant for monitoring and diagnostics.
+Since I started using docker, I always dreamed of having a docker TUI.
+Something like [tig](https://github.com/jonas/tig),
+[htop](http://hisham.hm/htop/) or [alot](https://github.com/pazz/alot). Some
+appeared over time. Such as
+[docker-mon](https://github.com/icecrime/docker-mon) or
+[ctop](https://github.com/yadutaf/ctop). Unfortunately, those are not proper
+docker TUIs. They are meant for monitoring and diagnostics.
 
-So I realized that if I want make my dream come true, I need to do it myself. That's where I started working on *sen* (*dream* in Slovak).
+So I realized that if I want make my dream come true, I need to do it myself.
+That's where I started working on *sen* (*dream* in Slovak).
 
-But! As the time went, [someone](https://github.com/moncho) else had the same idea as I did: [dry](https://github.com/moncho/dry).
+But! As the time went, [someone](https://github.com/moncho) else had the same
+idea as I did: [dry](https://github.com/moncho/dry).
