@@ -50,12 +50,21 @@ class NetData:
                 for key, value in self.net_settings["Ports"].items():
                     cleaned_port = key.split("/")[0]
                     self._ports[cleaned_port] = graceful_chain_get(value, 0, "HostPort")
+
             # in case of --net=host, there's nothing in network settings, let's get it from "Config"
+            exposed_ports_section = graceful_chain_get(self.inspect_data, "HostConfig", "PortBindings")
+            if exposed_ports_section:
+                for key, value in exposed_ports_section.items():
+                    cleaned_port = key.split("/")[0]
+                    if cleaned_port not in self._ports:
+                        self._ports[cleaned_port] = graceful_chain_get(value, 0, "HostPort")
+                        
             exposed_ports_section = graceful_chain_get(self.inspect_data, "Config", "ExposedPorts")
             if exposed_ports_section:
                 for key, value in exposed_ports_section.items():
                     cleaned_port = key.split("/")[0]
-                    self._ports[cleaned_port] = None  # extremely docker specific
+                    if cleaned_port not in self._ports:
+                        self._ports[cleaned_port] = None  # extremely docker specific
         return self._ports
 
     @property
