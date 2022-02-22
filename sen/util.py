@@ -182,7 +182,7 @@ def calculate_cpu_percent2(d, previous_cpu, previous_system):
     cpu_delta = cpu_total - previous_cpu
     cpu_system = float(d["cpu_stats"]["system_cpu_usage"])
     system_delta = cpu_system - previous_system
-    online_cpus = d["cpu_stats"].get("online_cpus", len(d["cpu_stats"]["cpu_usage"]["percpu_usage"]))
+    online_cpus = d["cpu_stats"].get("online_cpus", len(d["cpu_stats"]["cpu_usage"].get("percpu_usage", [None])))
     if system_delta > 0.0:
         cpu_percent = (cpu_delta / system_delta) * online_cpus * 100.0
     return cpu_percent, cpu_system, cpu_total
