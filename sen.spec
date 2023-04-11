@@ -32,7 +32,6 @@ Requires:       python3-urwidtrees
 Requires:       python3-docker
 %if %{with tests}
 BuildRequires:  python3-pytest
-BuildRequires:  python3-pytest-capturelog
 BuildRequires:  python3-flexmock
 BuildRequires:  python3-urwid
 BuildRequires:  python3-urwidtrees
