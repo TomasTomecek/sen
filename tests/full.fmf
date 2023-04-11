@@ -3,7 +3,6 @@ require:
 - python3-urwidtrees
 - python3-docker
 - python3-pytest
-- python3-pytest-capturelog
 - python3-flexmock
 - python3-urwid
 - python3-urwidtrees
