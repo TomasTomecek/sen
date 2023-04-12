@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0
+
+* Use also `HostConfig` to get port bindings. Thanks to [@soyo42](https://github.com/soyo42), [#169](https://github.com/TomasTomecek/sen/pull/169).
+* CPU usage is processed more safely. Thanks to [@soyo42](https://github.com/soyo42), [#168](https://github.com/TomasTomecek/sen/pull/168).
+* Fedora packaging updates.
+
+
 ## 0.6.2
 
 * Sen now has an icon! Thanks to [@Vitexus](https://github.com/Vitexus), [#161](https://github.com/TomasTomecek/sen/pull/161).
