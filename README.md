@@ -52,6 +52,8 @@ Some distros have `/var/run` simlinked to `/run`, so you can do `/run/docker.soc
 
 In case you would like to try development version of sen, you can pull `tomastomecek/sen:dev`.
 
+Don't forget to bindmount the socket inside with `:Z` on SELinux systems.
+
 
 ## docker
 
