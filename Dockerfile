@@ -1,16 +1,16 @@
-FROM alpine:3.4
-MAINTAINER Tomas Tomecek <ttomecek@redhat.com> @TomasTomec
+FROM alpine:3.14
+MAINTAINER Tomas Tomecek <tomas@tomecek.net>
 
 LABEL RUN docker run -v /var/run/docker.sock:/run/docker.sock -ti -e TERM --name \${NAME} \${IMAGE}
 
 COPY . /home/sen
 
 RUN apk update \
-    && apk add python3 \
-    && apk add -t build python3-dev libc-dev gcc git \
-    && pip3 install urwid \
-    && pip3 install -r /home/sen/requirements.txt \
-    && pip3 install /home/sen \
+    && apk add python3 py3-pip \
+    && apk add -t build python3-dev py3-pip libc-dev gcc git \
+    && pip install urwid \
+    && pip install -r /home/sen/requirements.txt \
+    && pip install /home/sen \
     && apk del --purge build python3-dev libc-dev gcc sqlite-libs git \
     && rm /var/cache/apk/*
 

@@ -1,5 +1,6 @@
-urwid
-docker
+urwid==2.1.2
+docker==6.1.3
+requests==2.31.0
 # this is latest upstream commit (April 2017)
 # upstream maintainer of urwidtrees doesn't maintain PyPI urwidtrees
 -e git+https://github.com/pazz/urwidtrees.git@9142c59d3e41421ff6230708d08b6a134e0a8eed#egg=urwidtrees
