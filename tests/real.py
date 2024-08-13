@@ -29,16 +29,38 @@ container_data = {
     'Status': 'Exited (0) 47 hours ago'
 }
 
-
 version_data = {
-    'ApiVersion': '1.21',
-    'Arch': 'amd64',
-    'BuildTime': 'Thu Sep 10 17:53:19 UTC 2015',
-    'GitCommit': 'af9b534-dirty',
-    'GoVersion': 'go1.5.1',
-    'KernelVersion': '4.2.5-300.fc23.x86_64',
-    'Os': 'linux',
-    'Version': '1.9.0-dev-fc24'
+  'Platform': {'Name': 'linux/amd64/fedora-40'},
+  'Components': [{
+    'Name': 'Podman Engine',
+    'Version': '5.1.2',
+    'Details': {
+      'APIVersion': '5.1.2',
+      'Arch': 'amd64',
+      'BuildTime': '2024-07-10T02:00:00+02:00',
+      'Experimental': 'false',
+      'GitCommit': '',
+      'GoVersion': 'go1.22.5',
+      'KernelVersion': '6.9.11-200.fc40.x86_64',
+      'MinAPIVersion': '4.0.0',
+      'Os': 'linux'}},
+    {
+      'Name': 'Conmon',
+      'Version': 'conmon version 2.1.10, commit: ',
+      'Details': {'Package': 'conmon-2.1.10-1.fc40.x86_64'}},
+    {
+      'Name': 'OCI Runtime (crun)',
+      'Version': 'crun version 1.15\ncommit: e6eacaf4034e84185fd8780ac9262bbf57082278\nrundir: /run/user/1000/crun\nspec: 1.0.0\n+SYSTEMD +SELINUX +APPARMOR +CAP +SECCOMP +EBPF +CRIU +LIBKRUN +WASM:wasmedge +YAJL',
+      'Details': {'Package': 'crun-1.15-1.fc40.x86_64'}}],
+  'Version': '5.1.2',
+  'ApiVersion': '1.41',
+  'MinAPIVersion': '1.24',
+  'GitCommit': '',
+  'GoVersion': 'go1.22.5',
+  'Os': 'linux',
+  'Arch': 'amd64',
+  'KernelVersion': '6.9.11-200.fc40.x86_64',
+  'BuildTime': '2024-07-10T02:00:00+02:00'
 }
 
 top_data = {
