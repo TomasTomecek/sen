@@ -791,7 +791,7 @@ class DockerBackend:
         self._df = None
 
         kwargs = {"version": "auto"}
-        kwargs.update(docker.utils.kwargs_from_env(assert_hostname=False))
+        kwargs.update(docker.utils.kwargs_from_env())
 
         try:
             APIClientClass = docker.Client  # 1.x
