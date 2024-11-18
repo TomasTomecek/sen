@@ -352,12 +352,9 @@ class ThreadSafeLoop(urwid.MainLoop):
         explicitely refresh user interface; useful when changing widgets dynamically
         """
         logger.debug("refresh user interface")
-        try:
-            with self.refresh_lock:
+        with self.refresh_lock:
+            if self.screen.started:
                 self.draw_screen()
-        except AssertionError:
-            logger.warning("application is not running")
-            pass
 
 
 def get_app_in_loop(pallete):
