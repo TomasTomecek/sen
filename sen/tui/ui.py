@@ -51,6 +51,7 @@ class UI(ThreadSafeFrame, ConcurrencyMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        ConcurrencyMixin.__init__(self)
 
         # widget -> message or None
         self.widget_message_dict = {}
