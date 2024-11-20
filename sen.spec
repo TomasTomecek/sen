@@ -7,7 +7,7 @@
 
 
 Name:           %{srcname}
-Version:        0.7.0
+Version:        0.8.0
 Release:        1%{?dist}
 Summary:        %{sum}
 
@@ -75,6 +75,9 @@ py.test-%{python3_version} -vv tests || :
 
 
 %changelog
+* Wed Nov 20 2024 Tomas Tomecek <ttomecek@redhat.com> - 0.8.0-1
+- 0.8.0 upstream release
+
 * Wed Apr 12 2023 Tomas Tomecek <ttomecek@redhat.com> - 0.7.0-1
 - 0.7.0 upstream release
 

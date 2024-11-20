@@ -17,7 +17,7 @@ requirements = [
 
 setup(
     name='sen',
-    version='0.7.0',
+    version='0.8.0',
     description="Terminal User Interface for Docker Engine",
     author='Tomas Tomecek',
     author_email='tomas@tomecek.net',
