@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0
+
+* Bump the official container image to `alpine:3.14`. Thanks to [@soyo42](https://github.com/soyo42), [#172](https://github.com/TomasTomecek/sen/pull/172).
+* Make sen compatible with python-docker 7.x, [#177](https://github.com/TomasTomecek/sen/pull/177).
+* Make sen work with urwid-2.6.14 and python 3.13. Thanks to [@0x6D682D7331](https://github.com/0x6D682D7331), [#180](https://github.com/TomasTomecek/sen/pull/180).
+
+
 ## 0.7.0
 
 * Use also `HostConfig` to get port bindings. Thanks to [@soyo42](https://github.com/soyo42), [#169](https://github.com/TomasTomecek/sen/pull/169).
