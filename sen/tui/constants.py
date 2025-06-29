@@ -10,7 +10,7 @@ STATUS_BG_FOCUS = "#08d"
 MONO_DEFAULT = None
 
 # name, fg, bg, mono, fg_h, bg_h
-PALLETE = [
+PALETTE = [
     (MAIN_LIST_FOCUS, 'default', 'brown', MONO_DEFAULT, "white", "#060"),  # a60
     ('main_list_lg', 'light gray', 'default', MONO_DEFAULT, "g100", "default"),
     ('main_list_dg', 'dark gray', 'default', MONO_DEFAULT, "g78", "default"),

@@ -8,8 +8,8 @@ from sen.tui.constants import MAIN_LIST_FOCUS
 logger = logging.getLogger(__name__)
 
 
-def get_map(defult="main_list_dg"):
-    return {"normal": defult, "focus": MAIN_LIST_FOCUS}
+def get_map(default="main_list_dg"):
+    return {"normal": default, "focus": MAIN_LIST_FOCUS}
 
 
 class AdHocAttrMap(urwid.AttrMap):

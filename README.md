@@ -241,8 +241,8 @@ i         inspect image or container, whatever is focused
 ## Container info buffer
 
 ```
-enter     display detailed info about image (when image of the container is focued)
-i         inspect image (when image of the container is focued)
+enter     display detailed info about image (when image of the container is focused)
+i         inspect image (when image of the container is focused)
 ```
 
 
