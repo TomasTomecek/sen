@@ -34,7 +34,7 @@ def get_detailed_image_row(docker_image):
     image_id = SelectableText(docker_image.short_id, maps=get_map())
     row.append(image_id)
 
-    command = SelectableText(docker_image.command, maps=get_map(defult="main_list_ddg"))
+    command = SelectableText(docker_image.command, maps=get_map(default="main_list_ddg"))
     row.append(command)
 
     base_image = docker_image.base_image()

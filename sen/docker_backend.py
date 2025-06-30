@@ -829,8 +829,8 @@ class DockerBackend:
         if cached is False or self._containers is None:
             logger.debug("doing containers() query")
             self._containers = {}
-            containers_reponse = repeater(self.client.containers, kwargs={"all": stopped}) or []
-            for c in containers_reponse:
+            containers_response = repeater(self.client.containers, kwargs={"all": stopped}) or []
+            for c in containers_response:
                 container = DockerContainer(c, self)
                 self._containers[container.container_id] = container
         if not stopped:
@@ -841,7 +841,7 @@ class DockerBackend:
     def df(self, cached=True):
         if cached is False or self._df is None:
             logger.debug("getting disk-usage")
-            # TODO: wrap in try/execpt
+            # TODO: wrap in try/except
             self._df = self.client.df()
             # TODO: attach these to real containers and images
             # # since DOCKER API-1.25 (v.1.13.0)

@@ -26,7 +26,7 @@ $ convert -limit memory 1 -limit map 1 -layers Optimize out.gif out_optimised.gi
 
  * `-ss 3` — cut until second 3
  * `-t 00:00:50.00` — process until second 50
- * `-vf scale=720:-1` — resize gif to 720px (looks like a prefered GitHub size)
+ * `-vf scale=720:-1` — resize gif to 720px (looks like a preferred GitHub size)
 
 
 ### byzanz

@@ -350,7 +350,7 @@ class ThreadSafeLoop(urwid.MainLoop):
 
     def refresh(self):
         """
-        explicitely refresh user interface; useful when changing widgets dynamically
+        explicitly refresh user interface; useful when changing widgets dynamically
         """
         logger.debug("refresh user interface")
         with self.refresh_lock:
@@ -358,10 +358,10 @@ class ThreadSafeLoop(urwid.MainLoop):
                 self.draw_screen()
 
 
-def get_app_in_loop(pallete):
+def get_app_in_loop(palette):
     screen = urwid.raw_display.Screen()
     screen.set_terminal_properties(256)
-    screen.register_palette(pallete)
+    screen.register_palette(palette)
 
     ui = UI(urwid.SolidFill())
     decorated_ui = urwid.AttrMap(ui, "root")

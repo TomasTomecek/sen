@@ -9,7 +9,7 @@ from sen.exceptions import NotifyError
 from sen.tui.commands.base import Commander, SameThreadPriority
 from sen.tui.commands.display import DisplayListingCommand
 from sen.tui.ui import get_app_in_loop
-from sen.tui.constants import PALLETE
+from sen.tui.constants import PALETTE
 from sen.docker_backend import DockerBackend
 
 
@@ -20,7 +20,7 @@ class Application:
     def __init__(self, yolo=False):
         self.d = DockerBackend()
 
-        self.loop, self.ui = get_app_in_loop(PALLETE)
+        self.loop, self.ui = get_app_in_loop(PALETTE)
 
         self.ui.yolo = yolo
 
