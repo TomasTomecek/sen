@@ -18,7 +18,10 @@ Source0:        https://files.pythonhosted.org/packages/source/s/%{srcname}/%{sr
 BuildArch:      noarch
 Requires:       python3-%{srcname}
 BuildRequires:  python3-devel
-BuildRequires:  python3-setuptools
+BuildRequires:  python3-pip
+BuildRequires:  python3-wheel
+%generate_buildrequires
+%pyproject_buildrequires
 
 
 %description
@@ -52,11 +55,11 @@ sed -i 1d sen/cli.py
 
 
 %build
-%py3_build
+%pyproject_wheel
 
 
 %install
-%py3_install
+%pyproject_install
 
 %check
 %if %{with tests}
