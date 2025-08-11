@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+* Migrate from setup.py to pyproject.toml
+* Update dependencies
+* Typo fix in README. Thanks to [@kianmeng](https://github.com/kianmeng).
+
 ## 0.8.0
 
 * Bump the official container image to `alpine:3.14`. Thanks to [@soyo42](https://github.com/soyo42), [#172](https://github.com/TomasTomecek/sen/pull/172).
