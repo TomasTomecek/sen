@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sen"
+version = "0.9.0-dev"
+description = "Terminal User Interface for Docker and Podman"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Tomas Tomecek", email = "tomas@tomecek.net"}
+]
+requires-python = ">=3.4"
+dependencies = [
+    "urwid",
+    "docker",
+    "urwidtrees"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: System :: Monitoring",
+]
+
+[project.urls]
+Homepage = "https://github.com/TomasTomecek/sen/"
+Repository = "https://github.com/TomasTomecek/sen/"
+
+[project.scripts]
+sen = "sen.cli:main"
+
+[tool.setuptools]
+packages = ["sen"]

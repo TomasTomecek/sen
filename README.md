@@ -103,7 +103,7 @@ $ sen
 $ git clone https://github.com/TomasTomecek/sen
 $ cd sen
 $ pip3 install --user -r ./requirements.txt
-$ ./setup.py install
+$ pip3 install .
 $ sen
 ```
 
