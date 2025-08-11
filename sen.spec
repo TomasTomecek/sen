@@ -18,8 +18,6 @@ Source0:        https://files.pythonhosted.org/packages/source/s/%{srcname}/%{sr
 BuildArch:      noarch
 Requires:       python3-%{srcname}
 BuildRequires:  python3-devel
-BuildRequires:  python3-pip
-BuildRequires:  python3-wheel
 %generate_buildrequires
 %pyproject_buildrequires
 
