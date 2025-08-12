@@ -18,8 +18,6 @@ Source0:        https://files.pythonhosted.org/packages/source/s/%{srcname}/%{sr
 BuildArch:      noarch
 Requires:       python3-%{srcname}
 BuildRequires:  python3-devel
-%generate_buildrequires
-%pyproject_buildrequires
 
 
 %description
@@ -51,6 +49,8 @@ from command line. Interface is similar to htop, alot or tig.
 %autosetup -n %{srcname}-%{version}
 sed -i 1d sen/cli.py
 
+%generate_buildrequires
+%pyproject_buildrequires
 
 %build
 %pyproject_wheel
