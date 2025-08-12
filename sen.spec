@@ -7,7 +7,7 @@
 
 
 Name:           %{srcname}
-Version:        0.9.0-dev
+Version:        0.9.0
 Release:        %autorelease
 Summary:        %{sum}
 
