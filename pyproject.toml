@@ -36,5 +36,5 @@ Repository = "https://github.com/TomasTomecek/sen/"
 [project.scripts]
 sen = "sen.cli:main"
 
-[tool.setuptools]
-packages = ["sen"]
+[tool.setuptools.packages.find]
+include = ["sen*"]
