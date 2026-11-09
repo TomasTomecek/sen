@@ -1,4 +1,4 @@
-urwid==2.6.14
+urwid==4.0.7
 docker==7.1.0
 requests==2.32.4
 # this is latest upstream commit (April 2017)
